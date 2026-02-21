@@ -1369,6 +1369,8 @@ mod tests {
             dynamic_pop_cap: 200,
             role_counts: std::collections::HashMap::new(),
             niche_resources: std::collections::HashMap::new(),
+            treasury_reserve: 15.0,
+            treasury_distributed: 0.0,
         }
     }
 

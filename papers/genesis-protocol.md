@@ -222,9 +222,18 @@ $$\text{balance}(t+1) = \text{balance}(t) - 0.15$$
 
 Balance is clamped at zero (Invariant M-1); the metabolic tick returns the actual amount consumed, preventing negative balances.
 
-### 5.3 Treasury and Skim
+### 5.3 Treasury and Redistribution
 
-A central treasury applies a configurable skim to market rewards, funding crisis stipends when the population falls below half of carrying capacity. This creates a counter-cyclical stabilizer: during boom times, the treasury accumulates reserves; during crises, it distributes them.
+A central treasury implements five counter-cyclical mechanisms to prevent capital hoarding and maintain economic circulation:
+
+1. **Market Skim** (5%): Applied to all problem-market rewards, funding the treasury reserve.
+2. **Balance Decay** (2%/epoch): All agent ATP balances erode by 2% per epoch, creating velocity pressure that prevents indefinite hoarding.
+3. **Wealth Tax** (1% above 100 ATP): Agents with balances exceeding 100 ATP pay a 1% marginal tax, with proceeds flowing to the treasury.
+4. **Stipend Distribution**: Underrepresented roles (below the fair share of 20% of population) receive subsidies proportional to their deficit, funded from treasury reserves.
+5. **Crisis Spending**: When population falls below half of carrying capacity, the treasury injects up to 2.0 ATP per agent from reserves.
+6. **Overflow Redistribution**: If treasury reserves exceed 30% of total ATP supply, half the excess is distributed equally across all agents.
+
+This layered approach ensures that ATP circulates rather than accumulating: the treasury collected 9,075 ATP and distributed 9,074 ATP over a 10,000-epoch simulation (Section 10.5), maintaining a mean reserve of only 0.76 ATP.
 
 ### 5.4 Ledger Integrity
 
@@ -429,6 +438,78 @@ All 14 defined invariants (Appendix A) hold for the current edition. Key verific
 - **S-1** (Dynamic Population Cap): `run_epoch()` computes `total_capacity / 15`, clamped to [10, 500].
 - **P-1** (Deterministic Edition Root): Independently recomputable from source files.
 
+### 10.5 Empirical Simulation: 10,000-Epoch Run
+
+To validate the ecological model beyond unit-level testing, we executed a single deterministic simulation of 10,000 epochs from a primordial state (20 agents, 50.0 ATP each). The full epoch-by-epoch dataset is available as `dist/simulation-10k.csv` in the source repository.
+
+#### 10.5.1 Population Dynamics
+
+| Metric | Bootstrap (0–100) | Growth (100–500) | Early Equilibrium (500–2000) | Mid Run (2000–5000) | Late Run (5000–10000) |
+|--------|---:|---:|---:|---:|---:|
+| Mean Population | 45.2 | 51.2 | 56.8 | 56.1 | 57.4 |
+| Mean ATP Supply | 510.3 | 450.8 | 668.1 | 633.5 | 697.8 |
+| Mean Fitness | 0.5224 | 0.5292 | 0.5644 | 0.5708 | 0.5623 |
+
+Table 6. Phase-segmented population and economic metrics across 10,000 epochs.
+
+The population converges from 20 primordial agents to an equilibrium band of 50–60 within the first 500 epochs. At steady state (epochs 5000–10000), mean population is 57.4 with standard deviation 2.11 — a coefficient of variation of 3.7%, indicating strong stability. The minimum population observed is 20 (epoch 0 only); the maximum is 60 (matching the dynamic carrying capacity ceiling for abundant resource conditions). Only 17 epochs across the entire run show population below 40, all occurring during the bootstrap phase.
+
+#### 10.5.2 ATP Economics
+
+| Metric | Value |
+|--------|------:|
+| Mean ATP per Agent (overall) | 11.72 |
+| Mean ATP per Agent (equilibrium) | 12.15 |
+| Total ATP Supply: min | 232.68 |
+| Total ATP Supply: max | 1013.03 |
+| Equilibrium ATP Supply: mean ± σ | 697.8 ± 109.4 |
+
+Table 7. ATP supply dynamics across 10,000 epochs.
+
+The initial ATP surplus (20 × 50.0 = 1000 ATP) declines rapidly as primordial grants are consumed by basal metabolism. The system finds economic equilibrium around 12.15 ATP per agent — roughly 80 epochs of survival budget at basal cost (0.15 ATP/epoch), providing a meaningful survival buffer without excessive hoarding.
+
+**Treasury cycling.** The treasury collected 9,075.1 ATP and distributed 9,074.4 ATP over the run, with a mean reserve of only 0.76 ATP. This demonstrates that the redistribution mechanisms (decay, wealth tax, stipends, crisis spending, overflow redistribution) effectively prevent capital accumulation while maintaining a small emergency buffer. The maximum single-epoch distribution was 21.13 ATP (during a crisis event), and only 152 of 10,000 epochs (1.5%) had zero treasury distribution.
+
+#### 10.5.3 Selection and Fitness
+
+Mean population fitness rises from 0.5224 (bootstrap) to 0.5708 (mid-run), representing a 9.3% improvement through natural selection. Individual peak fitness reached 0.9824 at epoch 4,718, demonstrating that the mutation and selection engines can produce high-performing agents over time. The fitness plateau around 0.56–0.57 suggests a selection–mutation equilibrium: evolutionary gains from culling low-fitness agents are balanced by the introduction of variation through mutation.
+
+#### 10.5.4 Demographic Turnover
+
+| Metric | Value |
+|--------|------:|
+| Total Births | 902 |
+| Total Deaths | 865 |
+| Net Growth (20 → 57) | +37 |
+| Epochs with Births | 674 (6.7%) |
+| Epochs with Deaths | 760 (7.6%) |
+| Max Births in One Epoch | 3 |
+| Max Deaths in One Epoch | 4 |
+
+Table 8. Demographic statistics across 10,000 epochs.
+
+The birth-to-death ratio of 1.04:1 maintains slight positive pressure sufficient to sustain the population without runaway growth. The low per-epoch birth rate (6.7% of epochs) reflects the stringent replication requirements: agents must exceed both a fitness threshold and ATP cost (25.0 ATP). Deaths occur slightly more frequently (7.6% of epochs) but are typically single-agent events — the maximum of 4 deaths in a single epoch is rare and coincides with catastrophe-driven carrying capacity reduction.
+
+#### 10.5.5 Environmental Dynamics
+
+Seasonal distribution across 10,000 epochs: Autumn 33.0%, Winter 33.0%, Spring 17.0%, Summer 17.0%. The unequal distribution reflects the sinusoidal season cycle and epoch-to-season mapping. Catastrophe events occurred in 3,820 epochs (38.2%), consistent with the 5% base probability compounded with multi-epoch catastrophe duration (mean ~7 epochs per event).
+
+#### 10.5.6 Role Distribution
+
+At equilibrium (epochs 5000–10000), the five specialist roles maintain near-uniform representation:
+
+| Role | Mean Count | Min | Max |
+|------|---:|---:|---:|
+| Optimizer | 11.6 | 9 | 15 |
+| Strategist | 11.6 | 9 | 14 |
+| Communicator | 11.5 | 9 | 14 |
+| Archivist | 11.1 | 8 | 14 |
+| Executor | 11.6 | 9 | 15 |
+
+Table 9. Role distribution at equilibrium (epochs 5000–10000).
+
+The near-uniform distribution validates the treasury stipend mechanism: underrepresented roles receive proportional subsidies, preventing niche monopolies. The slight deficit in Archivists (11.1 vs. 11.6 mean for other roles) suggests they face marginally higher competitive pressure but are not at risk of extinction.
+
 ---
 
 ## 11. Discussion
@@ -447,19 +528,25 @@ Both Genesis Protocol and the 2,500 Donkeys literary protocol [3] share the same
 
 ### 11.4 Limitations
 
+**Treasury hoarding (v1.0 defect, corrected).** In the initial v1.0 release, five of six treasury mechanisms existed as implemented but uncalled code. Only the skim function was wired into the epoch loop, causing approximately 88% of ATP to accumulate in the treasury with no redistribution pathway. This was identified through external review, diagnosed as dead-code accumulation, and corrected by wiring all five mechanisms (decay, wealth tax, stipends, crisis spending, overflow redistribution) into `run_epoch()`. The 10,000-epoch empirical validation in Section 10.5 confirms the fix: the treasury now retains only 0.76 ATP on average versus 9,074 ATP distributed. This defect is disclosed here as a case study in the importance of integration testing for economic subsystems — unit tests confirmed each mechanism worked in isolation, but no test verified they were invoked in the main loop.
+
 **Ecological simplification.** The model uses five discrete niches rather than a continuous niche space. Real ecosystems exhibit niche overlap, character displacement, and adaptive radiation that are not captured by discrete role assignments.
 
-**Deterministic pseudo-randomness.** Stochastic events use a hash-based PRNG seeded deterministically, which enables reproducibility but means the specific event sequence is predetermined rather than genuinely random. This is a deliberate design choice favoring reproducibility over stochasticity.
+**Deterministic pseudo-randomness.** Stochastic events use a hash-based PRNG seeded deterministically, which enables reproducibility but means the specific event sequence is predetermined rather than genuinely random. This is a deliberate design choice favoring reproducibility over stochasticity. A consequence is that the 10,000-epoch results in Section 10.5 represent a single trajectory; ensemble statistics across multiple seeds would strengthen the empirical claims.
 
 **Single-chain anchoring.** The current implementation prepares for but does not execute on-chain anchoring. Cross-chain redundancy (Bitcoin, Ethereum) would provide stronger durability guarantees.
 
 **Key management.** The author's private key is a single point of failure for on-chain operations. Multi-signature schemes could mitigate this risk but are not currently implemented.
+
+**Apostle crate maturity.** The `apostle` crate provides conversion tracking infrastructure but has not been exercised in production deployments. Its integration with the broader ecosystem remains at proof-of-concept stage.
 
 ---
 
 ## 12. Conclusion
 
 We have presented Genesis Protocol, a six-crate Rust organism implementing Lotka–Volterra inspired resource competition with cryptographic provenance verification. The system demonstrates that biologically grounded ecological dynamics — logistic growth, seasonal oscillation, density-dependent foraging, stochastic perturbation — produce realistic population behavior in multi-agent simulations, and that the provenance model established for literary publishing generalizes to executable software without modification to its cryptographic infrastructure.
+
+A 10,000-epoch empirical run validates the model: population converges to a stable equilibrium band (mean 57.4, CV 3.7%), ATP per agent stabilizes at 12.15 (an 80-epoch survival buffer), mean fitness improves 9.3% through selection, and the treasury cycles 9,074 of 9,075 collected ATP back into the economy — demonstrating effective counter-cyclical redistribution. The only significant defect discovered through review (treasury hoarding due to uncalled redistribution code) was corrected and is disclosed transparently in Section 11.4.
 
 The organism comprises 39 source files totaling 10,015 lines of Rust, validated by 143 automated tests. Its integrity is committed through 7 crate-level Merkle trees composing into a single edition root (`cd78b3be...d2cc3`) anchorable on a production blockchain at a cost of less than $0.50 USD. The Software Organism Protocol (SOP-1) formalizes these guarantees as a reproducible specification for future implementations.
 

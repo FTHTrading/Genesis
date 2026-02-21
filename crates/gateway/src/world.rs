@@ -297,6 +297,10 @@ pub struct EpochStats {
     pub role_counts: HashMap<AgentRole, usize>,
     /// Resource level per niche.
     pub niche_resources: HashMap<AgentRole, f64>,
+    /// Treasury reserve balance at end of epoch.
+    pub treasury_reserve: f64,
+    /// Treasury ATP distributed this epoch (stipends + crisis + overflow).
+    pub treasury_distributed: f64,
 }
 
 /// Registration request from external callers.
@@ -529,6 +533,7 @@ impl World {
         let mut market_rewarded: f64 = 0.0;
         let mut gated_posts: u64 = 0;
         let mut resources_extracted: f64 = 0.0;
+        let treasury_distributed_before = self.treasury.total_distributed;
 
         // ═══════════════════════════════════════════════════════════════
         // STEP 0: Environment tick — regenerate resources, apply seasons
@@ -601,6 +606,83 @@ impl World {
         // Lower than before (0.15 vs 0.5) so agents can sustain
         // ═══════════════════════════════════════════════════════════════
         self.ledger.metabolic_tick_all();
+
+        // ═══════════════════════════════════════════════════════════════
+        // STEP 2a: ATP decay — 2% balance erosion per epoch
+        // Prevents infinite accumulation; models entropy/maintenance.
+        // ═══════════════════════════════════════════════════════════════
+        self.ledger.decay_all(0.02);
+
+        // ═══════════════════════════════════════════════════════════════
+        // STEP 2b: Wealth tax — 1% on balances above 100 ATP
+        // Tax flows to treasury, not destroyed. Prevents hoarding.
+        // ═══════════════════════════════════════════════════════════════
+        let wealth_taxed = self.ledger.wealth_tax_all(100.0, 0.01);
+        self.treasury.reserve += wealth_taxed;
+        self.treasury.total_collected += wealth_taxed;
+
+        // ═══════════════════════════════════════════════════════════════
+        // STEP 2c: Treasury redistribution — the counter-cyclical loop
+        //
+        // 1. Stipends to underrepresented roles (diversity incentive)
+        // 2. Crisis spending when population < cap/2
+        // 3. Overflow redistribution: if treasury > 30% of supply,
+        //    distribute excess equally to all agents (prevents hoarding)
+        // ═══════════════════════════════════════════════════════════════
+        {
+            // Stipends for underrepresented roles
+            let stipend_distributed = self.treasury.distribute_stipends(&role_counts, self.agents.len());
+            for (role, total_for_role) in &stipend_distributed {
+                let count = *role_counts.get(role).unwrap_or(&1) as f64;
+                let per_agent = total_for_role / count;
+                for agent in self.agents.iter().filter(|a| &a.role == role) {
+                    let _ = self.ledger.mint(
+                        &agent.id, per_agent,
+                        TransactionKind::ProofOfSolution,
+                        &format!("Epoch {} role stipend", epoch),
+                    );
+                }
+            }
+
+            // Crisis spending: if population below half of carrying capacity
+            let pop = self.agents.len();
+            let dynamic_cap = ((self.environment.total_capacity() / 15.0) as usize).clamp(10, 500);
+            if pop > 0 && pop < dynamic_cap / 2 {
+                // Inject up to 2 ATP per agent from reserves
+                let crisis_budget = (pop as f64 * 2.0).min(self.treasury.reserve * 0.5);
+                let spent = self.treasury.crisis_spend(crisis_budget);
+                if spent > 0.0 {
+                    let per_agent = spent / pop as f64;
+                    for agent in self.agents.iter() {
+                        let _ = self.ledger.mint(
+                            &agent.id, per_agent,
+                            TransactionKind::ProofOfSolution,
+                            &format!("Epoch {} crisis stabilization", epoch),
+                        );
+                    }
+                }
+            }
+
+            // Overflow redistribution: prevent treasury from hoarding >30% of supply
+            let total_supply = self.ledger.total_supply();
+            let overflow_threshold = total_supply * 0.30;
+            if self.treasury.reserve > overflow_threshold && pop > 0 {
+                let excess = self.treasury.reserve - overflow_threshold;
+                // Distribute half the excess — leave some buffer
+                let redistribute = excess * 0.5;
+                let spent = self.treasury.crisis_spend(redistribute);
+                if spent > 0.0 {
+                    let per_agent = spent / pop as f64;
+                    for agent in self.agents.iter() {
+                        let _ = self.ledger.mint(
+                            &agent.id, per_agent,
+                            TransactionKind::ProofOfSolution,
+                            &format!("Epoch {} treasury overflow", epoch),
+                        );
+                    }
+                }
+            }
+        }
 
         // ═══════════════════════════════════════════════════════════════
         // STEP 3: Problem Market — supplementary income (bonus, not sole)
@@ -837,6 +919,8 @@ impl World {
             dynamic_pop_cap,
             role_counts: final_role_counts,
             niche_resources,
+            treasury_reserve: self.treasury.reserve,
+            treasury_distributed: self.treasury.total_distributed - treasury_distributed_before,
         };
 
         // Keep rolling window of last 100 epochs

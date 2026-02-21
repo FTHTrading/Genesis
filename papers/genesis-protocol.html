@@ -445,8 +445,17 @@
 <h3>5.2 Metabolic Cost</h3>
 <p>Every agent pays a basal metabolic cost of 0.15 ATP per epoch. Balance is clamped at zero (Invariant M-1); the metabolic tick returns actual amount consumed, preventing negative balances.</p>
 
-<h3>5.3 Treasury and Skim</h3>
-<p>A central treasury applies a configurable skim to market rewards, funding crisis stipends when population falls below half of carrying capacity. This creates a counter-cyclical stabilizer.</p>
+<h3>5.3 Treasury and Redistribution</h3>
+<p>A central treasury implements five counter-cyclical mechanisms to prevent capital hoarding and maintain economic circulation:</p>
+<ol>
+<li><strong>Market Skim</strong> (5%): Applied to all problem-market rewards, funding the treasury reserve.</li>
+<li><strong>Balance Decay</strong> (2%/epoch): All agent ATP balances erode by 2% per epoch, creating velocity pressure.</li>
+<li><strong>Wealth Tax</strong> (1% above 100 ATP): Marginal tax on balances exceeding 100 ATP, proceeds flow to treasury.</li>
+<li><strong>Stipend Distribution</strong>: Underrepresented roles (below 20% of population) receive proportional subsidies.</li>
+<li><strong>Crisis Spending</strong>: When population falls below half of carrying capacity, up to 2.0 ATP per agent is injected.</li>
+<li><strong>Overflow Redistribution</strong>: If reserves exceed 30% of total supply, half the excess is distributed equally.</li>
+</ol>
+<p>Over a 10,000-epoch simulation (Section 10.5), the treasury collected 9,075 ATP and distributed 9,074 ATP, maintaining a mean reserve of only 0.76 ATP.</p>
 
 <h3>5.4 Ledger Integrity</h3>
 <p>The ATP ledger tracks all transactions with typed entries and computes total supply as the sum of all agent balances at query time (Invariant M-2), eliminating accumulation errors.</p>
@@ -580,6 +589,57 @@
 <h3>10.4 Invariant Compliance</h3>
 <p>All 14 defined invariants hold for the current edition (see Appendix A).</p>
 
+<h3>10.5 Empirical Simulation: 10,000-Epoch Run</h3>
+<p>A single deterministic simulation of 10,000 epochs was executed from primordial state (20 agents, 50.0 ATP each). The full dataset is available as <code>dist/simulation-10k.csv</code>.</p>
+
+<h4>10.5.1 Population Dynamics</h4>
+<table>
+<tr><th>Metric</th><th>Bootstrap (0–100)</th><th>Growth (100–500)</th><th>Early Equil. (500–2000)</th><th>Mid (2000–5000)</th><th>Late (5000–10000)</th></tr>
+<tr><td>Mean Population</td><td>45.2</td><td>51.2</td><td>56.8</td><td>56.1</td><td>57.4</td></tr>
+<tr><td>Mean ATP</td><td>510.3</td><td>450.8</td><td>668.1</td><td>633.5</td><td>697.8</td></tr>
+<tr><td>Mean Fitness</td><td>0.5224</td><td>0.5292</td><td>0.5644</td><td>0.5708</td><td>0.5623</td></tr>
+</table>
+<p class="table-note">Table 6. Phase-segmented population and economic metrics.</p>
+
+<p>The population converges from 20 to an equilibrium band of 50–60 within 500 epochs. At steady state, mean population is 57.4 with CV 3.7%. Only 17 epochs show population below 40, all during bootstrap.</p>
+
+<h4>10.5.2 ATP Economics</h4>
+<table>
+<tr><th>Metric</th><th>Value</th></tr>
+<tr><td>Mean ATP per Agent (equilibrium)</td><td>12.15</td></tr>
+<tr><td>ATP Supply Range</td><td>232.68 – 1013.03</td></tr>
+<tr><td>Equilibrium ATP: mean ± σ</td><td>697.8 ± 109.4</td></tr>
+<tr><td>Treasury collected / distributed</td><td>9,075 / 9,074</td></tr>
+<tr><td>Mean treasury reserve</td><td>0.76 ATP</td></tr>
+</table>
+<p class="table-note">Table 7. ATP supply and treasury dynamics.</p>
+
+<h4>10.5.3 Selection and Fitness</h4>
+<p>Mean fitness rises from 0.5224 (bootstrap) to 0.5708 (mid-run), a 9.3% improvement through natural selection. Individual peak fitness reached 0.9824 at epoch 4,718. The fitness plateau around 0.56–0.57 suggests selection–mutation equilibrium.</p>
+
+<h4>10.5.4 Demographic Turnover</h4>
+<table>
+<tr><th>Metric</th><th>Value</th></tr>
+<tr><td>Total Births / Deaths</td><td>902 / 865</td></tr>
+<tr><td>Birth-to-Death Ratio</td><td>1.04:1</td></tr>
+<tr><td>Epochs with Births</td><td>674 (6.7%)</td></tr>
+<tr><td>Epochs with Deaths</td><td>760 (7.6%)</td></tr>
+<tr><td>Max Births / Deaths per Epoch</td><td>3 / 4</td></tr>
+</table>
+<p class="table-note">Table 8. Demographic statistics across 10,000 epochs.</p>
+
+<h4>10.5.5 Role Distribution</h4>
+<table>
+<tr><th>Role</th><th>Mean</th><th>Min</th><th>Max</th></tr>
+<tr><td>Optimizer</td><td>11.6</td><td>9</td><td>15</td></tr>
+<tr><td>Strategist</td><td>11.6</td><td>9</td><td>14</td></tr>
+<tr><td>Communicator</td><td>11.5</td><td>9</td><td>14</td></tr>
+<tr><td>Archivist</td><td>11.1</td><td>8</td><td>14</td></tr>
+<tr><td>Executor</td><td>11.6</td><td>9</td><td>15</td></tr>
+</table>
+<p class="table-note">Table 9. Role distribution at equilibrium (epochs 5000–10000).</p>
+<p>Near-uniform distribution validates the treasury stipend mechanism: underrepresented roles receive proportional subsidies, preventing niche monopolies.</p>
+
 <!-- ═══════════════════════════════════════════════════════════════════ -->
 <!-- 11. DISCUSSION                                                     -->
 <!-- ═══════════════════════════════════════════════════════════════════ -->
@@ -595,14 +655,17 @@
 <p>Both Genesis Protocol and the 2,500 Donkeys literary protocol share the same on-chain infrastructure: the LiteraryAnchor contract, the AuthorIdentity contract, and the author wallet. This demonstrates that a single set of smart contracts can serve as provenance infrastructure for an arbitrary number of works across different domains.</p>
 
 <h3>11.4 Limitations</h3>
-<p><strong>Ecological simplification.</strong> Five discrete niches rather than continuous niche space. <strong>Deterministic pseudo-randomness.</strong> Hash-based PRNG favoring reproducibility over stochasticity. <strong>Single-chain anchoring.</strong> Cross-chain redundancy not yet executed. <strong>Key management.</strong> Single private key without multi-signature support.</p>
+<p><strong>Treasury hoarding (v1.0 defect, corrected).</strong> In the initial v1.0 release, five of six treasury mechanisms existed as implemented but uncalled code. Only the skim function was wired into the epoch loop, causing ~88% of ATP to accumulate without redistribution. This was identified through external review, diagnosed as dead-code accumulation, and corrected. The 10,000-epoch validation (Section 10.5) confirms the fix. This defect is disclosed as a case study in the importance of integration testing for economic subsystems.</p>
+<p><strong>Ecological simplification.</strong> Five discrete niches rather than continuous niche space. <strong>Deterministic pseudo-randomness.</strong> Hash-based PRNG favoring reproducibility; ensemble statistics across multiple seeds would strengthen empirical claims. <strong>Single-chain anchoring.</strong> Cross-chain redundancy not yet executed. <strong>Key management.</strong> Single private key without multi-signature support. <strong>Apostle crate maturity.</strong> Conversion tracking infrastructure at proof-of-concept stage.</p>
 
 <!-- ═══════════════════════════════════════════════════════════════════ -->
 <!-- 12. CONCLUSION                                                     -->
 <!-- ═══════════════════════════════════════════════════════════════════ -->
 <h2>12. Conclusion</h2>
 
-<p>We have presented Genesis Protocol, a six-crate Rust organism implementing Lotka–Volterra inspired resource competition with cryptographic provenance verification. The system demonstrates that biologically grounded ecological dynamics — logistic growth, seasonal oscillation, density-dependent foraging, stochastic perturbation — produce realistic population behavior in multi-agent simulations, and that the provenance model established for literary publishing generalizes to executable software without modification to its cryptographic infrastructure.</p>
+<p>We have presented Genesis Protocol, a six-crate Rust organism implementing Lotka–Volterra inspired resource competition with cryptographic provenance verification. The system demonstrates that biologically grounded ecological dynamics produce realistic population behavior, and that the provenance model established for literary publishing generalizes to executable software.</p>
+
+<p>A 10,000-epoch empirical run validates the model: population converges to a stable equilibrium band (mean 57.4, CV 3.7%), ATP per agent stabilizes at 12.15, mean fitness improves 9.3% through selection, and the treasury cycles 9,074 of 9,075 collected ATP back into the economy. The only significant defect discovered through review (treasury hoarding due to uncalled redistribution code) was corrected and is disclosed transparently in Section 11.4.</p>
 
 <p>The organism comprises 39 source files totaling 10,015 lines of Rust, validated by 143 automated tests. Its integrity is committed through 7 crate-level Merkle trees composing into a single edition root (<code>cd78b3be...d2cc3</code>) anchorable on a production blockchain at a cost of less than $0.50 USD.</p>
 
