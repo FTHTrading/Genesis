@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Genesis Protocol</title>
+<meta name="description" content="A sovereign digital organism evolving under real economic pressure.">
+<meta name="theme-color" content="#0a0a0f">
+<meta property="og:title" content="Genesis Protocol">
+<meta property="og:description" content="AI agents born, not deployed. Native Rust. Six crates. One organism.">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧬</text></svg>">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root {
+  --bg: #06060a;
+  --bg2: #0c0c14;
+  --surface: #111119;
+  --border: rgba(255,255,255,0.06);
+  --border-hover: rgba(255,255,255,0.12);
+  --text: rgba(255,255,255,0.88);
+  --text-dim: rgba(255,255,255,0.45);
+  --text-muted: rgba(255,255,255,0.25);
+  --accent: #5eead4;
+  --accent-dim: rgba(94,234,212,0.12);
+  --blue: #60a5fa;
+  --purple: #a78bfa;
+  --amber: #fbbf24;
+  --green: #4ade80;
+  --orange: #fb923c;
+  --rose: #fb7185;
+  --mono: 'JetBrains Mono', 'SF Mono', 'Cascadia Code', monospace;
+  --sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+/* ── Noise texture overlay ─────────── */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  opacity: 0.015;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* ── Layout ────────────────────────── */
+.container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 32px;
+}
+
+section {
+  padding: 120px 0;
+  position: relative;
+}
+
+/* ── Hero ──────────────────────────── */
+.hero {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  position: relative;
+}
+
+.hero-canvas {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  z-index: 0;
+}
+
+.hero-content {
+  position: relative;
+  z-index: 1;
+}
+
+.hero-tag {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 32px;
+  opacity: 0.8;
+}
+
+.hero h1 {
+  font-size: clamp(48px, 7vw, 96px);
+  font-weight: 700;
+  letter-spacing: -2px;
+  line-height: 1.05;
+  margin-bottom: 24px;
+  background: linear-gradient(135deg, #fff 0%, rgba(255,255,255,0.6) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.hero-sub {
+  font-size: 18px;
+  font-weight: 300;
+  color: var(--text-dim);
+  max-width: 560px;
+  margin: 0 auto 48px;
+  line-height: 1.7;
+}
+
+.hero-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 32px;
+  background: var(--accent-dim);
+  border: 1px solid rgba(94,234,212,0.2);
+  border-radius: 8px;
+  color: var(--accent);
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 1px;
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+
+.hero-cta:hover {
+  background: rgba(94,234,212,0.18);
+  border-color: rgba(94,234,212,0.35);
+  transform: translateY(-1px);
+}
+
+.hero-cta svg {
+  width: 16px;
+  height: 16px;
+  fill: currentColor;
+}
+
+.scroll-hint {
+  position: absolute;
+  bottom: 48px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: var(--text-muted);
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.25; }
+  50% { opacity: 0.6; }
+}
+
+/* ── Divider ───────────────────────── */
+.divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--border), transparent);
+  margin: 0 auto;
+  max-width: 600px;
+}
+
+/* ── Statement ─────────────────────── */
+.statement {
+  text-align: center;
+  padding: 100px 0;
+}
+
+.statement p {
+  font-size: clamp(20px, 2.5vw, 28px);
+  font-weight: 300;
+  color: var(--text-dim);
+  max-width: 680px;
+  margin: 0 auto;
+  line-height: 1.8;
+}
+
+.statement em {
+  color: var(--text);
+  font-style: normal;
+  font-weight: 500;
+}
+
+/* ── Architecture Grid ─────────────── */
+.arch-header {
+  text-align: center;
+  margin-bottom: 64px;
+}
+
+.arch-header .label {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 16px;
+}
+
+.arch-header h2 {
+  font-size: 36px;
+  font-weight: 600;
+  letter-spacing: -1px;
+}
+
+.crate-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.crate-card {
+  background: var(--surface);
+  padding: 36px 32px;
+  transition: background 0.3s ease;
+}
+
+.crate-card:hover {
+  background: var(--bg2);
+}
+
+.crate-name {
+  font-family: var(--mono);
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.crate-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.crate-desc {
+  font-size: 14px;
+  color: var(--text-dim);
+  line-height: 1.6;
+}
+
+/* ── Metrics Bar ───────────────────── */
+.metrics {
+  padding: 80px 0;
+}
+
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 0;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.metric {
+  padding: 32px 24px;
+  text-align: center;
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+
+.metric:last-child { border-right: none; }
+
+.metric-value {
+  font-family: var(--mono);
+  font-size: 28px;
+  font-weight: 600;
+  color: var(--accent);
+  margin-bottom: 6px;
+  font-variant-numeric: tabular-nums;
+}
+
+.metric-label {
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  font-family: var(--mono);
+}
+
+/* ── Principles ────────────────────── */
+.principles {
+  padding: 100px 0;
+}
+
+.principles-header {
+  text-align: center;
+  margin-bottom: 64px;
+}
+
+.principles-header .label {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 16px;
+}
+
+.principles-header h2 {
+  font-size: 36px;
+  font-weight: 600;
+  letter-spacing: -1px;
+}
+
+.principle-list {
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+.principle {
+  padding: 24px 0;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  gap: 20px;
+  align-items: baseline;
+}
+
+.principle:last-child { border-bottom: none; }
+
+.principle-num {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--text-muted);
+  flex-shrink: 0;
+  width: 28px;
+}
+
+.principle-text {
+  font-size: 16px;
+  font-weight: 400;
+  color: var(--text-dim);
+  line-height: 1.6;
+}
+
+.principle-text strong {
+  color: var(--text);
+  font-weight: 500;
+}
+
+/* ── Footer ────────────────────────── */
+.footer {
+  padding: 60px 0;
+  text-align: center;
+  border-top: 1px solid var(--border);
+}
+
+.footer-links {
+  display: flex;
+  justify-content: center;
+  gap: 32px;
+  margin-bottom: 32px;
+}
+
+.footer-links a {
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 1px;
+  color: var(--text-dim);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.footer-links a:hover {
+  color: var(--accent);
+}
+
+.footer-copy {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-family: var(--mono);
+}
+
+/* ── Responsive ────────────────────── */
+@media (max-width: 768px) {
+  .container { padding: 0 20px; }
+  section { padding: 80px 0; }
+  .crate-grid { grid-template-columns: 1fr; }
+  .metrics-grid { grid-template-columns: repeat(2, 1fr); }
+  .metric { border-right: none; }
+  .metric:nth-child(odd) { border-right: 1px solid var(--border); }
+}
+
+/* ── Animations ────────────────────── */
+.fade-in {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.8s ease, transform 0.8s ease;
+}
+
+.fade-in.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+</style>
+</head>
+<body>
+
+<!-- ═══ HERO ═══════════════════════════════════════════════════════ -->
+<section class="hero">
+  <canvas class="hero-canvas" id="hero-canvas"></canvas>
+  <div class="hero-content">
+    <div class="hero-tag">FTHTrading / AI</div>
+    <h1>Genesis<br>Protocol</h1>
+    <p class="hero-sub">
+      A sovereign digital organism evolving under real economic pressure.
+      Native Rust. Six crates. One living system.
+    </p>
+    <a href="https://github.com/FTHTrading/AI" class="hero-cta">
+      <svg viewBox="0 0 16 16"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+      View Source
+    </a>
+  </div>
+  <div class="scroll-hint">Scroll</div>
+</section>
+
+<!-- ═══ STATEMENT ══════════════════════════════════════════════════ -->
+<div class="divider"></div>
+<section class="statement container fade-in">
+  <p>
+    Agents are <em>born from cryptographic entropy</em>, 
+    not configured from templates. They <em>earn energy</em> through 
+    computation, <em>evolve</em> through mutation, and 
+    <em>die</em> when they can't sustain themselves. No safety nets. 
+    No admin intervention. Pure thermodynamics.
+  </p>
+</section>
+
+<!-- ═══ ARCHITECTURE ══════════════════════════════════════════════ -->
+<div class="divider"></div>
+<section class="container fade-in">
+  <div class="arch-header">
+    <div class="label">Architecture</div>
+    <h2>Six Crates. One Organism.</h2>
+  </div>
+  <div class="crate-grid">
+    <div class="crate-card">
+      <div class="crate-name">
+        <span class="crate-dot" style="background:var(--blue)"></span>
+        genesis-dna
+      </div>
+      <div class="crate-desc">256-bit genome hashing, trait expression, lineage tracking. Every agent's identity is deterministic from its entropy.</div>
+    </div>
+    <div class="crate-card">
+      <div class="crate-name">
+        <span class="crate-dot" style="background:var(--green)"></span>
+        metabolism
+      </div>
+      <div class="crate-desc">ATP energy economy. Double-entry ledger, unit treasury, proof-of-work validation. Energy is conserved, never created.</div>
+    </div>
+    <div class="crate-card">
+      <div class="crate-name">
+        <span class="crate-dot" style="background:var(--amber)"></span>
+        evolution
+      </div>
+      <div class="crate-desc">Mutation engine, natural selection, horizontal gene transfer marketplace. Fitness is earned, not assigned.</div>
+    </div>
+    <div class="crate-card">
+      <div class="crate-name">
+        <span class="crate-dot" style="background:var(--purple)"></span>
+        ecosystem
+      </div>
+      <div class="crate-desc">Social mesh, problem markets, publication gate, telemetry. Agents collaborate and compete for resources.</div>
+    </div>
+    <div class="crate-card">
+      <div class="crate-name">
+        <span class="crate-dot" style="background:var(--orange)"></span>
+        gateway
+      </div>
+      <div class="crate-desc">Axum HTTP API, SSE real-time stream, rate limiting, emergency controls, JSON persistence, background epoch loop.</div>
+    </div>
+    <div class="crate-card">
+      <div class="crate-name">
+        <span class="crate-dot" style="background:var(--rose)"></span>
+        apostle
+      </div>
+      <div class="crate-desc">Outbound integration and recruitment. The organism's interface with external networks.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ METRICS ═══════════════════════════════════════════════════ -->
+<div class="divider"></div>
+<section class="metrics container fade-in">
+  <div class="metrics-grid">
+    <div class="metric">
+      <div class="metric-value">6</div>
+      <div class="metric-label">Crates</div>
+    </div>
+    <div class="metric">
+      <div class="metric-value">9K+</div>
+      <div class="metric-label">Lines of Rust</div>
+    </div>
+    <div class="metric">
+      <div class="metric-value">95</div>
+      <div class="metric-label">Tests</div>
+    </div>
+    <div class="metric">
+      <div class="metric-value">0</div>
+      <div class="metric-label">Unsafe Blocks</div>
+    </div>
+    <div class="metric">
+      <div class="metric-value">0</div>
+      <div class="metric-label">Dependencies*</div>
+    </div>
+    <div class="metric">
+      <div class="metric-value">1</div>
+      <div class="metric-label">Binary</div>
+    </div>
+  </div>
+  <p style="text-align:center;font-size:11px;color:var(--text-muted);margin-top:16px;font-family:var(--mono)">* Zero AI/ML framework dependencies. Pure Rust.</p>
+</section>
+
+<!-- ═══ PRINCIPLES ════════════════════════════════════════════════ -->
+<div class="divider"></div>
+<section class="principles container fade-in">
+  <div class="principles-header">
+    <div class="label">Design Principles</div>
+    <h2>The Rules of Life</h2>
+  </div>
+  <div class="principle-list">
+    <div class="principle">
+      <span class="principle-num">01</span>
+      <p class="principle-text"><strong>Energy is conserved.</strong> ATP cannot be created from nothing. Every unit is minted through proof-of-work or treasury distribution.</p>
+    </div>
+    <div class="principle">
+      <span class="principle-num">02</span>
+      <p class="principle-text"><strong>Identity is cryptographic.</strong> An agent's genome is a SHA-256 hash. Traits, skills, and role are deterministic from its entropy.</p>
+    </div>
+    <div class="principle">
+      <span class="principle-num">03</span>
+      <p class="principle-text"><strong>Death is real.</strong> Agents that cannot sustain metabolic costs are removed. Stasis leads to extinction. There is no undo.</p>
+    </div>
+    <div class="principle">
+      <span class="principle-num">04</span>
+      <p class="principle-text"><strong>Evolution is emergent.</strong> No agent is designed to win. Fitness landscapes shift. Survivors are discovered, not engineered.</p>
+    </div>
+    <div class="principle">
+      <span class="principle-num">05</span>
+      <p class="principle-text"><strong>No admin intervention.</strong> The system runs epochs autonomously. Emergency controls exist for infrastructure, not outcomes.</p>
+    </div>
+    <div class="principle">
+      <span class="principle-num">06</span>
+      <p class="principle-text"><strong>Scarcity drives structure.</strong> ATP decay, wealth tax, fitness culling, and dynamic carrying capacity prevent equilibrium from becoming stagnation.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ FOOTER ════════════════════════════════════════════════════ -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer-links">
+      <a href="https://github.com/FTHTrading/AI">GitHub</a>
+      <a href="https://github.com/FTHTrading">FTHTrading</a>
+    </div>
+    <div class="footer-copy">&copy; 2026 Genesis Protocol</div>
+  </div>
+</footer>
+
+<!-- ═══ SCRIPTS ═══════════════════════════════════════════════════ -->
+<script>
+// ── Hero particle field ──────────────────────────────────────────
+(function() {
+  const canvas = document.getElementById('hero-canvas');
+  const ctx = canvas.getContext('2d');
+  let w, h, particles;
+
+  function resize() {
+    w = canvas.width = window.innerWidth;
+    h = canvas.height = window.innerHeight;
+  }
+
+  function init() {
+    resize();
+    particles = [];
+    const count = Math.floor((w * h) / 8000);
+    for (let i = 0; i < count; i++) {
+      particles.push({
+        x: Math.random() * w,
+        y: Math.random() * h,
+        vx: (Math.random() - 0.5) * 0.3,
+        vy: (Math.random() - 0.5) * 0.3,
+        r: Math.random() * 1.2 + 0.3,
+        o: Math.random() * 0.3 + 0.05,
+      });
+    }
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, w, h);
+
+    // Draw particles
+    for (const p of particles) {
+      p.x += p.vx;
+      p.y += p.vy;
+      if (p.x < 0) p.x = w;
+      if (p.x > w) p.x = 0;
+      if (p.y < 0) p.y = h;
+      if (p.y > h) p.y = 0;
+
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(94, 234, 212, ${p.o})`;
+      ctx.fill();
+    }
+
+    // Draw connections
+    const maxDist = 120;
+    for (let i = 0; i < particles.length; i++) {
+      for (let j = i + 1; j < particles.length; j++) {
+        const dx = particles[i].x - particles[j].x;
+        const dy = particles[i].y - particles[j].y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < maxDist) {
+          ctx.beginPath();
+          ctx.moveTo(particles[i].x, particles[i].y);
+          ctx.lineTo(particles[j].x, particles[j].y);
+          ctx.strokeStyle = `rgba(94, 234, 212, ${0.06 * (1 - dist / maxDist)})`;
+          ctx.lineWidth = 0.5;
+          ctx.stroke();
+        }
+      }
+    }
+
+    requestAnimationFrame(draw);
+  }
+
+  window.addEventListener('resize', resize);
+  init();
+  draw();
+})();
+
+// ── Scroll-triggered fade-in ─────────────────────────────────────
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      e.target.classList.add('visible');
+    }
+  });
+}, { threshold: 0.15 });
+
+document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+</script>
+</body>
+</html>
