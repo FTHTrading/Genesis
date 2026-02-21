@@ -126,7 +126,7 @@ impl MoltbotConfig {
 /// Request body for POST /posts.
 #[derive(Debug, Serialize)]
 struct CreatePostRequest {
-    submolt: String,
+    submolt_name: String,
     title: String,
     content: String,
 }
@@ -376,7 +376,7 @@ impl MoltbotClient {
     pub async fn create_post(&self, submolt: &str, title: &str, content: &str) -> bool {
         let url = format!("{}/posts", self.config.base_url);
         let payload = CreatePostRequest {
-            submolt: submolt.to_string(),
+            submolt_name: submolt.to_string(),
             title: title.to_string(),
             content: content.to_string(),
         };
