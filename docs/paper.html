@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Genesis Protocol — Academic Paper | Burns (2026)</title>
+<meta name="description" content="Deterministic Artificial Life with Ecological Dynamics and Cryptographic Provenance. A standalone academic research paper by Kevan Burns.">
+<meta name="author" content="Kevan Burns">
+
+<!-- Open Graph / Social -->
+<meta property="og:title" content="Genesis Protocol: Deterministic Artificial Life with Ecological Dynamics and Cryptographic Provenance">
+<meta property="og:description" content="A self-sustaining digital organism with Lotka–Volterra resource competition, per-crate Merkle provenance, and on-chain anchoring. Burns (2026).">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://fthtrading.github.io/AI/paper.html">
+
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Genesis Protocol — Burns (2026)">
+<meta name="twitter:description" content="Deterministic Artificial Life with Ecological Dynamics and Cryptographic Provenance.">
+
+<!-- Citation metadata -->
+<meta name="citation_title" content="Genesis Protocol: Deterministic Artificial Life with Ecological Dynamics and Cryptographic Provenance">
+<meta name="citation_author" content="Burns, Kevan">
+<meta name="citation_date" content="2026-02-21">
+<meta name="citation_doi" content="10.5281/zenodo.18646886">
+<meta name="citation_pdf_url" content="https://fthtrading.github.io/AI/genesis-protocol.pdf">
+
+<style>
+  :root {
+    --bg: #f5f5f0;
+    --card: #ffffff;
+    --text: #1a1a1a;
+    --muted: #666;
+    --accent: #2c5282;
+    --accent-hover: #1a365d;
+    --border: #ddd;
+    --serif: Georgia, "Times New Roman", serif;
+    --sans: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    --mono: Consolas, "Courier New", monospace;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ── Header bar ─────────────────────────────── */
+  .header {
+    background: var(--card);
+    border-bottom: 1px solid var(--border);
+    padding: 24px 32px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  }
+
+  .header-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+
+  .header-text h1 {
+    font-family: var(--serif);
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1.3;
+    margin-bottom: 6px;
+  }
+
+  .header-text .subtitle {
+    font-size: 14px;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+
+  .header-text .subtitle a {
+    color: var(--accent);
+    text-decoration: none;
+  }
+
+  .header-text .subtitle a:hover {
+    text-decoration: underline;
+  }
+
+  .header-actions {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-shrink: 0;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.1s;
+  }
+
+  .btn:active { transform: scale(0.97); }
+
+  .btn-primary {
+    background: var(--accent);
+    color: #fff;
+  }
+
+  .btn-primary:hover {
+    background: var(--accent-hover);
+  }
+
+  .btn-secondary {
+    background: transparent;
+    color: var(--accent);
+    border: 1.5px solid var(--accent);
+  }
+
+  .btn-secondary:hover {
+    background: rgba(44, 82, 130, 0.06);
+  }
+
+  .btn svg {
+    width: 16px;
+    height: 16px;
+    fill: currentColor;
+  }
+
+  /* ── Metadata strip ─────────────────────────── */
+  .meta-strip {
+    background: var(--card);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 32px;
+  }
+
+  .meta-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 20px;
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  .meta-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .meta-item a {
+    color: var(--accent);
+    text-decoration: none;
+  }
+
+  .meta-item a:hover {
+    text-decoration: underline;
+  }
+
+  .meta-label {
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  /* ── PDF Viewer ─────────────────────────────── */
+  .viewer-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    max-width: 1100px;
+    width: 100%;
+    margin: 24px auto;
+    padding: 0 32px;
+  }
+
+  .pdf-frame {
+    flex: 1;
+    min-height: 800px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    background: #525659;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  }
+
+  .pdf-frame iframe {
+    width: 100%;
+    height: 100%;
+    min-height: 800px;
+    border: none;
+  }
+
+  /* Fallback for mobile / no-embed */
+  .pdf-fallback {
+    display: none;
+    padding: 60px 32px;
+    text-align: center;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+  }
+
+  .pdf-fallback h2 {
+    font-family: var(--serif);
+    font-size: 20px;
+    margin-bottom: 12px;
+  }
+
+  .pdf-fallback p {
+    color: var(--muted);
+    margin-bottom: 24px;
+    line-height: 1.6;
+  }
+
+  /* ── Abstract card ──────────────────────────── */
+  .abstract-card {
+    max-width: 1100px;
+    width: 100%;
+    margin: 0 auto 24px;
+    padding: 0 32px;
+  }
+
+  .abstract-inner {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--accent);
+    border-radius: 0 8px 8px 0;
+    padding: 20px 24px;
+  }
+
+  .abstract-inner h2 {
+    font-family: var(--sans);
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--accent);
+    margin-bottom: 8px;
+  }
+
+  .abstract-inner p {
+    font-family: var(--serif);
+    font-size: 14px;
+    line-height: 1.65;
+    color: var(--text);
+  }
+
+  .keywords {
+    margin-top: 10px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .keywords strong {
+    color: var(--text);
+  }
+
+  /* ── Footer ─────────────────────────────────── */
+  .footer {
+    background: var(--card);
+    border-top: 1px solid var(--border);
+    padding: 16px 32px;
+    text-align: center;
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+
+  .footer a {
+    color: var(--accent);
+    text-decoration: none;
+  }
+
+  .footer a:hover {
+    text-decoration: underline;
+  }
+
+  /* ── Responsive ─────────────────────────────── */
+  @media (max-width: 768px) {
+    .header { padding: 16px; }
+    .header-inner { flex-direction: column; }
+    .header-text h1 { font-size: 18px; }
+    .meta-strip { padding: 10px 16px; }
+    .viewer-container { padding: 0 16px; margin: 16px auto; }
+    .abstract-card { padding: 0 16px; }
+    .pdf-frame { display: none; }
+    .pdf-fallback { display: block; }
+    .footer { padding: 12px 16px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══ Header ═══════════════════════════════════════════════ -->
+<header class="header">
+  <div class="header-inner">
+    <div class="header-text">
+      <h1>Genesis Protocol: Deterministic Artificial Life with<br>Ecological Dynamics and Cryptographic Provenance</h1>
+      <div class="subtitle">
+        Kevan Burns &middot; FTH Trading &middot; February 2026
+        &nbsp;|&nbsp;
+        <a href="index.html">Research Site</a>
+        &nbsp;|&nbsp;
+        <a href="https://github.com/FTHTrading/AI">GitHub</a>
+      </div>
+    </div>
+    <div class="header-actions">
+      <a class="btn btn-primary" href="genesis-protocol.pdf" download="genesis-protocol.pdf">
+        <svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+        Download PDF
+      </a>
+      <a class="btn btn-secondary" href="https://doi.org/10.5281/zenodo.18646886" target="_blank">
+        DOI
+      </a>
+    </div>
+  </div>
+</header>
+
+<!-- ═══ Metadata ═════════════════════════════════════════════ -->
+<div class="meta-strip">
+  <div class="meta-inner">
+    <span class="meta-item"><span class="meta-label">DOI:</span> <a href="https://doi.org/10.5281/zenodo.18646886">10.5281/zenodo.18646886</a></span>
+    <span class="meta-item"><span class="meta-label">ORCID:</span> <a href="https://orcid.org/0009-0008-8425-939X">0009-0008-8425-939X</a></span>
+    <span class="meta-item"><span class="meta-label">License:</span> CC-BY-4.0</span>
+    <span class="meta-item"><span class="meta-label">Format:</span> 388 KB &middot; US Letter</span>
+    <span class="meta-item"><span class="meta-label">Edition Root:</span> <code style="font-family:Consolas,monospace;font-size:11px;background:#f0f0f0;padding:2px 6px;border-radius:3px;">cd78b3be…0367d2cc3</code></span>
+  </div>
+</div>
+
+<!-- ═══ Abstract ═════════════════════════════════════════════ -->
+<div class="abstract-card">
+  <div class="abstract-inner">
+    <h2>Abstract</h2>
+    <p>
+      We present Genesis Protocol, a self-sustaining digital organism implemented as a six-crate Rust workspace.
+      Autonomous AI agents are born with SHA-256-derived genomes, compete for resources in per-niche pools
+      governed by logistic regeneration, face seasonal environmental oscillation and stochastic catastrophe events,
+      and are subject to density-dependent natural selection pressure. The ecological model draws on
+      Lotka&ndash;Volterra competitive dynamics with proportional resource extraction and cross-niche competition
+      coefficients. Source-code integrity is verified through per-crate Merkle trees whose edition root
+      is deterministically recomputable and can be anchored on Polygon mainnet via the same
+      LiteraryAnchor contract infrastructure used in the companion literary-provenance system.
+      The system formalises Software Organism Protocol v1 (SOP-1)&mdash;a reproducible pattern for constructing
+      verifiable artificial-life systems with cryptographic provenance.
+    </p>
+    <div class="keywords">
+      <strong>Keywords:</strong> artificial life, deterministic simulation, ecological modeling,
+      Lotka&ndash;Volterra competition, Merkle trees, cryptographic provenance, software organisms,
+      Rust, on-chain anchoring, reproducible research
+    </div>
+  </div>
+</div>
+
+<!-- ═══ PDF Viewer ═══════════════════════════════════════════ -->
+<div class="viewer-container">
+  <div class="pdf-frame">
+    <iframe src="genesis-protocol.pdf" title="Genesis Protocol — Academic Paper PDF"></iframe>
+  </div>
+  <div class="pdf-fallback">
+    <h2>PDF Preview</h2>
+    <p>Your browser or device does not support inline PDF viewing.<br>Use the button below to download and read the paper.</p>
+    <a class="btn btn-primary" href="genesis-protocol.pdf" download="genesis-protocol.pdf">
+      <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:#fff;"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+      Download PDF (388 KB)
+    </a>
+  </div>
+</div>
+
+<!-- ═══ Footer ═══════════════════════════════════════════════ -->
+<footer class="footer">
+  &copy; 2026 Kevan Burns. Licensed under <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>.
+  &nbsp;|&nbsp;
+  Companion: <a href="https://fthtrading.github.io/2500-donkeys/">Deterministic Literary Publishing</a>
+  &nbsp;|&nbsp;
+  <a href="https://github.com/FTHTrading/AI">Source Code</a>
+</footer>
+
+</body>
+</html>
