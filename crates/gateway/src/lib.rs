@@ -13,3 +13,4 @@ pub mod runtime;
 pub mod server;
 pub mod shield;
 pub mod moltbot;
+pub mod stress;

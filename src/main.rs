@@ -46,6 +46,27 @@ async fn main() {
     println!("  ATP supply: {:.2}", world.ledger.total_supply());
     println!();
 
+    // ── Adversarial stress profile (--stress-profile=<name>) ────────────────
+    // Applies a named stress configuration to the running world, amplifying
+    // economic pressures to probe equilibrium resilience vs. parameter tuning.
+    // Example: cargo run -- --stress-profile=brutal
+    let mut world = world;
+    let stress_profile_arg = std::env::args()
+        .find(|a| a.starts_with("--stress-profile="))
+        .and_then(|a| a.splitn(2, '=').nth(1).map(str::to_string));
+    if let Some(ref profile) = stress_profile_arg {
+        match gateway::stress::StressConfig::from_profile(profile) {
+            Some(config) => {
+                println!("  Stress profile: \"{}\" — adversarial mode ACTIVE", profile);
+                world.with_stress(config, profile.clone());
+            }
+            None => {
+                eprintln!("  WARNING: unknown stress profile \"{}\". Valid: baseline, mild, moderate, brutal, hoarding, mutation-runaway, catastrophe-cluster", profile);
+            }
+        }
+    }
+    println!();
+
     let shared: gateway::world::SharedWorld = std::sync::Arc::new(std::sync::Mutex::new(world));
 
     // Initialize Moltbot adapter (outbound-only bridge to Moltbook)

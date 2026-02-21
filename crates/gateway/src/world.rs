@@ -29,6 +29,8 @@ use evolution::gene_transfer::GeneMarketplace;
 
 use serde::{Serialize, Deserialize};
 
+use crate::stress::{StressConfig, StressMetrics, PhaseTransitionDetector, role_entropy};
+
 // ─── Ecological Constants ───────────────────────────────────────────────
 // These constants parameterize the ecological dynamics.  Some are
 // consumed directly in this module; others shadow crate-level defaults
@@ -364,6 +366,12 @@ pub struct World {
     pub total_deaths: u64,
     /// Current ecological season state.
     pub eco_state: EcoState,
+    /// Active stress configuration (None = baseline).
+    pub stress_config: Option<StressConfig>,
+    /// Accumulated stress metrics (populated only when stress is active).
+    pub stress_metrics: Option<StressMetrics>,
+    /// Phase transition detector.
+    pub phase_detector: PhaseTransitionDetector,
 }
 
 /// Epoch summary stats returned by run_epoch.
@@ -496,7 +504,23 @@ impl World {
             total_births: 0,
             total_deaths: 0,
             eco_state: EcoState::Autumn,
+            stress_config: None,
+            stress_metrics: None,
+            phase_detector: PhaseTransitionDetector::new(),
         }
+    }
+
+    /// Attach a stress profile to this world.
+    pub fn with_stress(&mut self, config: StressConfig, profile_name: impl Into<String>) {
+        self.stress_metrics = Some(StressMetrics::new(profile_name));
+        self.stress_config = Some(config);
+        tracing::warn!("Stress profile attached — evolutionary legitimacy remains intact");
+    }
+
+    /// Remove stress profile and return accumulated metrics if any.
+    pub fn clear_stress(&mut self) -> Option<crate::stress::StressRunResult> {
+        self.stress_config = None;
+        self.stress_metrics.take().map(|m| m.finalize())
     }
 
     /// Spawn primordial agents with diverse entropy.
@@ -644,6 +668,30 @@ impl World {
         // ═══════════════════════════════════════════════════════════════
         self.environment.tick(epoch);
 
+        // ── Stress: catastrophe cluster bias ──────────────────────────
+        // When catastrophe_cluster_bias > 0 we roll an extra catastrophe
+        // check on top of the natural 2% background rate.
+        if let Some(ref sc) = self.stress_config {
+            if sc.catastrophe_cluster_bias > 0.0
+                && self.environment.catastrophe_remaining == 0
+            {
+                let lcg = epoch
+                    .wrapping_mul(0x9E37_79B9_7F4A_7C15_u64)
+                    .wrapping_add(0xDEAD_BEEF_CAFE_1234_u64);
+                let roll = (lcg >> 33) as f64 / (1u64 << 31) as f64;
+                if roll < sc.catastrophe_cluster_bias {
+                    self.environment.catastrophe_remaining = 5 + (epoch % 8);
+                    self.environment.catastrophe_severity =
+                        (0.4 + sc.catastrophe_cluster_bias * 0.3).min(0.9);
+                    tracing::warn!(
+                        epoch,
+                        bias = format!("{:.3}", sc.catastrophe_cluster_bias),
+                        "Stress: catastrophe cluster triggered"
+                    );
+                }
+            }
+        }
+
         // ═══════════════════════════════════════════════════════════════
         // STEP 0a: Ecological state determination
         //
@@ -663,8 +711,15 @@ impl World {
         self.eco_state = current_eco;
 
         // Seasonal treasury release — BEFORE metabolism so agents have energy to survive
+        // ── Stress: treasury lock ─────────────────────────────────────
+        // treasury_lock_probability > 0 stochastically suppresses release.
+        let release_suppressed = self
+            .stress_config
+            .as_ref()
+            .map(|sc| sc.treasury_locked(epoch))
+            .unwrap_or(false);
         let release_fraction = current_eco.treasury_release_fraction(birth_death_ratio);
-        if release_fraction > 0.0 && self.treasury.reserve > 0.0 {
+        if !release_suppressed && release_fraction > 0.0 && self.treasury.reserve > 0.0 {
             let release_amount = self.treasury.reserve * release_fraction;
             let actually_released = self.treasury.crisis_spend(release_amount);
             let pop = self.agents.len();
@@ -754,6 +809,25 @@ impl World {
         // Lower than before (0.15 vs 0.5) so agents can sustain
         // ═══════════════════════════════════════════════════════════════
         self.ledger.metabolic_tick_all();
+
+        // ── Stress: extra basal burn ───────────────────────────────────
+        // basal_cost_multiplier > 1 means maintenance is more expensive.
+        // We apply the excess as an additional burn loop.
+        if let Some(ref sc) = self.stress_config {
+            let excess = (sc.basal_cost_multiplier - 1.0).max(0.0);
+            if excess > 0.0 {
+                use metabolism::atp::costs::BASAL_TICK;
+                let extra_burn = BASAL_TICK * excess;
+                let ids: Vec<uuid::Uuid> = self.agents.iter().map(|a| a.id).collect();
+                for id in ids {
+                    let _ = self.ledger.burn(
+                        &id, extra_burn,
+                        TransactionKind::BasalMetabolism,
+                        &format!("Epoch {} stress basal", epoch),
+                    );
+                }
+            }
+        }
 
         // ── Juvenile protection: agents < 5 epochs old get 25% basal rebate ──
         // Prevents newborns from dying before their first foraging cycle.
@@ -894,7 +968,24 @@ impl World {
 
                     if self.publication_gate.approve(confidence, 0.3, self.agents[idx].reputation.score) {
                         let gross_reward = problem.reward_atp;
-                        let skim = self.treasury.skim(gross_reward);
+                        let raw_skim = self.treasury.skim(gross_reward);
+                        // ── Stress: skim_rate_multiplier ─────────────
+                        // Extra skim above 1.0× draws additional ATP into
+                        // the treasury from each problem reward.
+                        let skim = {
+                            let mult = self.stress_config
+                                .as_ref()
+                                .map(|sc| sc.skim_rate_multiplier)
+                                .unwrap_or(1.0);
+                            if mult > 1.0 {
+                                let extra = gross_reward * (mult - 1.0) * 0.05;
+                                self.treasury.reserve += extra;
+                                self.treasury.total_collected += extra;
+                                raw_skim + extra
+                            } else {
+                                raw_skim
+                            }
+                        };
                         let reward = gross_reward - skim;
                         let _ = self.ledger.mint(
                             &agent_id, reward,
@@ -938,7 +1029,15 @@ impl World {
         // Eco-state further modulates: Spring reduces volatility (safer
         // offspring), Summer intensifies (diversity burst).
         // ═══════════════════════════════════════════════════════════════
-        let seasonal_pressure = environmental_pressure * current_eco.mutation_multiplier();
+        let seasonal_pressure = {
+            let base = environmental_pressure * current_eco.mutation_multiplier();
+            // ── Stress: mutation volatility ───────────────────────────
+            let m = self.stress_config
+                .as_ref()
+                .map(|sc| sc.mutation_volatility_multiplier)
+                .unwrap_or(1.0);
+            base * m
+        };
         for agent in self.agents.iter_mut() {
             let m = self.mutation_engine.apply_pressure(agent.id, &mut agent.traits, seasonal_pressure);
             mutations += m as u64;
@@ -973,7 +1072,13 @@ impl World {
             let replicator_ids: Vec<_> = outcome.replicators.clone();
             let mut births_this_epoch = 0usize;
             // Ecology-adjusted replication cost (Spring = 40% cheaper)
-            let effective_replication_cost = REPLICATION_COST * current_eco.fertility_multiplier();
+            // ── Stress: replication_cost_multiplier ───────────────────
+            let effective_replication_cost = REPLICATION_COST
+                * current_eco.fertility_multiplier()
+                * self.stress_config
+                    .as_ref()
+                    .map(|sc| sc.replication_cost_multiplier)
+                    .unwrap_or(1.0);
             for parent_id in replicator_ids {
                 if births_this_epoch >= MAX_BIRTHS_PER_EPOCH {
                     break;
@@ -1103,6 +1208,34 @@ impl World {
             self.epoch_history.pop_front();
         }
         self.epoch_history.push_back(stats.clone());
+
+        // ═══════════════════════════════════════════════════════════════
+        // STEP Ω: Stress metrics recording + phase transition detection
+        // ═══════════════════════════════════════════════════════════════
+        if self.stress_metrics.is_some() {
+            let entropy = role_entropy(&stats.role_counts);
+            let hoarding_ratio = if self.ledger.total_supply() > 0.0 {
+                stats.treasury_reserve / (stats.treasury_reserve + self.ledger.total_supply())
+            } else {
+                1.0
+            };
+            if let Some(ref mut sm) = self.stress_metrics {
+                sm.record(
+                    epoch,
+                    stats.population,
+                    stats.mean_fitness,
+                    hoarding_ratio,
+                    stats.birth_death_ratio,
+                    entropy,
+                    stats.total_atp,
+                    stats.catastrophe_active,
+                    stats.eco_state.name(),
+                );
+            }
+            if let Some(msg) = self.phase_detector.push(stats.population, epoch) {
+                tracing::warn!(epoch, "{}", msg);
+            }
+        }
 
         stats
     }

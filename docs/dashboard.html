@@ -3,930 +3,741 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Genesix — Sovereign Organism Layer 1</title>
-<style>
-/* ── Reset ─────────────────────────────────────────────────── */
-*{margin:0;padding:0;box-sizing:border-box}
-html,body{width:100%;height:100%;overflow:hidden;background:#000}
-body{font-family:-apple-system,'Segoe UI',sans-serif;color:#c8d6e5}
-canvas{display:block}
-
-/* ── Loading ────────────────────────────────────────────────── */
-#loading{
-  position:fixed;inset:0;background:#000;z-index:200;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;
-}
-#loading-text{font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:rgba(34,211,238,.4)}
-#loading-bar{width:160px;height:1px;background:rgba(34,211,238,.1)}
-#loading-bar-fill{height:100%;background:#22d3ee;width:0%;transition:width .3s}
-
-/* ── HUD — top ──────────────────────────────────────────────── */
-#hud-top{
-  position:fixed;top:0;left:0;right:0;
-  display:flex;justify-content:space-between;align-items:flex-start;
-  padding:22px 28px;pointer-events:none;z-index:10;
-}
-#hud-ident .label{
-  font-size:10px;letter-spacing:.18em;text-transform:uppercase;
-  color:rgba(200,214,229,.3);margin-bottom:4px;
-}
-#hud-ident .name{
-  font-size:20px;font-weight:300;letter-spacing:.06em;color:rgba(34,211,238,.9);
-}
-#hud-ident .sub{
-  font-size:10px;letter-spacing:.1em;color:rgba(200,214,229,.25);margin-top:2px;
-}
-#hud-epoch{text-align:right}
-#hud-epoch .ep-label{font-size:9px;letter-spacing:.15em;text-transform:uppercase;color:rgba(200,214,229,.25)}
-#hud-epoch .ep-num{
-  font-size:36px;font-weight:200;letter-spacing:-.02em;
-  font-variant-numeric:tabular-nums;color:rgba(34,211,238,.6);line-height:1;
-}
-#hud-epoch .ep-runtime{font-size:10px;color:rgba(200,214,229,.2);margin-top:2px}
-
-/* ── HUD — vitals (bottom left) ─────────────────────────────── */
-#hud-vitals{
-  position:fixed;bottom:28px;left:28px;pointer-events:none;z-index:10;
-}
-.vital{margin-bottom:12px}
-.vital-label{
-  font-size:9px;text-transform:uppercase;letter-spacing:.12em;
-  color:rgba(200,214,229,.25);margin-bottom:3px;
-}
-.vital-value{
-  font-size:17px;font-weight:300;font-variant-numeric:tabular-nums;
-  color:rgba(200,214,229,.65);transition:color .8s;
-}
-.vital-value.green{color:rgba(52,211,153,.85)}
-.vital-value.yellow{color:rgba(251,191,36,.8)}
-.vital-value.red{color:rgba(248,113,113,.85)}
-
-/* ── HUD — treasury status (bottom right) ───────────────────── */
-#hud-treasury{
-  position:fixed;bottom:28px;right:28px;pointer-events:none;z-index:10;text-align:right;
-}
-.tr-label{font-size:9px;text-transform:uppercase;letter-spacing:.12em;color:rgba(200,214,229,.25);margin-bottom:3px}
-.tr-value{font-size:22px;font-weight:300;font-variant-numeric:tabular-nums;color:rgba(251,191,36,.4)}
-.tr-status{
-  display:inline-block;font-size:10px;letter-spacing:.12em;text-transform:uppercase;
-  padding:3px 10px;border-radius:2px;margin-top:6px;
-}
-.tr-status.hoarding{
-  color:rgba(248,113,113,.9);
-  border:1px solid rgba(248,113,113,.3);
-  background:rgba(248,113,113,.05);
-  animation:hoarding-pulse 3s ease-in-out infinite;
-}
-.tr-status.stable{color:rgba(251,191,36,.7);border:1px solid rgba(251,191,36,.2)}
-.tr-status.flowing{color:rgba(52,211,153,.7);border:1px solid rgba(52,211,153,.2)}
-@keyframes hoarding-pulse{0%,100%{opacity:.7}50%{opacity:1}}
-
-/* ── Legend (right center) ───────────────────────────────────── */
-#legend{
-  position:fixed;top:50%;right:28px;transform:translateY(-50%);
-  pointer-events:none;z-index:10;
-}
-.legend-item{display:flex;align-items:center;gap:8px;margin-bottom:7px}
-.legend-pip{width:7px;height:7px;border-radius:50%}
-.legend-text{font-size:10px;letter-spacing:.06em;color:rgba(200,214,229,.25)}
-
-/* ── Agent tooltip ───────────────────────────────────────────── */
-#tooltip{
-  position:fixed;pointer-events:none;z-index:50;
-  background:rgba(8,14,28,.95);border:1px solid rgba(34,211,238,.15);
-  border-radius:4px;padding:14px 18px;display:none;
-  backdrop-filter:blur(12px);max-width:260px;
-  box-shadow:0 0 40px rgba(0,0,0,.6);
-}
-.tt-header{font-size:14px;font-weight:500;margin-bottom:8px;letter-spacing:.02em}
-.tt-row{
-  display:flex;justify-content:space-between;gap:20px;
-  padding:3px 0;border-bottom:1px solid rgba(34,211,238,.06);font-size:12px;
-}
-.tt-row:last-child{border:none}
-.tt-dim{color:rgba(200,214,229,.35)}
-.tt-val{font-weight:500;font-variant-numeric:tabular-nums;color:rgba(200,214,229,.8)}
-
-/* ── Isolation label ─────────────────────────────────────────── */
-#isolation-label{
-  position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
-  pointer-events:none;z-index:30;text-align:center;display:none;
-}
-#isolation-label .il-role{font-size:18px;font-weight:300;letter-spacing:.08em}
-#isolation-label .il-sub{font-size:11px;color:rgba(200,214,229,.3);margin-top:4px;letter-spacing:.1em}
-
-/* ── Layer badge ─────────────────────────────────────────────── */
-#layer-badge{
-  position:fixed;top:20px;left:50%;transform:translateX(-50%);
-  pointer-events:none;z-index:10;
-  font-size:9px;letter-spacing:.2em;text-transform:uppercase;
-  color:rgba(34,211,238,.2);
-}
-
-/* ── Eco state badge ─────────────────────────────────────────── */
-#eco-badge{
-  position:fixed;top:36px;left:50%;transform:translateX(-50%);
-  pointer-events:none;z-index:10;text-align:center;
-  animation:eco-fade-in .8s ease;
-}
-@keyframes eco-fade-in{from{opacity:0;transform:translateX(-50%) translateY(-4px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
-#eco-badge .eco-label{
-  display:inline-block;
-  font-size:9px;letter-spacing:.18em;text-transform:uppercase;
-  padding:2px 10px;border-radius:2px;
-  transition:all 1s ease;
-}
-#eco-badge .eco-desc{
-  font-size:9px;letter-spacing:.06em;color:rgba(200,214,229,.2);
-  display:block;margin-top:3px;text-align:center;
-}
-.eco-spring{ color:rgba(52,211,153,.9); border:1px solid rgba(52,211,153,.2); background:rgba(52,211,153,.04); }
-.eco-summer{ color:rgba(251,191,36,.9); border:1px solid rgba(251,191,36,.2); background:rgba(251,191,36,.04); }
-.eco-autumn{ color:rgba(200,214,229,.5); border:1px solid rgba(200,214,229,.1); background:rgba(200,214,229,.02); }
-.eco-winter{ color:rgba(96,165,250,.9); border:1px solid rgba(96,165,250,.2); background:rgba(96,165,250,.04); }
-
-/* ── Seasonal aurora overlay ─────────────────────────────────── */
-#aurora{
-  position:fixed;bottom:0;left:0;right:0;height:30vh;
-  pointer-events:none;z-index:2;
-  opacity:0;transition:opacity 2s ease;
-  background:transparent;
-}
-#aurora.spring{
-  background:radial-gradient(ellipse 80% 100% at 50% 100%, rgba(52,211,153,.07) 0%, transparent 70%);
-  opacity:1;
-  animation:aurora-breathe 8s ease-in-out infinite;
-}
-#aurora.winter{
-  background:radial-gradient(ellipse 80% 100% at 50% 100%, rgba(96,165,250,.06) 0%, transparent 70%);
-  opacity:1;
-  animation:aurora-breathe 6s ease-in-out infinite;
-}
-@keyframes aurora-breathe{0%,100%{opacity:.6}50%{opacity:1}}
-
-/* ── Back link ───────────────────────────────────────────────── */
-#back-link{
-  position:fixed;top:0;left:0;right:0;bottom:0;pointer-events:none;z-index:5;
-}
-#back-link a{
-  position:fixed;bottom:28px;left:50%;transform:translateX(-50%);
-  pointer-events:all;
-  font-size:9px;letter-spacing:.16em;text-transform:uppercase;
-  color:rgba(200,214,229,.15);text-decoration:none;
-  transition:color .3s;
-}
-#back-link a:hover{color:rgba(34,211,238,.5)}
-</style>
-</head>
-<body>
-
-<!-- Loading gate -->
-<div id="loading">
-  <div id="loading-text">Initializing Organism</div>
-  <div id="loading-bar"><div id="loading-bar-fill"></div></div>
-</div>
-
-<!-- Top HUD -->
-<div id="hud-top">
-  <div id="hud-ident">
-    <div class="label">Sovereign Digital Organism</div>
-    <div class="name">GENESIX</div>
-    <div class="sub">Genesis Protocol · Layer 1 Surface</div>
-  </div>
-  <div id="hud-epoch">
-    <div class="ep-label">Epoch</div>
-    <div class="ep-num" id="epoch-num">—</div>
-    <div class="ep-runtime" id="epoch-runtime"></div>
-  </div>
-</div>
-
-<div id="layer-badge">L1 · Living Surface</div>
-<div id="eco-badge">
-  <span class="eco-label" id="eco-label">Autumn</span>
-  <span class="eco-desc" id="eco-desc">Stable competition</span>
-</div>
-<div id="aurora"></div>
-
-<!-- Vitals -->
-<div id="hud-vitals">
-  <div class="vital"><div class="vital-label">Population</div><div class="vital-value" id="v-pop">—</div></div>
-  <div class="vital"><div class="vital-label">Mean Fitness</div><div class="vital-value" id="v-fit">—</div></div>
-  <div class="vital"><div class="vital-label">Circulation ATP</div><div class="vital-value" id="v-atp">—</div></div>
-  <div class="vital"><div class="vital-label">Treasury ATP</div><div class="vital-value" id="v-tr">—</div></div>
-  <div class="vital"><div class="vital-label">Births / Deaths</div><div class="vital-value" id="v-bd">—</div></div>
-  <div class="vital"><div class="vital-label">Birth · Death Ratio</div><div class="vital-value" id="v-ratio">—</div></div>
-</div>
-
-<!-- Treasury status -->
-<div id="hud-treasury">
-  <div class="tr-label">Treasury</div>
-  <div class="tr-value" id="tr-val">—</div>
-  <div><span class="tr-status" id="tr-status">?</span></div>
-</div>
-
-<!-- Legend -->
-<div id="legend">
-  <div class="legend-item"><div class="legend-pip" style="background:#60a5fa"></div><div class="legend-text">Optimizer</div></div>
-  <div class="legend-item"><div class="legend-pip" style="background:#a78bfa"></div><div class="legend-text">Strategist</div></div>
-  <div class="legend-item"><div class="legend-pip" style="background:#fbbf24"></div><div class="legend-text">Communicator</div></div>
-  <div class="legend-item"><div class="legend-pip" style="background:#34d399"></div><div class="legend-text">Archivist</div></div>
-  <div class="legend-item"><div class="legend-pip" style="background:#f472b6"></div><div class="legend-text">Executor</div></div>
-</div>
-
-<!-- Tooltip -->
-<div id="tooltip"></div>
-
-<!-- Isolation label -->
-<div id="isolation-label">
-  <div class="il-role" id="il-role-text"></div>
-  <div class="il-sub">Isolated · releasing in <span id="il-count">3</span>s</div>
-</div>
-
-<!-- Back -->
-<div id="back-link"><a href="index.html">← Genesis Protocol</a></div>
-
+<title>Genesis Protocol — Biome Observatory</title>
 <script type="importmap">
 {
   "imports": {
-    "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.min.js",
+    "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
     "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
   }
 }
 </script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #060a10;
+    color: #8ab4c8;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 11px;
+    overflow: hidden;
+    user-select: none;
+  }
+  #canvas-host { position: fixed; inset: 0; }
+
+  /* ── HUD ── */
+  #hud {
+    position: fixed;
+    top: 18px;
+    left: 18px;
+    width: 244px;
+    pointer-events: none;
+    z-index: 10;
+  }
+  .hud-title {
+    font-size: 10px;
+    letter-spacing: 0.20em;
+    color: #2a4560;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+    border-bottom: 1px solid #111e2c;
+    padding-bottom: 5px;
+  }
+  .hud-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 5px;
+    letter-spacing: 0.04em;
+  }
+  .hud-label { color: #2e4a60; }
+  .hud-val   { color: #8ab4c8; }
+  .hud-val.warn    { color: #d4a84b; }
+  .hud-val.danger  { color: #c0392b; }
+  .hud-val.healthy { color: #4caf6e; }
+  .hud-sep {
+    border: none;
+    border-top: 1px solid #0f1f2e;
+    margin: 8px 0;
+  }
+  #stress-badge {
+    margin-top: 10px;
+    padding: 4px 8px;
+    border: 1px solid rgba(192,57,43,0.35);
+    color: #c0392b;
+    font-size: 9px;
+    letter-spacing: 0.14em;
+    display: none;
+  }
+  #season-badge {
+    margin-top: 10px;
+    padding: 4px 8px;
+    font-size: 9px;
+    letter-spacing: 0.12em;
+    border: 1px solid #132030;
+    color: #3a6080;
+  }
+  #hud-bottom {
+    position: fixed;
+    bottom: 18px;
+    left: 18px;
+    pointer-events: none;
+    z-index: 10;
+    color: #1e3040;
+    font-size: 9px;
+    letter-spacing: 0.08em;
+    line-height: 2.1;
+  }
+
+  /* ── Tooltip ── */
+  #tooltip {
+    position: fixed;
+    pointer-events: none;
+    z-index: 20;
+    background: rgba(5,8,14,0.94);
+    border: 1px solid #1a3050;
+    padding: 8px 12px;
+    font-size: 10px;
+    line-height: 1.75;
+    color: #8ab4c8;
+    display: none;
+    max-width: 200px;
+  }
+
+  /* ── Phase transition banner ── */
+  #phase-banner {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    z-index: 30;
+    color: #c0392b;
+    font-size: 11px;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    opacity: 0;
+    transition: opacity 0.5s;
+    text-align: center;
+    line-height: 2;
+  }
+</style>
+</head>
+<body>
+<div id="canvas-host"></div>
+
+<div id="hud">
+  <div class="hud-title">Genesis Protocol · Biome Observatory</div>
+  <div class="hud-row"><span class="hud-label">EPOCH</span><span class="hud-val" id="h-epoch">—</span></div>
+  <div class="hud-row"><span class="hud-label">POPULATION</span><span class="hud-val" id="h-pop">—</span></div>
+  <div class="hud-row"><span class="hud-label">CIRCULATING</span><span class="hud-val" id="h-circ">—</span></div>
+  <div class="hud-row"><span class="hud-label">TREASURY</span><span class="hud-val" id="h-treas">—</span></div>
+  <hr class="hud-sep">
+  <div class="hud-row"><span class="hud-label">B:D RATIO</span><span class="hud-val" id="h-bd">—</span></div>
+  <div class="hud-row"><span class="hud-label">DOMINANCE</span><span class="hud-val" id="h-dom">—</span></div>
+  <div class="hud-row"><span class="hud-label">AVG FITNESS</span><span class="hud-val" id="h-fit">—</span></div>
+  <hr class="hud-sep">
+  <div id="season-badge">SEASON: —</div>
+  <div id="stress-badge">⬡ ADVERSARIAL OVERLAY</div>
+</div>
+
+<div id="hud-bottom">
+  [A] adversarial overlay &nbsp;·&nbsp; [click] isolate agent &nbsp;·&nbsp; [drag] orbit
+</div>
+
+<div id="tooltip"></div>
+<div id="phase-banner">PHASE TRANSITION<br>DETECTED</div>
 
 <script type="module">
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
-// ═══════════════════════════════════════════════════════════════
-// LAYER 1: LIVING SURFACE — Agent Cosmology
-// ═══════════════════════════════════════════════════════════════
-// LAYER 2: Genetic Plane Overlay (DNA helix, mutation waveforms)
-// LAYER 3: ATP Vector Field (flowing plasma currents)
-// LAYER 4: Multi-Organism Interaction Network
-// LAYER 5: Cosmological Sovereign Map
-// ═══════════════════════════════════════════════════════════════
-
-// ── Loading progress ──────────────────────────────────────────
-function setProgress(pct) {
-  document.getElementById('loading-bar-fill').style.width = pct + '%';
-}
-
-setProgress(10);
-
-// ── Data ──────────────────────────────────────────────────────
-const res = await fetch('system-state.json');
-const S = await res.json();
-const HISTORY = S.history.sort((a, b) => a.ep - b.ep);
-const AGENTS = S.agents;
-const LAST = HISTORY[HISTORY.length - 1];
-
-// Derived economy constants
-const CIRC_ATP = LAST.atp;
-const TOTAL_SYSTEM_ATP = CIRC_ATP + S.tr_reserve;
-const TREASURY_RATIO = S.tr_reserve / Math.max(TOTAL_SYSTEM_ATP, 1);
-const BIRTH_DEATH_RATIO = S.total_births / Math.max(S.total_deaths, 1);
-const MAX_CONTRACTS = Math.max(...AGENTS.map(a => a.contracts));
-
-// ── Ecological state (mirrors Rust determine_ecostate()) ─────────────────
-// Priority: Spring > Winter > Summer > Autumn
-const ECO_STATE = (() => {
-  if (BIRTH_DEATH_RATIO < 1.0) return 'Spring';
-  if (TREASURY_RATIO > 0.70)   return 'Winter';
-  if (BIRTH_DEATH_RATIO > 1.10) return 'Summer';
-  return 'Autumn';
-})();
-const ECO_META = {
-  Spring: { cls: 'eco-spring', desc: 'Recovery · Fertility boost', aurora: 'spring' },
-  Summer: { cls: 'eco-summer', desc: 'Innovation surge · High mutation', aurora: '' },
-  Autumn: { cls: 'eco-autumn', desc: 'Stable selection · Equilibrium', aurora: '' },
-  Winter: { cls: 'eco-winter', desc: 'Hoarding correction · Redistribution active', aurora: 'winter' },
-}[ECO_STATE];
-
-// Update eco badge immediately
-document.getElementById('eco-label').textContent = ECO_STATE;
-document.getElementById('eco-label').className = 'eco-label ' + ECO_META.cls;
-document.getElementById('eco-desc').textContent = ECO_META.desc;
-if (ECO_META.aurora) document.getElementById('aurora').className = ECO_META.aurora;
-
-setProgress(25);
-
-// ── Role palette ──────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════
+//  CONSTANTS
+// ═══════════════════════════════════════════════════════
 const ROLE_COLOR = {
-  Optimizer:    new THREE.Color(0x60a5fa),
-  Strategist:   new THREE.Color(0xa78bfa),
-  Communicator: new THREE.Color(0xfbbf24),
-  Archivist:    new THREE.Color(0x34d399),
-  Executor:     new THREE.Color(0xf472b6),
+  Optimizer:    0x4fc3f7,
+  Strategist:   0x81c784,
+  Communicator: 0xffd54f,
+  Archivist:    0xce93d8,
+  Executor:     0xef9a9a,
 };
-const ROLE_HEX = {
-  Optimizer: '#60a5fa', Strategist: '#a78bfa',
-  Communicator: '#fbbf24', Archivist: '#34d399', Executor: '#f472b6',
+const SEASON_PALETTE = {
+  Spring: { bg: 0x080e0b, fog: '#111c16', orbitSpeed: 0.50 },
+  Summer: { bg: 0x080810, fog: '#0d0e1e', orbitSpeed: 0.65 },
+  Autumn: { bg: 0x0d0906, fog: '#1c1006', orbitSpeed: 0.45 },
+  Winter: { bg: 0x050810, fog: '#070f1a', orbitSpeed: 0.35 },
 };
+const DATA_URL = 'system-state.json';
+const SPHERE_R  = 5.8;
+const TRAIL_LEN = 10;
+const HAZE_N    = 2000;
+const CURRENT_N = 200;
 
-// ── Scene ─────────────────────────────────────────────────────
-const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x000003);
-scene.fog = new THREE.FogExp2(0x000003, 0.018);
-
-const camera = new THREE.PerspectiveCamera(52, innerWidth / innerHeight, 0.1, 300);
-camera.position.set(0, 4, 14);
-
-const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+// ═══════════════════════════════════════════════════════
+//  RENDERER
+// ═══════════════════════════════════════════════════════
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.setSize(innerWidth, innerHeight);
-renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.0;
-document.body.appendChild(renderer.domElement);
+renderer.toneMappingExposure = 0.85;
+document.getElementById('canvas-host').appendChild(renderer.domElement);
+
+const scene  = new THREE.Scene();
+scene.background = new THREE.Color(0x060a10);
+scene.fog        = new THREE.FogExp2('#0a1018', 0.040);
+
+const camera = new THREE.PerspectiveCamera(50, innerWidth / innerHeight, 0.1, 200);
+camera.position.set(0, 2.5, 16);
 
 const controls = new OrbitControls(camera, renderer.domElement);
-controls.enableDamping = true;
-controls.dampingFactor = 0.04;
-controls.minDistance = 5;
-controls.maxDistance = 35;
-controls.autoRotate = true;
-controls.autoRotateSpeed = 0.25;
-controls.target.set(0, 0, 0);
+controls.enableDamping    = true;
+controls.dampingFactor    = 0.06;
+controls.maxDistance      = 28;
+controls.minDistance      = 6;
+controls.autoRotate       = true;
+controls.autoRotateSpeed  = 0.5;
 
-setProgress(40);
+// ═══════════════════════════════════════════════════════
+//  LIGHTS
+// ═══════════════════════════════════════════════════════
+scene.add(new THREE.AmbientLight(0x0c1e34, 2.0));
 
-// ── Lighting ──────────────────────────────────────────────────
-// Cold cosmic ambient
-scene.add(new THREE.AmbientLight(0x0a1628, 0.8));
-
-// Warm core light
-const coreLight = new THREE.PointLight(0xfbbf24, 0.6, 18);
+const coreLight = new THREE.PointLight(0x2080c0, 2.5, 18, 1.8);
 scene.add(coreLight);
 
-// Directional cold light from above
-const dirLight = new THREE.DirectionalLight(0x60a5fa, 0.15);
-dirLight.position.set(10, 20, 10);
-scene.add(dirLight);
+const rimLight = new THREE.DirectionalLight(0x1a3a5a, 0.5);
+rimLight.position.set(-7, 5, -5);
+scene.add(rimLight);
 
-// ── Starfield ─────────────────────────────────────────────────
-{
-  const count = 3000;
-  const pos = new Float32Array(count * 3);
-  for (let i = 0; i < count * 3; i++) pos[i] = (Math.random() - 0.5) * 150;
-  const geo = new THREE.BufferGeometry();
-  geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-  scene.add(new THREE.Points(geo, new THREE.PointsMaterial({
-    color: 0xffffff, size: 0.06, transparent: true, opacity: 0.25,
-    blending: THREE.AdditiveBlending, depthWrite: false,
-  })));
+// ═══════════════════════════════════════════════════════
+//  CONTAINMENT SPHERE — Fresnel glass shell
+//  Custom GLSL: rim glow proportional to grazing angle
+// ═══════════════════════════════════════════════════════
+const fresnelVert = /* glsl */`
+  varying vec3 vNormal;
+  varying vec3 vViewPos;
+  void main() {
+    vNormal  = normalize(normalMatrix * normal);
+    vec4 mv  = modelViewMatrix * vec4(position, 1.0);
+    vViewPos = -mv.xyz;
+    gl_Position = projectionMatrix * mv;
+  }
+`;
+const fresnelFrag = /* glsl */`
+  uniform vec3  rimColor;
+  uniform float rimStrength;
+  uniform float uTime;
+  varying vec3 vNormal;
+  varying vec3 vViewPos;
+  void main() {
+    vec3  view = normalize(vViewPos);
+    float rim  = 1.0 - abs(dot(view, vNormal));
+    rim = pow(rim, 2.6);
+    float pulse = 1.0 + 0.05 * sin(uTime * 0.75);
+    gl_FragColor = vec4(rimColor, rim * rimStrength * pulse);
+  }
+`;
+
+function makeFresnel(radius, side, color, strength) {
+  return new THREE.ShaderMaterial({
+    uniforms: {
+      rimColor:    { value: new THREE.Color(color) },
+      rimStrength: { value: strength },
+      uTime:       { value: 0.0 },
+    },
+    vertexShader:   fresnelVert,
+    fragmentShader: fresnelFrag,
+    side,
+    transparent:  true,
+    depthWrite:   false,
+    blending:     THREE.AdditiveBlending,
+  });
 }
 
-// ── Core — the organism itself ────────────────────────────────
-// Fitness 0→1 maps core hue: cold blue (0.5 fit) → warm cyan (0.8 fit)
-const fitnessNorm = Math.min(LAST.mf * 1.5, 1.0); // 0.5012 → ~0.75
-const coreHue = 0.55 + fitnessNorm * 0.05; // 0.55–0.60 (cyan band)
-const coreColor = new THREE.Color().setHSL(coreHue, 0.7, 0.4);
+const shellMatInner = makeFresnel(SPHERE_R,        THREE.BackSide,  0x1a5080, 0.55);
+const shellMatOuter = makeFresnel(SPHERE_R * 1.04, THREE.FrontSide, 0x0a2840, 0.18);
 
-const coreGeo = new THREE.IcosahedronGeometry(1.0, 4);
+scene.add(new THREE.Mesh(new THREE.SphereGeometry(SPHERE_R,        64, 64), shellMatInner));
+scene.add(new THREE.Mesh(new THREE.SphereGeometry(SPHERE_R * 1.04, 48, 48), shellMatOuter));
+
+// ═══════════════════════════════════════════════════════
+//  LIQUID CORE — breathing nucleus with vertex animation
+// ═══════════════════════════════════════════════════════
+const coreGeo    = new THREE.SphereGeometry(1.0, 48, 48);
+const coreOrigPx = Float32Array.from(coreGeo.attributes.position.array);
+
 const coreMat = new THREE.MeshPhysicalMaterial({
-  color: new THREE.Color(0x041529),
-  emissive: coreColor,
-  emissiveIntensity: 0.35,
-  transparent: true, opacity: 0.55,
-  roughness: 0.5, metalness: 0.7, wireframe: false,
+  color:              new THREE.Color(0x0d4870),
+  emissive:           new THREE.Color(0x0a3060),
+  emissiveIntensity:  1.2,
+  transmission:       0.35,
+  roughness:          0.10,
+  metalness:          0.0,
+  ior:                1.45,
+  transparent:        true,
+  opacity:            0.90,
 });
 const coreMesh = new THREE.Mesh(coreGeo, coreMat);
 scene.add(coreMesh);
 
-// Wireframe shell
-const coreSkinMat = new THREE.MeshBasicMaterial({
-  color: coreColor, transparent: true, opacity: 0.12, wireframe: true,
+// Inner back-face glow
+const innerGlowMat = new THREE.MeshBasicMaterial({
+  color: 0x1a6090, transparent: true, opacity: 0.16, side: THREE.BackSide,
 });
-const coreSkin = new THREE.Mesh(new THREE.IcosahedronGeometry(1.05, 2), coreSkinMat);
-scene.add(coreSkin);
+scene.add(new THREE.Mesh(new THREE.SphereGeometry(1.2, 24, 24), innerGlowMat));
 
-// Core halo
-const haloMat = new THREE.SpriteMaterial({
-  map: buildGlowTexture(new THREE.Color(0x22d3ee)),
-  transparent: true, opacity: 0.08, depthWrite: false, blending: THREE.AdditiveBlending,
+// ═══════════════════════════════════════════════════════
+//  TREASURY SEDIMENT — gravity well at base
+// ═══════════════════════════════════════════════════════
+const sedGeo = new THREE.CylinderGeometry(2.1, 1.7, 0.30, 48);
+const sedMat = new THREE.MeshPhysicalMaterial({
+  color:             new THREE.Color(0x1a1000),
+  emissive:          new THREE.Color(0x0d0800),
+  emissiveIntensity: 0.45,
+  roughness:         0.60,
+  metalness:         0.28,
+  transparent:       true,
+  opacity:           0.84,
 });
-const coreHalo = new THREE.Sprite(haloMat);
-coreHalo.scale.setScalar(5);
-scene.add(coreHalo);
+const sediment = new THREE.Mesh(sedGeo, sedMat);
+sediment.position.y = -3.5;
+scene.add(sediment);
 
-function buildGlowTexture(color) {
-  const canvas = document.createElement('canvas');
-  canvas.width = canvas.height = 128;
-  const ctx = canvas.getContext('2d');
-  const grad = ctx.createRadialGradient(64, 64, 2, 64, 64, 64);
-  grad.addColorStop(0, `rgba(${Math.round(color.r*255)},${Math.round(color.g*255)},${Math.round(color.b*255)},1)`);
-  grad.addColorStop(1, 'rgba(0,0,0,0)');
-  ctx.fillStyle = grad;
-  ctx.fillRect(0, 0, 128, 128);
-  const tex = new THREE.CanvasTexture(canvas);
-  return tex;
+// Rim glow
+const sedGlowMat = new THREE.MeshBasicMaterial({
+  color: 0x3a1a00, transparent: true, opacity: 0.20, side: THREE.BackSide,
+});
+const sedGlow = new THREE.Mesh(
+  new THREE.CylinderGeometry(2.25, 1.85, 0.34, 32),
+  sedGlowMat
+);
+sedGlow.position.y = -3.5;
+scene.add(sedGlow);
+
+// ═══════════════════════════════════════════════════════
+//  TREASURY CURRENT PARTICLES — golden upward surge
+// ═══════════════════════════════════════════════════════
+const cpBuf = new Float32Array(CURRENT_N * 3);
+const cpVel = Array.from({ length: CURRENT_N }, () => ({
+  x: (Math.random() - 0.5) * 0.012,
+  y: Math.random() * 0.04 + 0.02,
+  z: (Math.random() - 0.5) * 0.012,
+  life: Math.random(),
+}));
+for (let i = 0; i < CURRENT_N; i++) {
+  const a = Math.random() * Math.PI * 2, r = Math.random() * 1.6;
+  cpBuf[i*3]   = Math.cos(a) * r;
+  cpBuf[i*3+1] = -3.5 + Math.random() * 0.4;
+  cpBuf[i*3+2] = Math.sin(a) * r;
 }
-
-setProgress(55);
-
-// ── Treasury Gravity Well ─────────────────────────────────────
-// CRITICAL VISUAL: Treasury holds 98.6% of all system ATP.
-// This must be physically dominant — large, cold, distorted.
-const TREASURY_DOMINANCE = TREASURY_RATIO; // 0.986
-
-// Main well torus — scale based on hoarding severity
-const wellRadius = 2.2 + TREASURY_DOMINANCE * 2.8; // 2.2–5.0
-const wellTubeRadius = 0.06 + TREASURY_DOMINANCE * 0.18;
-const wellGeo = new THREE.TorusGeometry(wellRadius, wellTubeRadius, 12, 128);
-
-// Color: if hoarding >70% → cold blue-amber corruption; else amber warmth
-const isHoarding = TREASURY_RATIO > 0.70;
-const wellColor = isHoarding
-  ? new THREE.Color(0x4a6fa5) // cold blue corruption
-  : new THREE.Color(0xfbbf24); // healthy amber
-
-const wellMat = new THREE.MeshBasicMaterial({
-  color: wellColor, transparent: true, opacity: isHoarding ? 0.35 : 0.45,
+const cpGeo = new THREE.BufferGeometry();
+cpGeo.setAttribute('position', new THREE.BufferAttribute(cpBuf, 3));
+const cpMat = new THREE.PointsMaterial({
+  color: 0xc8860a, size: 0.08, transparent: true, opacity: 0.0,
   blending: THREE.AdditiveBlending, depthWrite: false,
 });
-const treasuryWell = new THREE.Mesh(wellGeo, wellMat);
-treasuryWell.rotation.x = Math.PI / 2;
-treasuryWell.position.y = -2.2;
-scene.add(treasuryWell);
+scene.add(new THREE.Points(cpGeo, cpMat));
 
-// Distortion rings emanating from well
-const distortColors = isHoarding
-  ? [0x1e40af, 0x1d4ed8, 0x3b82f6]
-  : [0xfbbf24, 0xf59e0b, 0xd97706];
-
-for (let i = 1; i <= 4; i++) {
-  const rGeo = new THREE.TorusGeometry(wellRadius + i * 0.5, 0.012, 6, 128);
-  const rMat = new THREE.MeshBasicMaterial({
-    color: new THREE.Color(distortColors[i % 3] || 0x1e40af),
-    transparent: true, opacity: 0.04 * (4 - i),
-    blending: THREE.AdditiveBlending, depthWrite: false,
-  });
-  const ring = new THREE.Mesh(rGeo, rMat);
-  ring.rotation.x = Math.PI / 2;
-  ring.position.y = -2.2;
-  ring.userData.distortRing = true;
-  ring.userData.ringIndex = i;
-  scene.add(ring);
+// ═══════════════════════════════════════════════════════
+//  VOLUMETRIC HAZE — brownian drifting motes, NOT stars
+//  Upward bias, bounce off inner sphere wall
+// ═══════════════════════════════════════════════════════
+const hzBuf = new Float32Array(HAZE_N * 3);
+const hzVel = Array.from({ length: HAZE_N }, () => ({
+  x: (Math.random() - 0.5) * 0.004,
+  y:  Math.random() * 0.005 + 0.001,
+  z: (Math.random() - 0.5) * 0.004,
+}));
+for (let i = 0; i < HAZE_N; i++) {
+  const phi   = Math.acos(1 - 2 * Math.random());
+  const theta = Math.random() * Math.PI * 2;
+  const r     = Math.cbrt(Math.random()) * SPHERE_R * 0.92;
+  hzBuf[i*3]   = r * Math.sin(phi) * Math.cos(theta);
+  hzBuf[i*3+1] = r * Math.sin(phi) * Math.sin(theta);
+  hzBuf[i*3+2] = r * Math.cos(phi);
 }
-
-// Stagnation pool — flat disc showing trapped ATP mass
-const poolGeo = new THREE.CircleGeometry(wellRadius * 0.9, 64);
-const poolMat = new THREE.MeshBasicMaterial({
-  color: isHoarding ? new THREE.Color(0x0d2040) : new THREE.Color(0x2a1a00),
-  transparent: true, opacity: isHoarding ? 0.4 : 0.2,
-  side: THREE.DoubleSide,
+const hzGeo = new THREE.BufferGeometry();
+hzGeo.setAttribute('position', new THREE.BufferAttribute(hzBuf, 3));
+const hzMat = new THREE.PointsMaterial({
+  color: 0x1a3a5a, size: 0.17, transparent: true, opacity: 0.055,
+  blending: THREE.AdditiveBlending, depthWrite: false,
 });
-const pool = new THREE.Mesh(poolGeo, poolMat);
-pool.rotation.x = -Math.PI / 2;
-pool.position.y = -2.22;
-scene.add(pool);
+const hazeMesh = new THREE.Points(hzGeo, hzMat);
+scene.add(hazeMesh);
 
-// ── Agent nodes ───────────────────────────────────────────────
-const agentMeshes = [];
-const ORBIT_INNER = 3.0;
-const ORBIT_OUTER = 4.8;
+// ═══════════════════════════════════════════════════════
+//  AGENT DROPLETS
+// ═══════════════════════════════════════════════════════
+const agentObjs = [];   // { mesh, trailGeo, trailHist[], orbitPhase, orbitSpeed, r, phi, data }
 
-AGENTS.forEach((agent, i) => {
-  const role = agent.role;
-  const baseColor = ROLE_COLOR[role] || new THREE.Color(0xffffff);
+function spawnAgentDroplet(agentData, idx, total) {
+  // Fibonacci sphere placement
+  const phi   = Math.acos(-1 + (2 * (idx + 0.5)) / (total || 1));
+  const theta = idx * 2.3999632297;
 
-  // Fitness-modulated hue (within role color band)
-  const fitShift = (LAST.mf - 0.4) * 0.5; // small shift
-  const agentColor = baseColor.clone().offsetHSL(fitShift * 0.05, 0, 0);
+  const rol   = agentData.role || 'Optimizer';
+  const rep   = agentData.reputation ?? 0.5;
+  const gen   = agentData.generation ?? 0;
+  const hex   = ROLE_COLOR[rol] ?? 0x4fc3f7;
+  const size  = 0.11 + rep * 0.22;
+  const r     = 2.6 + rep * 1.5;
 
-  // Reputation → size
-  const sz = 0.10 + agent.rep * 0.24;
+  const startPos = new THREE.Vector3(
+    r * Math.sin(phi) * Math.cos(theta),
+    r * Math.cos(phi),
+    r * Math.sin(phi) * Math.sin(theta),
+  );
 
-  // Orbital band
-  const spread = ORBIT_OUTER - ORBIT_INNER;
-  const orbitR = ORBIT_INNER + (i / AGENTS.length) * spread + (Math.random() - 0.5) * 0.3;
-
-  // Speed proportional to contract tenure
-  const contractNorm = agent.contracts / Math.max(MAX_CONTRACTS, 1);
-  const orbitSpeed = 0.06 + contractNorm * 0.18;
-
-  // Starting angle
-  const startAngle = (i / AGENTS.length) * Math.PI * 2;
-
-  // Inclination (generation drives slight tilt)
-  const incline = (agent.gen * 0.15) + (Math.random() - 0.5) * 0.2;
-
-  // ── Sphere body ──
-  const geo = new THREE.SphereGeometry(sz, 20, 20);
+  // Droplet mesh
   const mat = new THREE.MeshPhysicalMaterial({
-    color: agentColor,
-    emissive: agentColor,
-    emissiveIntensity: 0.3 + agent.rep * 0.5,
-    roughness: 0.35,
-    metalness: 0.5,
-    transparent: true,
-    opacity: 0.88,
+    color:              new THREE.Color(hex),
+    emissive:           new THREE.Color(hex),
+    emissiveIntensity:  0.50,
+    transmission:       0.22,
+    roughness:          0.07,
+    metalness:          0.0,
+    ior:                1.35,
+    transparent:        true,
+    opacity:            0.88,
   });
-  const mesh = new THREE.Mesh(geo, mat);
+  const mesh = new THREE.Mesh(new THREE.SphereGeometry(size, 16, 16), mat);
+  mesh.position.copy(startPos);
+  mesh.userData = { agentData, index: idx };
   scene.add(mesh);
 
-  // ── Glow halo around agent ──
-  const aHalo = new THREE.Sprite(new THREE.SpriteMaterial({
-    map: buildGlowTexture(agentColor),
-    transparent: true, opacity: 0.12 + agent.rep * 0.12,
-    depthWrite: false, blending: THREE.AdditiveBlending,
-  }));
-  aHalo.scale.setScalar(sz * 6);
-  mesh.add(aHalo);
-
-  // ── Generation rings (one per generation beyond 0) ──
-  for (let g = 0; g < agent.gen; g++) {
-    const rSz = sz + 0.07 + g * 0.04;
-    const ringGeo = new THREE.TorusGeometry(rSz, 0.008, 6, 40);
-    const ringMat = new THREE.MeshBasicMaterial({
-      color: agentColor, transparent: true, opacity: 0.35 - g * 0.08,
+  // Generation ring (gen ≥ 3)
+  if (gen >= 3) {
+    const rGeo = new THREE.RingGeometry(size * 1.5, size * 1.7, 22);
+    const rMat = new THREE.MeshBasicMaterial({
+      color: hex, side: THREE.DoubleSide, transparent: true, opacity: 0.26,
     });
-    const ring = new THREE.Mesh(ringGeo, ringMat);
-    ring.rotation.x = Math.PI / 2;
-    ring.position.y = (g - (agent.gen - 1) * 0.5) * 0.04;
-    mesh.add(ring);
+    mesh.add(new THREE.Mesh(rGeo, rMat));
   }
 
-  // ── Primordial crown (gold halo) ──
-  if (agent.prim) {
-    const crownGeo = new THREE.TorusGeometry(sz + 0.12, 0.018, 8, 48);
-    const crownMat = new THREE.MeshBasicMaterial({
-      color: 0xfbbf24, transparent: true, opacity: 0.65,
+  // Primordial crown (gen 0)
+  if (gen === 0) {
+    const cMat = new THREE.MeshBasicMaterial({
+      color: 0xffd700, wireframe: true, transparent: true, opacity: 0.22,
     });
-    const crown = new THREE.Mesh(crownGeo, crownMat);
-    crown.rotation.x = Math.PI / 2;
-    crown.position.y = sz * 0.3;
-    mesh.add(crown);
+    mesh.add(new THREE.Mesh(new THREE.OctahedronGeometry(size * 1.9, 0), cMat));
   }
 
-  mesh.userData = {
-    agent, orbitR, orbitSpeed,
-    angle: startAngle, incline,
-    baseEmissive: 0.3 + agent.rep * 0.5,
-    flicker: agent.rep <= 0.55,
-    isolated: false,
-    isolateTimer: 0,
+  // Micro trail
+  const trailPx = new Float32Array(TRAIL_LEN * 3);
+  for (let j = 0; j < TRAIL_LEN * 3; j += 3) {
+    trailPx[j] = startPos.x; trailPx[j+1] = startPos.y; trailPx[j+2] = startPos.z;
+  }
+  const trailGeo = new THREE.BufferGeometry();
+  trailGeo.setAttribute('position', new THREE.BufferAttribute(trailPx, 3));
+  const trailMat = new THREE.LineBasicMaterial({
+    color: hex, transparent: true, opacity: 0.18,
+    blending: THREE.AdditiveBlending, depthWrite: false,
+  });
+  scene.add(new THREE.Line(trailGeo, trailMat));
+
+  return {
+    mesh, trailGeo,
+    trailHist: [startPos.clone()],
+    orbitPhase: Math.random() * Math.PI * 2,
+    orbitSpeed: 0.28 + Math.random() * 0.30,
+    r, phi, data: agentData,
   };
+}
 
-  agentMeshes.push(mesh);
-});
+function clearAgents() {
+  agentObjs.forEach(o => { scene.remove(o.mesh); scene.remove(o.trailLine); });
+  agentObjs.length = 0;
+}
 
-// Orbit trail lines (faint)
-AGENTS.forEach((agent, i) => {
-  const orbitR = agentMeshes[i].userData.orbitR;
-  const trail = new THREE.Mesh(
-    new THREE.TorusGeometry(orbitR, 0.003, 4, 128),
-    new THREE.MeshBasicMaterial({
-      color: ROLE_COLOR[agent.role] || 0xffffff,
-      transparent: true, opacity: 0.03, depthWrite: false,
-    })
+// ═══════════════════════════════════════════════════════
+//  STATE & HUD BINDING
+// ═══════════════════════════════════════════════════════
+let adversarialMode = false;
+let isolatedIdx     = null;
+let lastBD          = 1.0;
+
+function setText(id, v) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = v;
+}
+function setVal(id, v, cls) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = v;
+  el.className = 'hud-val' + (cls ? ' ' + cls : '');
+}
+
+function applyState(d) {
+  const ep   = d.epoch        ?? '—';
+  const pop  = d.population   ?? '—';
+  const circ = d.circulating_atp ?? d.total_atp_circulating ?? 0;
+  const tres = d.treasury_reserve ?? 0;
+  const bd   = d.birth_death_ratio ?? d.bd_ratio ?? 1.0;
+  const fit  = d.mean_fitness ?? 0;
+  const eco  = d.eco_state    ?? d.season ?? 'Autumn';
+  const dist = d.treasury_distributed ?? 0;
+
+  const domPct = (tres + circ) > 0 ? tres / (tres + circ) * 100 : 0;
+
+  setText('h-epoch', ep);
+  setText('h-pop',   pop);
+  setVal('h-circ',  typeof circ === 'number' ? circ.toFixed(0) + ' ATP' : circ);
+  setVal('h-treas', typeof tres === 'number' ? tres.toFixed(0) + ' ATP' : tres,
+    domPct > 88 ? 'danger' : domPct > 70 ? 'warn' : '');
+  setVal('h-bd', typeof bd === 'number' ? bd.toFixed(3) : bd,
+    bd < 0.95 ? 'danger' : bd < 1.05 ? 'warn' : 'healthy');
+  setVal('h-dom', domPct.toFixed(1) + '%',
+    domPct > 88 ? 'danger' : domPct > 70 ? 'warn' : '');
+  setVal('h-fit', fit.toFixed(4));
+
+  const season = typeof eco === 'string'
+    ? eco.charAt(0).toUpperCase() + eco.slice(1).toLowerCase()
+    : 'Autumn';
+  document.getElementById('season-badge').textContent = 'SEASON: ' + season.toUpperCase();
+
+  // ── Sediment color: gold → cold blue with hoarding ──
+  sedMat.color.lerpColors(
+    new THREE.Color(0x2a1400),
+    new THREE.Color(0x0a1a2c),
+    Math.min(domPct / 100, 1.0)
   );
-  trail.rotation.x = Math.PI / 2 + agentMeshes[i].userData.incline;
-  scene.add(trail);
-});
+  sedMat.emissive.copy(sedMat.color).multiplyScalar(0.4);
 
-setProgress(72);
+  // ── Treasury current opacity ──
+  cpMat.opacity = dist > 0 ? Math.min(0.65, dist / 4.0) : cpMat.opacity * 0.88;
 
-// ── Particle system ───────────────────────────────────────────
-const P_COUNT = 400;
-const pPositions = new Float32Array(P_COUNT * 3);
-const pColors = new Float32Array(P_COUNT * 3);
-const pLifetimes = new Float32Array(P_COUNT);
-const pVelocities = Array.from({ length: P_COUNT }, () => new THREE.Vector3());
-const pScales = new Float32Array(P_COUNT).fill(0);
+  // ── Core health color ──
+  const h = Math.max(0, Math.min(1, (bd - 0.9) / 0.2));
+  coreMat.color.lerpColors(new THREE.Color(0x3a0808), new THREE.Color(0x0d4870), h);
+  coreMat.emissive.lerpColors(new THREE.Color(0x300505), new THREE.Color(0x0a3060), h);
+  shellMatInner.uniforms.rimColor.value.lerpColors(
+    new THREE.Color(0x6a0a0a), new THREE.Color(0x1a5080), h
+  );
 
-const pGeo = new THREE.BufferGeometry();
-pGeo.setAttribute('position', new THREE.BufferAttribute(pPositions, 3));
-pGeo.setAttribute('color', new THREE.BufferAttribute(pColors, 3));
+  // ── Seasonal atmosphere lerp ──
+  const pal = SEASON_PALETTE[season] ?? SEASON_PALETTE.Autumn;
+  scene.background.lerp(new THREE.Color(pal.bg), 0.015);
+  scene.fog.color.lerp(new THREE.Color(pal.fog), 0.015);
+  controls.autoRotateSpeed = pal.orbitSpeed * (adversarialMode ? 1.5 : 1.0);
 
-let pHead = 0;
-scene.add(new THREE.Points(pGeo, new THREE.PointsMaterial({
-  size: 0.055, vertexColors: true,
-  transparent: true, opacity: 0.9,
-  blending: THREE.AdditiveBlending, depthWrite: false,
-})));
-
-function emit(pos, color, count, speed = 1.5) {
-  for (let i = 0; i < count; i++) {
-    const idx = pHead % P_COUNT; pHead++;
-    pPositions[idx*3]   = pos.x;
-    pPositions[idx*3+1] = pos.y;
-    pPositions[idx*3+2] = pos.z;
-    pColors[idx*3]   = color.r;
-    pColors[idx*3+1] = color.g;
-    pColors[idx*3+2] = color.b;
-    pLifetimes[idx] = 1.0;
-    pVelocities[idx].set(
-      (Math.random()-0.5)*2, (Math.random()-0.5)*2, (Math.random()-0.5)*2
-    ).normalize().multiplyScalar(speed * (0.5 + Math.random()));
-  }
-}
-
-// Radial ATP wave (ring that expands from core)
-const atpWaveGeo = new THREE.TorusGeometry(0.1, 0.02, 6, 64);
-const atpWaveMat = new THREE.MeshBasicMaterial({
-  color: 0x22d3ee, transparent: true, opacity: 0,
-  blending: THREE.AdditiveBlending, depthWrite: false,
-});
-const atpWave = new THREE.Mesh(atpWaveGeo, atpWaveMat);
-atpWave.rotation.x = Math.PI / 2;
-scene.add(atpWave);
-atpWave.userData = { active: false, progress: 0, atpDelta: 0 };
-
-// Screen-shake state
-let shakeIntensity = 0;
-
-setProgress(85);
-
-// ── Epoch replay engine ───────────────────────────────────────
-let historyIndex = 0;
-let epochTimer = 0;
-const EPOCH_INTERVAL = 5.0; // seconds
-
-function replayEpoch(epoch, prevEpoch) {
-  const atpDelta = prevEpoch ? epoch.atp - prevEpoch.atp : 0;
-
-  // ── HUD updates ──
-  document.getElementById('epoch-num').textContent = epoch.ep.toLocaleString();
-  document.getElementById('epoch-runtime').textContent =
-    'Started ' + new Date(S.started_at).toLocaleDateString('en-US', {month:'short',day:'numeric',year:'numeric'});
-
-  document.getElementById('v-pop').textContent = epoch.pop + ' / ' + epoch.cap;
-  document.getElementById('v-pop').className = 'vital-value ' +
-    (epoch.pop >= epoch.cap * 0.8 ? 'green' : epoch.pop <= epoch.cap * 0.4 ? 'red' : 'yellow');
-
-  document.getElementById('v-fit').textContent = epoch.mf.toFixed(4);
-  document.getElementById('v-fit').className = 'vital-value ' +
-    (epoch.mf >= 0.6 ? 'green' : epoch.mf >= 0.5 ? 'yellow' : 'red');
-
-  document.getElementById('v-atp').textContent = Math.round(epoch.atp).toLocaleString();
-  document.getElementById('v-atp').className = 'vital-value ' +
-    (epoch.atp >= 300 ? 'green' : epoch.atp >= 200 ? 'yellow' : 'red');
-
-  document.getElementById('v-tr').textContent = Math.round(S.tr_reserve).toLocaleString() + ' ATP';
-  document.getElementById('v-tr').className = 'vital-value ' + (isHoarding ? 'red' : 'yellow');
-
-  document.getElementById('v-bd').textContent =
-    S.total_births.toLocaleString() + ' / ' + S.total_deaths.toLocaleString();
-  document.getElementById('v-bd').className = 'vital-value ' +
-    (S.total_births > S.total_deaths ? 'green' : 'red');
-
-  const ratio = BIRTH_DEATH_RATIO;
-  document.getElementById('v-ratio').textContent = ratio.toFixed(3) + ':1';
-  document.getElementById('v-ratio').className = 'vital-value ' +
-    (ratio >= 1.05 ? 'green' : ratio >= 0.95 ? 'yellow' : 'red');
-
-  // Treasury status
-  document.getElementById('tr-val').textContent = Math.round(S.tr_reserve).toLocaleString() + ' ATP';
-  if (isHoarding) {
-    document.getElementById('tr-status').textContent = 'Hoarding';
-    document.getElementById('tr-status').className = 'tr-status hoarding';
-  } else if (S.tr_distributed > 0) {
-    document.getElementById('tr-status').textContent = 'Flowing';
-    document.getElementById('tr-status').className = 'tr-status flowing';
+  // ── Rebuild agents if population changed ──
+  const agents = d.agents ?? [];
+  if (agents.length !== agentObjs.length) {
+    clearAgents();
+    agents.forEach((a, i) => agentObjs.push(spawnAgentDroplet(a, i, agents.length)));
   } else {
-    document.getElementById('tr-status').textContent = 'Stable';
-    document.getElementById('tr-status').className = 'tr-status stable';
+    agents.forEach((a, i) => { if (agentObjs[i]) agentObjs[i].data = a; });
   }
 
-  // ── Birth events → cyan quantum sparks from parent node ──
-  if (epoch.b > 0 && agentMeshes.length > 0) {
-    const parentNode = agentMeshes[Math.floor(Math.random() * agentMeshes.length)];
-    emit(parentNode.position, new THREE.Color(0x22d3ee), 20 * epoch.b, 1.8);
-  }
-
-  // ── Death events → red implosion collapse ──
-  if (epoch.d > 0) {
-    // Place death near a random orbital position
-    const angle = Math.random() * Math.PI * 2;
-    const r = ORBIT_INNER + Math.random() * (ORBIT_OUTER - ORBIT_INNER);
-    const deathPos = new THREE.Vector3(
-      Math.cos(angle) * r, (Math.random() - 0.5) * 1.5, Math.sin(angle) * r
-    );
-    // Implosion: particles inward first then scatter
-    emit(deathPos, new THREE.Color(0xf87171), 30 * epoch.d, 2.5);
-    // Screen vibrate on population drop
-    if (prevEpoch && epoch.pop < prevEpoch.pop) {
-      shakeIntensity = Math.max(shakeIntensity, 0.04 * epoch.d);
-    }
-  }
-
-  // ── ATP wave from core on significant ATP delta ──
-  if (Math.abs(atpDelta) > 5) {
-    atpWave.userData.active = true;
-    atpWave.userData.progress = 0;
-    atpWave.userData.atpDelta = atpDelta;
-  }
-
-  // ── Core pulse intensity from ATP amplitude ──
-  const atpNorm = Math.min(epoch.atp / 400, 1.0);
-  coreMat.emissiveIntensity = 0.2 + atpNorm * 0.35;
-  coreLight.intensity = 0.4 + atpNorm * 1.0;
+  // ── Phase transition flash ──
+  if (lastBD - bd > 0.08) flashPhaseBanner();
+  lastBD = bd;
 }
 
-// ── Raycaster / hover / click ─────────────────────────────────
+async function fetchState() {
+  try {
+    const r = await fetch(DATA_URL + '?t=' + Date.now());
+    if (r.ok) applyState(await r.json());
+  } catch (_) { /* tolerate fetch failure */ }
+}
+
+function flashPhaseBanner() {
+  const el = document.getElementById('phase-banner');
+  el.style.opacity = '1';
+  setTimeout(() => { el.style.opacity = '0'; }, 3500);
+}
+
+// ═══════════════════════════════════════════════════════
+//  INTERACTION
+// ═══════════════════════════════════════════════════════
 const raycaster = new THREE.Raycaster();
-raycaster.params.Points = { threshold: 0.2 };
-const mouse = new THREE.Vector2(-999, -999);
-const tooltip = document.getElementById('tooltip');
-let hoveredMesh = null;
-let isolatedMesh = null;
-let isolateReleaseTimer = 0;
-const isolationLabel = document.getElementById('isolation-label');
-const ilRoleText = document.getElementById('il-role-text');
-const ilCount = document.getElementById('il-count');
+const mPos      = new THREE.Vector2();
+const tooltip   = document.getElementById('tooltip');
 
-renderer.domElement.addEventListener('mousemove', e => {
-  mouse.x = (e.clientX / innerWidth) * 2 - 1;
-  mouse.y = -(e.clientY / innerHeight) * 2 + 1;
-  raycaster.setFromCamera(mouse, camera);
-  const hits = raycaster.intersectObjects(agentMeshes, false);
-  if (hits.length > 0) {
-    hoveredMesh = hits[0].object;
-    const a = hoveredMesh.userData.agent;
-    tooltip.style.display = 'block';
-    tooltip.style.left = (e.clientX + 18) + 'px';
-    tooltip.style.top = Math.min(e.clientY - 20, innerHeight - 200) + 'px';
-    tooltip.innerHTML = `
-      <div class="tt-header" style="color:${ROLE_HEX[a.role]||'#fff'}">${a.role}${a.prim ? ' ★ Primordial' : ''}</div>
-      <div class="tt-row"><span class="tt-dim">Generation</span><span class="tt-val">Gen ${a.gen}${a.gen===0?' — Founder':''}</span></div>
-      <div class="tt-row"><span class="tt-dim">Contracts Completed</span><span class="tt-val">${a.contracts.toLocaleString()}</span></div>
-      <div class="tt-row"><span class="tt-dim">Reputation Score</span><span class="tt-val">${(a.rep*100).toFixed(1)}%</span></div>
-      <div class="tt-row"><span class="tt-dim">Mutation Rate</span><span class="tt-val">${a.mut}</span></div>
-      <div class="tt-row"><span class="tt-dim">Basal Metabolic Cost</span><span class="tt-val">${a.basal} ATP/epoch</span></div>
-    `;
-    renderer.domElement.style.cursor = 'pointer';
+window.addEventListener('mousemove', e => {
+  mPos.x =  (e.clientX / innerWidth)  * 2 - 1;
+  mPos.y = -(e.clientY / innerHeight) * 2 + 1;
+  tooltip.style.left = (e.clientX + 16) + 'px';
+  tooltip.style.top  = (e.clientY + 12) + 'px';
+
+  raycaster.setFromCamera(mPos, camera);
+  const hits = raycaster.intersectObjects(agentObjs.map(o => o.mesh));
+  if (hits.length) {
+    const d = hits[0].object.userData.agentData;
+    if (d) {
+      tooltip.innerHTML = [
+        `<b>${d.role ?? '—'}</b>`,
+        `Rep: ${(d.reputation ?? 0).toFixed(4)}`,
+        `Gen: ${d.generation ?? 0}`,
+        `ATP: ${(d.atp_balance ?? 0).toFixed(2)}`,
+        d.in_stasis ? '<span style="color:#d4a84b">● STASIS</span>' : '',
+      ].filter(Boolean).join('<br>');
+      tooltip.style.display = 'block';
+    }
   } else {
-    hoveredMesh = null;
     tooltip.style.display = 'none';
-    renderer.domElement.style.cursor = 'default';
   }
 });
 
-renderer.domElement.addEventListener('click', () => {
-  if (hoveredMesh && hoveredMesh !== isolatedMesh) {
-    isolatedMesh = hoveredMesh;
-    isolatedMesh.userData.isolated = true;
-    isolateReleaseTimer = 3.0;
-    const a = isolatedMesh.userData.agent;
-    ilRoleText.textContent = a.role;
-    ilRoleText.style.color = ROLE_HEX[a.role] || '#fff';
-    ilCount.textContent = '3';
-    isolationLabel.style.display = 'block';
-    controls.autoRotate = false;
-    // Emit selection burst
-    emit(isolatedMesh.position, new THREE.Color(ROLE_HEX[a.role] || '#fff'), 25, 1.2);
+window.addEventListener('click', () => {
+  raycaster.setFromCamera(mPos, camera);
+  const hits = raycaster.intersectObjects(agentObjs.map(o => o.mesh));
+  if (hits.length) {
+    const idx = hits[0].object.userData.index;
+    isolatedIdx = isolatedIdx === idx ? null : idx;
+  } else {
+    isolatedIdx = null;
   }
+  agentObjs.forEach((o, i) => {
+    const dim = isolatedIdx !== null && i !== isolatedIdx;
+    o.mesh.material.opacity = dim ? 0.10 : 0.88;
+  });
 });
 
-// ── Screen shake ──────────────────────────────────────────────
-const shakeOffset = new THREE.Vector3();
-const baseCameraPos = new THREE.Vector3();
+window.addEventListener('keydown', e => {
+  if (e.key !== 'a' && e.key !== 'A') return;
+  adversarialMode = !adversarialMode;
+  document.getElementById('stress-badge').style.display = adversarialMode ? 'block' : 'none';
+  shellMatInner.uniforms.rimStrength.value = adversarialMode ? 0.82 : 0.55;
+  shellMatOuter.uniforms.rimStrength.value = adversarialMode ? 0.30 : 0.18;
+  hzMat.color.set(adversarialMode ? 0x3a1010 : 0x1a3a5a);
+  hzMat.opacity = adversarialMode ? 0.10 : 0.055;
+  if (adversarialMode) flashPhaseBanner();
+});
 
-// ── Clock + animation loop ────────────────────────────────────
-const clock = new THREE.Clock();
-let prevHistoryEpoch = null;
-
-function animate() {
-  requestAnimationFrame(animate);
-  const dt = Math.min(clock.getDelta(), 0.05);
-  const t = clock.getElapsedTime();
-
-  // ── Core respiration ──
-  const breatheScale = 1 + Math.sin(t * 0.42) * 0.025;
-  coreMesh.scale.setScalar(breatheScale);
-  coreSkin.scale.setScalar(breatheScale * 1.04);
-  coreHalo.scale.setScalar(5 + Math.sin(t * 0.3) * 0.3);
-  coreMesh.rotation.y += dt * 0.04;
-  coreMesh.rotation.x = Math.sin(t * 0.17) * 0.06;
-
-  // ── Treasury well slow rotation + distortion breathing ──
-  treasuryWell.rotation.z += dt * 0.06;
-  wellMat.opacity = (isHoarding ? 0.3 : 0.4) + Math.sin(t * 0.7) * 0.04;
-
-  // Distortion rings animate outward phase
-  scene.traverse(obj => {
-    if (obj.userData.distortRing) {
-      const base = 0.04 * (4 - obj.userData.ringIndex);
-      obj.material.opacity = base * (0.7 + Math.sin(t * 0.5 + obj.userData.ringIndex * 0.8) * 0.3);
-    }
-  });
-
-  // ── ATP wave expand ──
-  if (atpWave.userData.active) {
-    atpWave.userData.progress += dt * 0.4;
-    const p = atpWave.userData.progress;
-    atpWave.scale.setScalar(1 + p * 5);
-    atpWaveMat.opacity = Math.max(0, 0.3 * (1 - p));
-    if (p >= 1) {
-      atpWave.userData.active = false;
-      atpWave.scale.setScalar(0.1);
-      atpWaveMat.opacity = 0;
-    }
-  }
-
-  // ── Agent orbits ──
-  agentMeshes.forEach(mesh => {
-    const ud = mesh.userData;
-    if (!ud.isolated) {
-      ud.angle += ud.orbitSpeed * dt;
-    }
-    // Isolation release
-    if (ud.isolated) {
-      ud.isolateTimer = (ud.isolateTimer || 0) + dt;
-    }
-    const x = Math.cos(ud.angle) * ud.orbitR;
-    const z = Math.sin(ud.angle) * ud.orbitR;
-    const y = Math.sin(ud.angle + ud.incline * 3) * Math.abs(ud.incline) * 2;
-    mesh.position.set(x, y, z);
-    mesh.lookAt(0, 0, 0);
-
-    // Flicker for low-rep agents
-    if (ud.flicker) {
-      const flicker = 0.3 + Math.random() * 0.7;
-      mesh.material.emissiveIntensity = ud.baseEmissive * flicker;
-      mesh.material.opacity = 0.5 + Math.random() * 0.4;
-    }
-  });
-
-  // ── Isolation countdown ──
-  if (isolatedMesh) {
-    isolateReleaseTimer -= dt;
-    const remaining = Math.ceil(Math.max(0, isolateReleaseTimer));
-    ilCount.textContent = remaining;
-    if (isolateReleaseTimer <= 0) {
-      isolatedMesh.userData.isolated = false;
-      isolatedMesh = null;
-      isolationLabel.style.display = 'none';
-      controls.autoRotate = true;
-    }
-  }
-
-  // ── Particles ──
-  for (let i = 0; i < P_COUNT; i++) {
-    if (pLifetimes[i] > 0) {
-      pLifetimes[i] -= dt * 0.7;
-      pPositions[i*3]   += pVelocities[i].x * dt;
-      pPositions[i*3+1] += pVelocities[i].y * dt - 0.4 * dt; // gravity
-      pPositions[i*3+2] += pVelocities[i].z * dt;
-      const alive = Math.max(0, pLifetimes[i]);
-      if (alive < 0.3) {
-        pColors[i*3] *= 0.92;
-        pColors[i*3+1] *= 0.92;
-        pColors[i*3+2] *= 0.92;
-      }
-    }
-  }
-  pGeo.attributes.position.needsUpdate = true;
-  pGeo.attributes.color.needsUpdate = true;
-
-  // ── Screen shake decay ──
-  shakeIntensity *= 0.88;
-  if (shakeIntensity > 0.001) {
-    shakeOffset.set(
-      (Math.random()-0.5)*shakeIntensity,
-      (Math.random()-0.5)*shakeIntensity,
-      0
-    );
-    camera.position.add(shakeOffset);
-  }
-
-  // ── Epoch replay timer ──
-  epochTimer += dt;
-  if (epochTimer >= EPOCH_INTERVAL) {
-    epochTimer = 0;
-    const curr = HISTORY[historyIndex % HISTORY.length];
-    const prev = historyIndex > 0 ? HISTORY[(historyIndex - 1) % HISTORY.length] : null;
-    replayEpoch(curr, prev);
-    prevHistoryEpoch = curr;
-    historyIndex++;
-  }
-
-  controls.update();
-  renderer.render(scene, camera);
-}
-
-// ── Resize ────────────────────────────────────────────────────
 window.addEventListener('resize', () => {
   camera.aspect = innerWidth / innerHeight;
   camera.updateProjectionMatrix();
   renderer.setSize(innerWidth, innerHeight);
 });
 
-// ── Boot ──────────────────────────────────────────────────────
-setProgress(100);
-setTimeout(() => {
-  document.getElementById('loading').style.opacity = '0';
-  document.getElementById('loading').style.transition = 'opacity .6s';
-  setTimeout(() => document.getElementById('loading').style.display = 'none', 700);
-}, 300);
+// ═══════════════════════════════════════════════════════
+//  ANIMATION LOOP
+// ═══════════════════════════════════════════════════════
+const clock = new THREE.Clock();
+let lastFetch = -8;
 
-// Trigger first epoch immediately
-replayEpoch(HISTORY[0], null);
-historyIndex = 1;
+function animate() {
+  requestAnimationFrame(animate);
+  const t = clock.getElapsedTime();
 
+  // Refresh data every 8 seconds
+  if (t - lastFetch >= 8) { lastFetch = t; fetchState(); }
+
+  // Shader time uniforms
+  shellMatInner.uniforms.uTime.value = t;
+  shellMatOuter.uniforms.uTime.value = t;
+
+  // ── Liquid core vertex displacement ──
+  const pArr = coreGeo.attributes.position.array;
+  const freq = adversarialMode ? 4.8 : 2.9;
+  const amp  = adversarialMode ? 0.10 : 0.055;
+  for (let i = 0; i < pArr.length; i += 3) {
+    const ox = coreOrigPx[i], oy = coreOrigPx[i+1], oz = coreOrigPx[i+2];
+    const d = Math.sin(ox * freq + t * 1.1)
+            * Math.cos(oy * freq + t * 0.8)
+            * Math.sin(oz * freq + t * 0.95) * amp;
+    pArr[i]   = ox + ox * d;
+    pArr[i+1] = oy + oy * d;
+    pArr[i+2] = oz + oz * d;
+  }
+  coreGeo.attributes.position.needsUpdate = true;
+  coreGeo.computeVertexNormals();
+
+  // Core pulse
+  const pulse = 1.0 + 0.20 * Math.sin(t * (adversarialMode ? 3.8 : 1.5));
+  coreLight.intensity        = 2.5 * pulse;
+  coreMat.emissiveIntensity  = 1.2 * pulse;
+
+  // ── Agent droplet orbits ──
+  agentObjs.forEach((o, i) => {
+    const spd = o.orbitSpeed * controls.autoRotateSpeed * 0.02;
+    o.orbitPhase += spd + (adversarialMode ? Math.sin(t * 2.3 + i) * 0.002 : 0);
+
+    const wobble = 0.07 * Math.sin(t * 0.65 + i * 1.3);
+    const phi    = o.phi + wobble;
+    const theta  = o.orbitPhase;
+    const r      = o.r + 0.14 * Math.sin(t * 0.5 + i * 0.9);
+
+    o.mesh.position.set(
+      r * Math.sin(phi) * Math.cos(theta),
+      r * Math.cos(phi),
+      r * Math.sin(phi) * Math.sin(theta),
+    );
+
+    // Update micro trail
+    o.trailHist.push(o.mesh.position.clone());
+    if (o.trailHist.length > TRAIL_LEN) o.trailHist.shift();
+    const ta = o.trailGeo.attributes.position.array;
+    o.trailHist.forEach((p, j) => { ta[j*3] = p.x; ta[j*3+1] = p.y; ta[j*3+2] = p.z; });
+    o.trailGeo.attributes.position.needsUpdate = true;
+
+    // Keep rings facing camera
+    o.mesh.children.forEach(c => {
+      if (c.geometry?.parameters?.innerRadius != null) c.lookAt(camera.position);
+    });
+  });
+
+  // ── Volumetric haze brownian drift ──
+  const ha = hzGeo.attributes.position.array;
+  for (let i = 0; i < HAZE_N; i++) {
+    const ix = i * 3;
+    hzVel[i].x += (Math.random() - 0.5) * 0.0012;
+    hzVel[i].y += (Math.random() - 0.5) * 0.0006;
+    hzVel[i].z += (Math.random() - 0.5) * 0.0012;
+
+    ha[ix]   += hzVel[i].x;
+    ha[ix+1] += hzVel[i].y;
+    ha[ix+2] += hzVel[i].z;
+
+    const dx = ha[ix], dy = ha[ix+1], dz = ha[ix+2];
+    const d2 = dx*dx + dy*dy + dz*dz;
+    if (d2 > (SPHERE_R * 0.90) ** 2) {
+      const inv = 1.0 / Math.sqrt(d2);
+      hzVel[i].x -= dx * inv * 0.006;
+      hzVel[i].y -= dy * inv * 0.006;
+      hzVel[i].z -= dz * inv * 0.006;
+    }
+    // dampen, keep upward bias
+    hzVel[i].x *= 0.994;
+    hzVel[i].z *= 0.994;
+    hzVel[i].y  = Math.max(-0.005, Math.min(0.016, hzVel[i].y));
+  }
+  hzGeo.attributes.position.needsUpdate = true;
+
+  // ── Treasury current particles ascend ──
+  const ca = cpGeo.attributes.position.array;
+  for (let i = 0; i < CURRENT_N; i++) {
+    const ix = i * 3;
+    ca[ix]   += cpVel[i].x;
+    ca[ix+1] += cpVel[i].y;
+    ca[ix+2] += cpVel[i].z;
+    cpVel[i].life += 0.016;
+    if (cpVel[i].life > 1 || ca[ix+1] > 0.6) {
+      const a = Math.random() * Math.PI * 2, rr = Math.random() * 1.6;
+      ca[ix]   = Math.cos(a) * rr;
+      ca[ix+1] = -3.5 + Math.random() * 0.3;
+      ca[ix+2] = Math.sin(a) * rr;
+      cpVel[i] = {
+        x: (Math.random()-0.5)*0.012, y: Math.random()*0.045+0.02,
+        z: (Math.random()-0.5)*0.012, life: 0,
+      };
+    }
+  }
+  cpGeo.attributes.position.needsUpdate = true;
+
+  // Sediment rim pulse
+  sedGlowMat.opacity = 0.17 + 0.06 * Math.sin(t * 0.58);
+
+  controls.update();
+  renderer.render(scene, camera);
+}
+
+// ═══════════════════════════════════════════════════════
+//  BOOT
+// ═══════════════════════════════════════════════════════
+fetchState();
 animate();
-
 </script>
 </body>
 </html>
