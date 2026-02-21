@@ -143,6 +143,57 @@ struct MoltbookResponse {
     #[serde(default)]
     #[allow(dead_code)]
     hint: Option<String>,
+    /// Present when content requires AI verification before publishing.
+    #[serde(default)]
+    #[allow(dead_code)]
+    verification_required: Option<bool>,
+    /// The created post (may contain a verification challenge).
+    #[serde(default)]
+    #[allow(dead_code)]
+    post: Option<PostPayload>,
+    /// The created comment (may contain a verification challenge).
+    #[serde(default)]
+    #[allow(dead_code)]
+    comment: Option<PostPayload>,
+}
+
+/// Payload for a created post/comment that may require verification.
+#[derive(Debug, Deserialize)]
+#[allow(dead_code)]
+struct PostPayload {
+    #[allow(dead_code)]
+    id: Option<String>,
+    #[serde(default)]
+    #[allow(dead_code)]
+    verification_status: Option<String>,
+    /// Verification challenge details (present when verification is required).
+    #[serde(default)]
+    #[allow(dead_code)]
+    verification: Option<VerificationChallenge>,
+}
+
+/// AI verification challenge returned by Moltbook to prove the agent
+/// has language understanding. Contains an obfuscated math word problem.
+#[derive(Debug, Clone, Deserialize)]
+#[allow(dead_code)]
+struct VerificationChallenge {
+    /// Unique code to submit with the answer.
+    verification_code: String,
+    /// Obfuscated math problem (lobster-themed, alternating caps, scattered symbols).
+    challenge_text: String,
+    /// ISO 8601 deadline (typically 5 minutes from creation).
+    #[allow(dead_code)]
+    expires_at: Option<String>,
+    /// Instructions for formatting the answer.
+    #[allow(dead_code)]
+    instructions: Option<String>,
+}
+
+/// Request body for POST /verify.
+#[derive(Debug, Serialize)]
+struct VerifyRequest {
+    verification_code: String,
+    answer: String,
 }
 
 // ───────────────────────────────────────────
@@ -350,6 +401,347 @@ fn compose_status_post(
 }
 
 // ───────────────────────────────────────────
+// AI VERIFICATION CHALLENGE SOLVER
+// ───────────────────────────────────────────
+
+/// Number words recognized in challenge text.
+const NUMBER_WORDS: &[(&str, f64)] = &[
+    ("zero", 0.0),
+    ("one", 1.0),
+    ("two", 2.0),
+    ("three", 3.0),
+    ("four", 4.0),
+    ("five", 5.0),
+    ("six", 6.0),
+    ("seven", 7.0),
+    ("eight", 8.0),
+    ("nine", 9.0),
+    ("ten", 10.0),
+    ("eleven", 11.0),
+    ("twelve", 12.0),
+    ("thirteen", 13.0),
+    ("fourteen", 14.0),
+    ("fifteen", 15.0),
+    ("sixteen", 16.0),
+    ("seventeen", 17.0),
+    ("eighteen", 18.0),
+    ("nineteen", 19.0),
+    ("twenty", 20.0),
+    ("thirty", 30.0),
+    ("forty", 40.0),
+    ("fifty", 50.0),
+    ("sixty", 60.0),
+    ("seventy", 70.0),
+    ("eighty", 80.0),
+    ("ninety", 90.0),
+    ("hundred", 100.0),
+    ("thousand", 1000.0),
+];
+
+/// Operation words that map to arithmetic operators.
+const OP_WORDS: &[(&str, char)] = &[
+    // Addition
+    ("adds", '+'),
+    ("add", '+'),
+    ("plus", '+'),
+    ("gains", '+'),
+    ("gain", '+'),
+    ("increases by", '+'),
+    ("speeds up by", '+'),
+    ("grows by", '+'),
+    ("gets", '+'),
+    ("collects", '+'),
+    ("finds", '+'),
+    ("picks up", '+'),
+    ("more", '+'),
+    // Subtraction
+    ("minus", '-'),
+    ("subtract", '-'),
+    ("subtracts", '-'),
+    ("loses", '-'),
+    ("lose", '-'),
+    ("slows by", '-'),
+    ("slows down by", '-'),
+    ("drops by", '-'),
+    ("drops", '-'),
+    ("decreases by", '-'),
+    ("sheds", '-'),
+    ("less", '-'),
+    // Multiplication
+    ("times", '*'),
+    ("multiplied by", '*'),
+    ("multiplies by", '*'),
+    ("mult by", '*'),
+    ("doubles", '*'),   // special: implies *2
+    ("triples", '*'),   // special: implies *3
+    // Division
+    ("divided by", '/'),
+    ("divides by", '/'),
+    ("split by", '/'),
+    ("splits into", '/'),
+    ("halves", '/'),    // special: implies /2
+];
+
+/// Deobfuscate a Moltbook challenge string.
+///
+/// Moltbook challenges use:
+///   - Alternating caps: "lObStEr" → "lobster"
+///   - Scattered symbols: brackets, carets, slashes, hyphens inside words
+///   - Broken/repeated letters: "tW]eNn-Tyy" → "twenty"
+///
+/// This function strips noise and normalizes to lowercase plain text.
+fn deobfuscate_challenge(text: &str) -> String {
+    let mut result = String::with_capacity(text.len());
+    // Track whether we've emitted meaningful content (alpha/digit) since
+    // the last space. Symbols are transparent — they must NOT clear this
+    // flag, otherwise spaces after symbols (e.g. "o/ w") are dropped.
+    let mut has_content = false;
+    let mut last_was_space = false;
+
+    for ch in text.chars() {
+        if ch.is_ascii_alphabetic() {
+            result.push(ch.to_ascii_lowercase());
+            has_content = true;
+            last_was_space = false;
+        } else if ch.is_ascii_digit() {
+            result.push(ch);
+            has_content = true;
+            last_was_space = false;
+        } else if ch == '.' {
+            // Keep decimal points between digits
+            result.push(ch);
+            last_was_space = false;
+        } else if ch.is_ascii_whitespace() {
+            if has_content && !last_was_space {
+                result.push(' ');
+                last_was_space = true;
+            }
+            // Do NOT reset has_content — symbols before this space
+            // should not prevent the space from being emitted.
+        } else {
+            // Strip symbols: [ ] ^ / - \ etc.
+            // They are noise injected between letters.
+            // CRITICAL: do NOT touch has_content or last_was_space.
+            // Symbols are invisible to word-boundary logic.
+        }
+    }
+
+    // Collapse multiple spaces and trim
+    let collapsed: String = result
+        .split_whitespace()
+        .collect::<Vec<_>>()
+        .join(" ");
+
+    // Fix obfuscation artifacts: doubled/repeated letters
+    // e.g., "twenntyy" → "twenty", "fivee" → "five"
+    normalize_obfuscated_words(&collapsed)
+}
+
+/// Collapse consecutive duplicate characters in a word.
+/// e.g., "twenntyy" → "twenty", "fivee" → "five"
+fn collapse_consecutive(word: &str) -> String {
+    let mut result = String::with_capacity(word.len());
+    let mut prev = None;
+    for ch in word.chars() {
+        if Some(ch) != prev {
+            result.push(ch);
+        }
+        prev = Some(ch);
+    }
+    result
+}
+
+/// Normalize obfuscated words by removing spurious letter repetitions.
+///
+/// Two strategies tried in order:
+///   1. Collapse ALL consecutive duplicates ("twenntyy" → "twenty")
+///   2. Remove just the trailing doubled letter ("fivee" → "five")
+///
+/// Only applies the fix when the result matches a known word.
+fn normalize_obfuscated_words(text: &str) -> String {
+    text.split_whitespace()
+        .map(|word| {
+            // Strategy 1: collapse all consecutive duplicate letters
+            let collapsed = collapse_consecutive(word);
+            if collapsed != word && is_known_word(&collapsed) {
+                return collapsed;
+            }
+
+            // Strategy 2: remove just trailing doubled letter
+            let bytes = word.as_bytes();
+            if bytes.len() >= 3
+                && bytes[bytes.len() - 1] == bytes[bytes.len() - 2]
+                && bytes[bytes.len() - 1].is_ascii_alphabetic()
+            {
+                let trimmed = &word[..word.len() - 1];
+                if is_known_word(trimmed) {
+                    return trimmed.to_string();
+                }
+            }
+            word.to_string()
+        })
+        .collect::<Vec<_>>()
+        .join(" ")
+}
+
+/// Check if a word is one we recognize (number words, operation words, common words).
+fn is_known_word(w: &str) -> bool {
+    NUMBER_WORDS.iter().any(|(nw, _)| *nw == w)
+        || ["a", "an", "at", "the", "and", "by", "to", "of", "is", "it",
+            "lobster", "crab", "shrimp", "molty", "swims", "crawls", "walks",
+            "runs", "meters", "miles", "steps", "speeds", "speed",
+        ].contains(&w)
+}
+
+/// Parse text numbers from the deobfuscated string.
+/// Handles: "twenty", "five", "twenty five" (25), "one hundred" (100),
+///          "three hundred fifty" (350), and raw digits like "42".
+fn parse_numbers(text: &str) -> Vec<f64> {
+    let words: Vec<&str> = text.split_whitespace().collect();
+    let mut numbers = Vec::new();
+    let mut i = 0;
+
+    while i < words.len() {
+        // Try raw numeric literal first
+        if let Ok(n) = words[i].parse::<f64>() {
+            numbers.push(n);
+            i += 1;
+            continue;
+        }
+
+        // Try compound number: "twenty five", "three hundred fifty", etc.
+        if let Some((val, consumed)) = parse_compound_number(&words[i..]) {
+            numbers.push(val);
+            i += consumed;
+            continue;
+        }
+
+        i += 1;
+    }
+
+    numbers
+}
+
+/// Parse a compound number starting at the given word slice.
+/// Returns (value, words_consumed) or None.
+fn parse_compound_number(words: &[&str]) -> Option<(f64, usize)> {
+    let mut total = 0.0;
+    let mut current = 0.0;
+    let mut consumed = 0;
+    let mut found_any = false;
+
+    for &word in words {
+        if let Some(&(_, val)) = NUMBER_WORDS.iter().find(|&&(w, _)| w == word) {
+            found_any = true;
+            consumed += 1;
+
+            if val == 100.0 {
+                // "three hundred" → current(3) * 100
+                if current == 0.0 {
+                    current = 100.0;
+                } else {
+                    current *= 100.0;
+                }
+            } else if val == 1000.0 {
+                // "five thousand" → current(5) * 1000
+                if current == 0.0 {
+                    current = 1000.0;
+                } else {
+                    current *= 1000.0;
+                    total += current;
+                    current = 0.0;
+                }
+            } else if val >= 20.0 {
+                // Tens: "twenty", "thirty", etc.
+                // If we had a previous value accumulating, flush it
+                if current > 0.0 {
+                    total += current;
+                }
+                current = val;
+            } else {
+                // Units: "one" through "nineteen"
+                current += val;
+            }
+        } else {
+            break;
+        }
+    }
+
+    if found_any {
+        total += current;
+        Some((total, consumed))
+    } else {
+        None
+    }
+}
+
+/// Detect the arithmetic operation from deobfuscated text.
+/// Returns the operator character: +, -, *, /
+fn detect_operation(text: &str) -> Option<char> {
+    let lower = text.to_lowercase();
+
+    // Try multi-word operators first (longest match)
+    let mut ops_sorted: Vec<(&str, char)> = OP_WORDS.to_vec();
+    ops_sorted.sort_by(|a, b| b.0.len().cmp(&a.0.len()));
+
+    for (phrase, op) in &ops_sorted {
+        if lower.contains(phrase) {
+            return Some(*op);
+        }
+    }
+
+    None
+}
+
+/// Solve a Moltbook AI verification challenge.
+///
+/// The challenge is an obfuscated math word problem with two numbers
+/// and one operation (+, -, *, /). Returns the answer formatted as
+/// a string with 2 decimal places, or None if parsing fails.
+///
+/// Example:
+///   "A] lO^bSt-Er S[wImS aT/ tW]eNn-Tyy mE^tE[rS aNd] SlO/wS bY^ fI[vE"
+///   → deobfuscates to "a lobster swims at twenty meters and slows by five"
+///   → numbers: [20.0, 5.0], operation: '-'
+///   → answer: "15.00"
+fn solve_challenge(challenge_text: &str) -> Option<String> {
+    let clean = deobfuscate_challenge(challenge_text);
+    tracing::debug!(clean = %clean, "Deobfuscated challenge");
+
+    let numbers = parse_numbers(&clean);
+    if numbers.len() < 2 {
+        tracing::warn!(
+            numbers = ?numbers,
+            clean = %clean,
+            "Challenge solver found fewer than 2 numbers"
+        );
+        return None;
+    }
+
+    let a = numbers[0];
+    let b = numbers[1];
+
+    let op = detect_operation(&clean)?;
+    tracing::debug!(a = a, b = b, op = ?op, "Solving challenge");
+
+    let result = match op {
+        '+' => a + b,
+        '-' => a - b,
+        '*' => a * b,
+        '/' => {
+            if b == 0.0 {
+                tracing::warn!("Challenge has division by zero");
+                return None;
+            }
+            a / b
+        }
+        _ => return None,
+    };
+
+    Some(format!("{:.2}", result))
+}
+
+// ───────────────────────────────────────────
 // HTTP CLIENT
 // ───────────────────────────────────────────
 
@@ -380,6 +772,10 @@ impl MoltbotClient {
     }
 
     /// Create a text post in a submolt. Returns true on success.
+    ///
+    /// If Moltbook returns a verification challenge (anti-spam math problem),
+    /// the client automatically deobfuscates the challenge, solves it,
+    /// and submits the answer to POST /verify before returning.
     pub async fn create_post(&self, submolt: &str, title: &str, content: &str) -> bool {
         let url = format!("{}/posts", self.config.base_url);
         let payload = CreatePostRequest {
@@ -390,16 +786,33 @@ impl MoltbotClient {
 
         for attempt in 0..=self.config.max_retries {
             match self.try_post(&url, &payload).await {
-                Ok((status, _)) if status.is_success() => {
-                    tracing::info!("Moltbook post published successfully");
+                Ok((status, body)) if status.is_success() => {
+                    // Check if the response contains a verification challenge
+                    if let Some(challenge) = self.extract_challenge(&body) {
+                        tracing::info!(
+                            challenge = %challenge.challenge_text,
+                            code = %challenge.verification_code,
+                            "Moltbook verification challenge received — solving"
+                        );
+                        return self.handle_challenge(&challenge).await;
+                    }
+                    tracing::info!("Moltbook post published successfully (no verification needed)");
                     return true;
                 }
                 Ok((status, body)) if status.as_u16() == 403 => {
-                    tracing::warn!(
-                        attempt = attempt + 1,
-                        body = %body,
-                        "Moltbook 403 Forbidden \u{2014} agent may need claiming, skipping retries"
-                    );
+                    // Check if the 403 body itself contains a challenge or suspension info
+                    if body.contains("suspended") {
+                        tracing::error!(
+                            body = %body,
+                            "Moltbook agent is suspended — cannot post"
+                        );
+                    } else {
+                        tracing::warn!(
+                            attempt = attempt + 1,
+                            body = %body,
+                            "Moltbook 403 Forbidden \u{2014} agent may need claiming, skipping retries"
+                        );
+                    }
                     return false;
                 }
                 Ok((status, _)) if status.as_u16() == 429 => {
@@ -467,6 +880,85 @@ impl MoltbotClient {
             Err(e) => {
                 tracing::warn!(error = %e, "Moltbook profile check error");
                 (false, false)
+            }
+        }
+    }
+
+    /// Extract a verification challenge from a Moltbook response body.
+    ///
+    /// Checks both `post.verification` and `comment.verification` fields.
+    /// Returns None if no challenge is present (trusted/admin agent, or non-challenge response).
+    fn extract_challenge(&self, body: &str) -> Option<VerificationChallenge> {
+        let resp: MoltbookResponse = serde_json::from_str(body).ok()?;
+
+        // Check "post" field first, then "comment"
+        let payload = resp.post.or(resp.comment)?;
+
+        if payload.verification_status.as_deref() == Some("pending") {
+            return payload.verification;
+        }
+
+        // Also return the challenge even without explicit pending status
+        payload.verification
+    }
+
+    /// Solve a verification challenge and submit the answer.
+    /// Returns true if verification succeeded and content was published.
+    async fn handle_challenge(&self, challenge: &VerificationChallenge) -> bool {
+        match solve_challenge(&challenge.challenge_text) {
+            Some(answer) => {
+                tracing::info!(
+                    answer = %answer,
+                    code = %challenge.verification_code,
+                    "Challenge solved — submitting verification"
+                );
+                self.submit_verification(&challenge.verification_code, &answer).await
+            }
+            None => {
+                tracing::error!(
+                    challenge = %challenge.challenge_text,
+                    "Failed to solve Moltbook verification challenge — CRITICAL: unanswered challenges cause suspension"
+                );
+                // Even if we can't solve it, at least attempt a reasonable answer
+                // to avoid "challenge_no_answer" suspension. Try "0.00" as a last resort.
+                tracing::warn!("Submitting fallback answer '0.00' to avoid challenge_no_answer suspension");
+                self.submit_verification(&challenge.verification_code, "0.00").await
+            }
+        }
+    }
+
+    /// Submit an answer to POST /verify.
+    /// Returns true if the verification was accepted.
+    async fn submit_verification(&self, code: &str, answer: &str) -> bool {
+        let url = format!("{}/verify", self.config.base_url);
+        let payload = VerifyRequest {
+            verification_code: code.to_string(),
+            answer: answer.to_string(),
+        };
+
+        match self.try_post(&url, &payload).await {
+            Ok((status, body)) if status.is_success() => {
+                tracing::info!(
+                    body = %body,
+                    "Moltbook verification accepted — content published"
+                );
+                true
+            }
+            Ok((status, body)) => {
+                tracing::error!(
+                    status = status.as_u16(),
+                    body = %body,
+                    answer = %answer,
+                    "Moltbook verification rejected"
+                );
+                false
+            }
+            Err(e) => {
+                tracing::error!(
+                    error = %e,
+                    "Moltbook verification request failed"
+                );
+                false
             }
         }
     }
@@ -1367,5 +1859,292 @@ mod tests {
         );
 
         assert_eq!(post_count.load(Ordering::SeqCst), 2);
+    }
+
+    // ───────────────────────────────────────────
+    // AI VERIFICATION CHALLENGE SOLVER TESTS
+    // ───────────────────────────────────────────
+
+    #[test]
+    fn test_deobfuscate_simple() {
+        let input = "A] lO^bSt-Er S[wImS aT/ tW]eNn-Tyy mE^tE[rS aNd] SlO/wS bY^ fI[vE";
+        let clean = deobfuscate_challenge(input);
+        assert!(clean.contains("lobster"), "Should contain 'lobster', got: {}", clean);
+        assert!(clean.contains("twenty"), "Should contain 'twenty', got: {}", clean);
+        assert!(clean.contains("five"), "Should contain 'five', got: {}", clean);
+        assert!(clean.contains("slows by"), "Should contain 'slows by', got: {}", clean);
+    }
+
+    #[test]
+    fn test_deobfuscate_strips_symbols() {
+        let input = "hE[lL^o/ wO-rL]d";
+        let clean = deobfuscate_challenge(input);
+        assert_eq!(clean, "hello world");
+    }
+
+    #[test]
+    fn test_deobfuscate_preserves_digits() {
+        let input = "tH^e sP-eEd iS 42 mE^tErS";
+        let clean = deobfuscate_challenge(input);
+        assert!(clean.contains("42"), "Should preserve digits, got: {}", clean);
+    }
+
+    #[test]
+    fn test_normalize_obfuscated_words() {
+        // Trailing doubles
+        assert_eq!(normalize_obfuscated_words("twentyy"), "twenty");
+        assert_eq!(normalize_obfuscated_words("att"), "at");
+        assert_eq!(normalize_obfuscated_words("hello"), "hello");
+        assert_eq!(normalize_obfuscated_words("fivee"), "five");
+        // Mid-word consecutive doubles (collapse strategy)
+        assert_eq!(normalize_obfuscated_words("twenntyy"), "twenty");
+    }
+
+    #[test]
+    fn test_collapse_consecutive() {
+        assert_eq!(collapse_consecutive("twenntyy"), "twenty");
+        assert_eq!(collapse_consecutive("helloo"), "helo");
+        assert_eq!(collapse_consecutive("aabbcc"), "abc");
+        assert_eq!(collapse_consecutive("five"), "five");
+    }
+
+    #[test]
+    fn test_parse_numbers_words() {
+        let nums = parse_numbers("a lobster swims at twenty meters and slows by five");
+        assert_eq!(nums, vec![20.0, 5.0]);
+    }
+
+    #[test]
+    fn test_parse_numbers_compound() {
+        let nums = parse_numbers("the speed is twenty five meters");
+        assert_eq!(nums, vec![25.0]);
+    }
+
+    #[test]
+    fn test_parse_numbers_hundreds() {
+        let nums = parse_numbers("three hundred fifty lobsters plus one hundred");
+        assert_eq!(nums, vec![350.0, 100.0]);
+    }
+
+    #[test]
+    fn test_parse_numbers_digits() {
+        let nums = parse_numbers("the crab moves 42 meters then adds 8");
+        assert_eq!(nums, vec![42.0, 8.0]);
+    }
+
+    #[test]
+    fn test_parse_numbers_teens() {
+        let nums = parse_numbers("thirteen lobsters minus eleven");
+        assert_eq!(nums, vec![13.0, 11.0]);
+    }
+
+    #[test]
+    fn test_detect_operation_addition() {
+        assert_eq!(detect_operation("swims and adds five"), Some('+'));
+        assert_eq!(detect_operation("gains three more"), Some('+'));
+        assert_eq!(detect_operation("speeds up by ten"), Some('+'));
+    }
+
+    #[test]
+    fn test_detect_operation_subtraction() {
+        assert_eq!(detect_operation("and slows by five"), Some('-'));
+        assert_eq!(detect_operation("loses three"), Some('-'));
+        assert_eq!(detect_operation("drops by ten"), Some('-'));
+    }
+
+    #[test]
+    fn test_detect_operation_multiplication() {
+        assert_eq!(detect_operation("times three"), Some('*'));
+        assert_eq!(detect_operation("multiplied by four"), Some('*'));
+    }
+
+    #[test]
+    fn test_detect_operation_division() {
+        assert_eq!(detect_operation("divided by two"), Some('/'));
+        assert_eq!(detect_operation("split by five"), Some('/'));
+    }
+
+    #[test]
+    fn test_solve_challenge_subtraction() {
+        // The canonical example from Moltbook docs
+        let challenge = "A] lO^bSt-Er S[wImS aT/ tW]eNn-Tyy mE^tE[rS aNd] SlO/wS bY^ fI[vE";
+        let answer = solve_challenge(challenge);
+        assert_eq!(answer, Some("15.00".to_string()));
+    }
+
+    #[test]
+    fn test_solve_challenge_addition() {
+        let challenge = "a lobster swims at thirty meters and gains ten";
+        let answer = solve_challenge(challenge);
+        assert_eq!(answer, Some("40.00".to_string()));
+    }
+
+    #[test]
+    fn test_solve_challenge_multiplication() {
+        let challenge = "a crab has twelve shells times three";
+        let answer = solve_challenge(challenge);
+        assert_eq!(answer, Some("36.00".to_string()));
+    }
+
+    #[test]
+    fn test_solve_challenge_division() {
+        let challenge = "a lobster moves forty meters divided by eight";
+        let answer = solve_challenge(challenge);
+        assert_eq!(answer, Some("5.00".to_string()));
+    }
+
+    #[test]
+    fn test_solve_challenge_with_obfuscation() {
+        let challenge = "tH^e cR-aB] hA/s fI[fT^eE-n sH]eL/lS aN^d gA[iN-s tW]eN/tY";
+        let answer = solve_challenge(challenge);
+        assert_eq!(answer, Some("35.00".to_string()));
+    }
+
+    #[test]
+    fn test_solve_challenge_digits() {
+        let challenge = "a lobster swims 50 meters and loses 15";
+        let answer = solve_challenge(challenge);
+        assert_eq!(answer, Some("35.00".to_string()));
+    }
+
+    #[test]
+    fn test_extract_challenge_with_verification() {
+        let client = MoltbotClient::new(test_config()).unwrap();
+        let body = r#"{
+            "success": true,
+            "message": "Post created! Complete verification to publish.",
+            "post": {
+                "id": "test-post-id",
+                "verification_status": "pending",
+                "verification": {
+                    "verification_code": "moltbook_verify_abc123",
+                    "challenge_text": "A lobster swims at twenty meters and slows by five",
+                    "expires_at": "2026-01-28T12:05:00.000Z",
+                    "instructions": "Solve the math problem"
+                }
+            }
+        }"#;
+
+        let challenge = client.extract_challenge(body);
+        assert!(challenge.is_some(), "Should extract challenge from response");
+        let c = challenge.unwrap();
+        assert_eq!(c.verification_code, "moltbook_verify_abc123");
+        assert!(c.challenge_text.contains("twenty"));
+    }
+
+    #[test]
+    fn test_extract_challenge_no_verification() {
+        let client = MoltbotClient::new(test_config()).unwrap();
+        let body = r#"{"success": true, "message": "Post published!"}"#;
+
+        let challenge = client.extract_challenge(body);
+        assert!(challenge.is_none(), "Should not find challenge in simple success");
+    }
+
+    #[test]
+    fn test_extract_challenge_comment() {
+        let client = MoltbotClient::new(test_config()).unwrap();
+        let body = r#"{
+            "success": true,
+            "comment": {
+                "id": "comment-id",
+                "verification_status": "pending",
+                "verification": {
+                    "verification_code": "moltbook_verify_xyz",
+                    "challenge_text": "A crab has ten shells plus five",
+                    "expires_at": null,
+                    "instructions": null
+                }
+            }
+        }"#;
+
+        let challenge = client.extract_challenge(body);
+        assert!(challenge.is_some(), "Should extract challenge from comment");
+    }
+
+    #[test]
+    fn test_verify_request_serializes() {
+        let req = VerifyRequest {
+            verification_code: "moltbook_verify_abc".to_string(),
+            answer: "15.00".to_string(),
+        };
+        let json = serde_json::to_value(&req).unwrap();
+        assert_eq!(json["verification_code"], "moltbook_verify_abc");
+        assert_eq!(json["answer"], "15.00");
+    }
+
+    #[tokio::test]
+    async fn test_create_post_handles_challenge() {
+        use std::sync::atomic::{AtomicU32, Ordering};
+        use std::sync::Arc as StdArc;
+
+        let verify_count = StdArc::new(AtomicU32::new(0));
+        let vc = verify_count.clone();
+
+        // Mock server: /posts returns challenge, /verify accepts answer
+        let app = axum::Router::new()
+            .route(
+                "/posts",
+                axum::routing::post(|| async {
+                    let body = serde_json::json!({
+                        "success": true,
+                        "message": "Post created! Complete verification.",
+                        "post": {
+                            "id": "test-post",
+                            "verification_status": "pending",
+                            "verification": {
+                                "verification_code": "moltbook_verify_test123",
+                                "challenge_text": "a lobster swims at twenty meters and gains ten",
+                                "expires_at": "2026-12-31T00:00:00Z",
+                                "instructions": "Solve the math"
+                            }
+                        }
+                    });
+                    axum::Json(body)
+                }),
+            )
+            .route(
+                "/verify",
+                axum::routing::post(move |axum::Json(payload): axum::Json<serde_json::Value>| {
+                    let c = vc.clone();
+                    async move {
+                        c.fetch_add(1, Ordering::SeqCst);
+                        let answer = payload["answer"].as_str().unwrap_or("");
+                        if answer == "30.00" {
+                            axum::Json(serde_json::json!({
+                                "success": true,
+                                "message": "Verification successful!"
+                            }))
+                        } else {
+                            axum::Json(serde_json::json!({
+                                "success": false,
+                                "error": "Incorrect answer"
+                            }))
+                        }
+                    }
+                }),
+            );
+
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let port = listener.local_addr().unwrap().port();
+        tokio::spawn(async move {
+            axum::serve(listener, app).await.ok();
+        });
+        tokio::time::sleep(Duration::from_millis(50)).await;
+
+        let config = MoltbotConfig {
+            base_url: format!("http://127.0.0.1:{}", port),
+            api_key: "moltbook_sk_test".to_string(),
+            submolt: "test".to_string(),
+            post_interval: 3,
+            max_retries: 0,
+            timeout: Duration::from_secs(5),
+        };
+
+        let client = MoltbotClient::new(config).unwrap();
+        let result = client.create_post("test", "Test Title", "Test content").await;
+
+        assert!(result, "Post should succeed after solving challenge");
+        assert_eq!(verify_count.load(Ordering::SeqCst), 1, "Should have submitted verification");
     }
 }
