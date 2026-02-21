@@ -383,20 +383,22 @@ impl MoltbotClient {
 
         for attempt in 0..=self.config.max_retries {
             match self.try_post(&url, &payload).await {
-                Ok(status) if status.is_success() => {
+                Ok((status, _)) if status.is_success() => {
+                    tracing::info!("Moltbook post published successfully");
                     return true;
                 }
-                Ok(status) if status.as_u16() == 429 => {
+                Ok((status, _)) if status.as_u16() == 429 => {
                     tracing::warn!(
                         attempt = attempt + 1,
                         "Moltbook rate limited (429) \u{2014} will retry next interval"
                     );
                     return false;
                 }
-                Ok(status) => {
+                Ok((status, body)) => {
                     tracing::warn!(
                         attempt = attempt + 1,
                         status = status.as_u16(),
+                        body = %body,
                         "Moltbook post rejected"
                     );
                 }
@@ -410,7 +412,9 @@ impl MoltbotClient {
             }
 
             if attempt < self.config.max_retries {
-                tokio::time::sleep(Duration::from_millis(100 * (attempt as u64 + 1))).await;
+                // Exponential backoff: 200ms, 400ms, 800ms...
+                let delay = 200 * (1u64 << attempt.min(4));
+                tokio::time::sleep(Duration::from_millis(delay)).await;
             }
         }
 
@@ -418,31 +422,46 @@ impl MoltbotClient {
         false
     }
 
-    /// Validate API key by fetching agent profile. Returns true if valid.
-    pub async fn check_profile(&self) -> bool {
+    /// Validate API key by fetching agent profile.
+    /// Returns (is_valid, is_claimed) — is_valid true if the API key works.
+    pub async fn check_profile(&self) -> (bool, bool) {
         let url = format!("{}/agents/me", self.config.base_url);
         match self.try_get(&url).await {
-            Ok(status) if status.is_success() => true,
-            Ok(status) => {
+            Ok((status, body)) if status.is_success() => {
+                // Parse claim status from response
+                let claimed = body.contains("\"is_claimed\":true");
+                let name = serde_json::from_str::<serde_json::Value>(&body)
+                    .ok()
+                    .and_then(|v| v["agent"]["name"].as_str().map(String::from))
+                    .unwrap_or_default();
+                tracing::info!(
+                    agent = %name,
+                    claimed = claimed,
+                    "Moltbook profile verified"
+                );
+                (true, claimed)
+            }
+            Ok((status, body)) => {
                 tracing::warn!(
                     status = status.as_u16(),
+                    body = %body,
                     "Moltbook profile check failed"
                 );
-                false
+                (false, false)
             }
             Err(e) => {
                 tracing::warn!(error = %e, "Moltbook profile check error");
-                false
+                (false, false)
             }
         }
     }
 
-    /// Single POST attempt. Returns status code.
+    /// Single POST attempt. Returns (status_code, response_body).
     async fn try_post<T: Serialize>(
         &self,
         url: &str,
         payload: &T,
-    ) -> Result<reqwest::StatusCode, reqwest::Error> {
+    ) -> Result<(reqwest::StatusCode, String), reqwest::Error> {
         let resp = self
             .http
             .post(url)
@@ -451,14 +470,16 @@ impl MoltbotClient {
             .send()
             .await?;
 
-        Ok(resp.status())
+        let status = resp.status();
+        let body = resp.text().await.unwrap_or_default();
+        Ok((status, body))
     }
 
-    /// Single GET attempt. Returns status code.
+    /// Single GET attempt. Returns (status_code, response_body).
     async fn try_get(
         &self,
         url: &str,
-    ) -> Result<reqwest::StatusCode, reqwest::Error> {
+    ) -> Result<(reqwest::StatusCode, String), reqwest::Error> {
         let resp = self
             .http
             .get(url)
@@ -466,7 +487,9 @@ impl MoltbotClient {
             .send()
             .await?;
 
-        Ok(resp.status())
+        let status = resp.status();
+        let body = resp.text().await.unwrap_or_default();
+        Ok((status, body))
     }
 }
 
@@ -758,6 +781,15 @@ pub fn start_adapter_loop(
             post_interval = config.post_interval,
             "Moltbot adapter started \u{2014} posting to Moltbook"
         );
+
+        // Validate API key and check claim status on startup
+        let (valid, claimed) = bridge.client.check_profile().await;
+        if !valid {
+            tracing::warn!("Moltbook API key may be invalid or service is down \u{2014} adapter will keep trying");
+        }
+        if !claimed {
+            tracing::warn!("Agent is not yet claimed on Moltbook \u{2014} posts may be rejected until claimed");
+        }
 
         while let Some(snapshot) = rx.recv().await {
             bridge.snapshots_received += 1;
