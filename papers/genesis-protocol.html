@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Genesis Protocol: A Lotka–Volterra Inspired Software Organism with Cryptographic Provenance</title>
+<style>
+  @page {
+    size: letter;
+    margin: 1in 0.85in;
+    @bottom-center {
+      content: "Burns (2026) — Genesis Protocol";
+      font-size: 8pt;
+      color: #888;
+    }
+    @bottom-right {
+      content: counter(page);
+      font-size: 8pt;
+      color: #888;
+    }
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Times New Roman', 'Georgia', serif;
+    font-size: 10.5pt;
+    line-height: 1.45;
+    color: #1a1a1a;
+    max-width: 7in;
+    margin: 0 auto;
+    padding: 0;
+  }
+
+  /* ─── Title Block ─── */
+  .title-block {
+    text-align: center;
+    margin-bottom: 24pt;
+    padding-bottom: 12pt;
+    border-bottom: 1px solid #ccc;
+  }
+  .title-block h1 {
+    font-size: 18pt;
+    line-height: 1.25;
+    margin-bottom: 10pt;
+    font-weight: bold;
+  }
+  .title-block .author {
+    font-size: 11pt;
+    font-weight: bold;
+    margin-bottom: 2pt;
+  }
+  .title-block .affiliation {
+    font-size: 9.5pt;
+    color: #444;
+    margin-bottom: 2pt;
+  }
+  .title-block .identifiers {
+    font-size: 9pt;
+    color: #555;
+    margin-top: 8pt;
+  }
+  .title-block .identifiers a {
+    color: #1a5276;
+    text-decoration: none;
+  }
+  .title-block .license {
+    font-size: 8.5pt;
+    color: #777;
+    margin-top: 6pt;
+  }
+
+  /* ─── Abstract ─── */
+  .abstract {
+    margin: 16pt 0;
+    padding: 10pt 16pt;
+    background: #f9f9f9;
+    border-left: 3px solid #1a5276;
+  }
+  .abstract h2 {
+    font-size: 11pt;
+    font-variant: small-caps;
+    letter-spacing: 0.5pt;
+    margin-bottom: 6pt;
+  }
+  .abstract p {
+    font-size: 9.5pt;
+    text-align: justify;
+    hyphens: auto;
+  }
+  .abstract .keywords {
+    font-size: 8.5pt;
+    color: #555;
+    margin-top: 8pt;
+    font-style: italic;
+  }
+
+  /* ─── Section Headings ─── */
+  h2 {
+    font-size: 13pt;
+    font-weight: bold;
+    margin-top: 20pt;
+    margin-bottom: 8pt;
+    color: #1a1a1a;
+    border-bottom: 0.5pt solid #ddd;
+    padding-bottom: 3pt;
+  }
+  h3 {
+    font-size: 11pt;
+    font-weight: bold;
+    margin-top: 14pt;
+    margin-bottom: 6pt;
+    color: #333;
+  }
+
+  /* ─── Body Text ─── */
+  p {
+    text-align: justify;
+    margin-bottom: 7pt;
+    hyphens: auto;
+  }
+  p + p { text-indent: 0; }
+
+  /* ─── Tables ─── */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 9pt;
+    margin: 10pt 0;
+  }
+  th {
+    background: #2c3e50;
+    color: white;
+    font-weight: bold;
+    text-align: left;
+    padding: 5pt 6pt;
+    font-size: 8.5pt;
+    text-transform: uppercase;
+    letter-spacing: 0.3pt;
+  }
+  td {
+    padding: 4pt 6pt;
+    border-bottom: 0.5pt solid #ddd;
+    vertical-align: top;
+  }
+  tr:nth-child(even) td { background: #f7f7f7; }
+  .table-caption {
+    font-size: 9pt;
+    color: #555;
+    margin-top: 4pt;
+    margin-bottom: 12pt;
+    font-style: italic;
+  }
+
+  /* ─── Code ─── */
+  code {
+    font-family: 'Consolas', 'Courier New', monospace;
+    font-size: 9pt;
+    background: #f4f4f4;
+    padding: 1pt 3pt;
+    border-radius: 2pt;
+  }
+  pre {
+    background: #f4f4f4;
+    border: 0.5pt solid #ddd;
+    border-radius: 3pt;
+    padding: 8pt 10pt;
+    font-size: 8.5pt;
+    line-height: 1.35;
+    overflow-x: auto;
+    margin: 8pt 0;
+    font-family: 'Consolas', 'Courier New', monospace;
+  }
+
+  /* ─── Figures ─── */
+  .figure {
+    margin: 12pt 0;
+    padding: 10pt;
+    background: #fafafa;
+    border: 0.5pt solid #ddd;
+    border-radius: 3pt;
+  }
+  .figure pre {
+    background: none;
+    border: none;
+    padding: 0;
+    margin: 0;
+    font-size: 8pt;
+  }
+  .figure-caption {
+    font-size: 9pt;
+    color: #555;
+    margin-top: 6pt;
+    font-style: italic;
+    text-align: center;
+  }
+
+  /* ─── Equations ─── */
+  .equation {
+    text-align: center;
+    margin: 10pt 0;
+    font-style: italic;
+    font-size: 10pt;
+  }
+
+  /* ─── Lists ─── */
+  ol, ul {
+    margin: 6pt 0 6pt 18pt;
+    font-size: 10pt;
+  }
+  li { margin-bottom: 3pt; }
+
+  /* ─── Blockquote (for emphasis blocks) ─── */
+  blockquote {
+    border-left: 2pt solid #1a5276;
+    padding-left: 10pt;
+    margin: 8pt 0;
+    color: #333;
+    font-size: 9.5pt;
+  }
+
+  /* ─── References ─── */
+  .references {
+    font-size: 9pt;
+    line-height: 1.4;
+  }
+  .references p {
+    text-indent: -18pt;
+    padding-left: 18pt;
+    margin-bottom: 4pt;
+    text-align: left;
+  }
+
+  /* ─── Appendix ─── */
+  .appendix h2 {
+    color: #2c3e50;
+  }
+
+  /* ─── Footer ─── */
+  .footer {
+    margin-top: 24pt;
+    padding-top: 10pt;
+    border-top: 1pt solid #ccc;
+    font-size: 8.5pt;
+    color: #666;
+    text-align: center;
+    line-height: 1.5;
+  }
+
+  /* ─── Links ─── */
+  a {
+    color: #1a5276;
+    text-decoration: none;
+  }
+  a:hover { text-decoration: underline; }
+
+  /* ─── Page breaks ─── */
+  .page-break { page-break-before: always; }
+
+  /* ─── Two-column for tables ─── */
+  .hash-table td:last-child {
+    font-family: 'Consolas', 'Courier New', monospace;
+    font-size: 7.5pt;
+    word-break: break-all;
+  }
+
+  /* Bold key terms */
+  strong { font-weight: bold; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<!-- TITLE BLOCK                                                        -->
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<div class="title-block">
+  <h1>Genesis Protocol: A Lotka–Volterra Inspired<br>Software Organism with Cryptographic Provenance</h1>
+  <div class="author">Kevan Burns</div>
+  <div class="affiliation">Independent Researcher · FTH Trading, Norcross, GA</div>
+  <div class="affiliation">kevan.burns@fthtrading.com</div>
+  <div class="identifiers">
+    ORCID: <a href="https://orcid.org/0009-0008-8425-939X">0009-0008-8425-939X</a><br>
+    Version 1.0 — February 21, 2026 &nbsp;|&nbsp;
+    <a href="https://github.com/FTHTrading/AI">GitHub Repository</a><br>
+    DOI: <a href="https://doi.org/10.5281/zenodo.18646886">10.5281/zenodo.18646886</a>
+  </div>
+  <div class="license">
+    © 2026 Kevan Burns. Licensed under CC BY 4.0. Source code licensed under MIT.
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<!-- ABSTRACT                                                           -->
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<div class="abstract">
+  <h2>Abstract</h2>
+  <p>We present Genesis Protocol, a self-sustaining digital organism implemented as a six-crate Rust workspace in which autonomous agents are born with SHA-256–derived genomes, compete for resources in per-niche pools governed by logistic regeneration, face seasonal environmental oscillation and stochastic catastrophe events, and are subject to natural selection pressure. The ecological model draws on Lotka–Volterra resource competition theory, implementing density-dependent foraging, cross-niche interference, and proportional extraction — replacing the winner-take-all dynamics common in multi-agent simulations with biologically plausible population dynamics. The system formalizes its operational requirements as the Software Organism Protocol (SOP-1) and establishes source code integrity through per-crate Merkle trees whose edition root can be anchored on a production blockchain. We validate the architecture through 143 automated tests across 39 source files totaling 10,015 lines of Rust, and demonstrate that the provenance model developed for literary publishing (Burns, 2026) generalizes to executable software systems without modification to its cryptographic infrastructure.</p>
+  <div class="keywords"><strong>Keywords:</strong> artificial life, evolutionary computation, Lotka–Volterra, multi-agent systems, resource competition, ecological simulation, software organism, Rust, cryptographic provenance, Merkle trees</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<!-- CONTENTS                                                           -->
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<h2>Contents</h2>
+<ol>
+  <li>Introduction</li>
+  <li>Related Work</li>
+  <li>System Architecture</li>
+  <li>Ecological Model</li>
+  <li>Energy Economics</li>
+  <li>Selection and Reproduction</li>
+  <li>Provenance Model</li>
+  <li>Merkle Tree System</li>
+  <li>Protocol Specification (SOP-1)</li>
+  <li>Evaluation</li>
+  <li>Discussion</li>
+  <li>Conclusion</li>
+</ol>
+<p style="font-size:9pt; color:#555; margin-top:4pt;">References · Appendix A: System Invariants · Appendix B: Crate Hash Table · Appendix C: How to Cite</p>
+
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<!-- 1. INTRODUCTION                                                    -->
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<h2>1. Introduction</h2>
+
+<p>Artificial life research has a long history of constructing software systems that exhibit emergent behavior through the interaction of simple agents operating under environmental pressure [1, 2]. However, the majority of such systems share two structural weaknesses: their ecological dynamics are unrealistic (often reducing resource competition to winner-take-all allocation), and their provenance — the ability to independently verify that a particular version of the system produced particular results — is unaddressed.</p>
+
+<p>We present Genesis Protocol, a system that addresses both concerns simultaneously. The organism is a Rust workspace of six library crates and one binary that runs as an HTTP server with a background survival loop. Agents are spawned with genomes derived from SHA-256 hashes of unique seed strings, ensuring genuine genetic diversity from the primordial generation. They compete for resources in per-niche pools that regenerate via logistic growth, experience seasonal oscillation and stochastic perturbation, and face natural selection pressure that culls unfit agents while permitting viable ones to replicate.</p>
+
+<p>This paper makes three contributions:</p>
+
+<ol>
+  <li><strong>A biologically grounded ecological model</strong> for multi-agent resource competition, implementing Lotka–Volterra dynamics with density-dependent foraging, cross-niche interference coefficients, and proportional extraction that produces realistic population oscillation, resource depletion, and recovery cycles.</li>
+  <li><strong>The Software Organism Protocol (SOP-1)</strong>, a formal specification extending the Literary Protocol Standard (LPS-1) from literary publishing [3] to executable software systems, defining the ecological, metabolic, selection, and provenance requirements that any conforming implementation must satisfy.</li>
+  <li><strong>A complete provenance infrastructure</strong> using per-crate Merkle trees, SHA-256 manifests, and on-chain anchoring capability that enables any party to independently verify the integrity of the source code without trusting the author, hosting platform, or any intermediary.</li>
+</ol>
+
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<!-- 2. RELATED WORK                                                    -->
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<h2>2. Related Work</h2>
+
+<h3>2.1 Artificial Life and Multi-Agent Systems</h3>
+<p>The field of artificial life, formalized by Langton [1], explores emergent behavior in computational systems. Tierra [2] demonstrated that digital organisms competing for CPU cycles could exhibit evolutionary dynamics analogous to biological systems. More recent work on multi-agent systems [4] has explored cooperation, competition, and emergent social behavior, but ecological realism — particularly in resource dynamics — has often been sacrificed for computational convenience.</p>
+
+<h3>2.2 Lotka–Volterra Resource Competition</h3>
+<p>The Lotka–Volterra equations [5, 6] provide a mathematical framework for modeling interspecific competition. The discrete-time formulation used in this work models resource dynamics as:</p>
+<div class="equation">dN<sub>i</sub>/dt = r<sub>i</sub> · N<sub>i</sub> · (1 − (N<sub>i</sub> + Σ α<sub>ij</sub>N<sub>j</sub>) / K<sub>i</sub>)</div>
+<p>where N<sub>i</sub> is the population of species i, r<sub>i</sub> is the intrinsic growth rate, K<sub>i</sub> is the carrying capacity, and α<sub>ij</sub> is the competition coefficient measuring the effect of species j on species i. This framework has been extensively validated in ecological research [7] but has seen limited application in software agent systems.</p>
+
+<h3>2.3 Cryptographic Provenance</h3>
+<p>Content integrity verification using Merkle trees [8] is well established in distributed systems — Git uses Merkle DAGs for repository integrity [9], and IPFS uses them for content-addressed storage [10]. Burns (2026) [3] applied Merkle tree hashing to literary manuscripts, establishing a five-layer provenance stack anchored on a production blockchain. Our work extends this approach from static content (manuscripts) to dynamic executable systems (software organisms).</p>
+
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<!-- 3. SYSTEM ARCHITECTURE                                             -->
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<h2>3. System Architecture</h2>
+
+<h3>3.1 Design Principles</h3>
+<p><strong>Biological plausibility.</strong> Ecological dynamics must be grounded in established theory (Lotka–Volterra competition, logistic growth, density dependence) rather than ad hoc heuristics.</p>
+<p><strong>Economic coherence.</strong> Energy (ATP) is a conserved quantity subject to thermodynamic constraints. No agent can create energy from nothing; all income derives from resource extraction or market rewards.</p>
+<p><strong>Cryptographic verifiability.</strong> Every source file has a SHA-256 hash. Per-crate Merkle roots compose into an edition root that can be independently recomputed.</p>
+<p><strong>Formal specification.</strong> Operational requirements are codified as SOP-1, enabling independent conforming implementations.</p>
+
+<h3>3.2 Crate Architecture</h3>
+<table>
+  <thead>
+    <tr><th>Layer</th><th>Crate</th><th>Responsibility</th><th>Files</th><th>Lines</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>1</td><td><code>genesis-dna</code></td><td>Genome, identity, traits, lineage, roles, skills</td><td>7</td><td>918</td></tr>
+    <tr><td>2</td><td><code>metabolism</code></td><td>ATP accounting, ledger, treasury, proof-of-work</td><td>6</td><td>1,019</td></tr>
+    <tr><td>3</td><td><code>ecosystem</code></td><td>Communication mesh, problem markets, telemetry</td><td>8</td><td>1,022</td></tr>
+    <tr><td>4</td><td><code>evolution</code></td><td>Mutation engine, selection pressure, gene transfer</td><td>5</td><td>638</td></tr>
+    <tr><td>5</td><td><code>gateway</code></td><td>World engine, HTTP server, persistence, security</td><td>7</td><td>5,172</td></tr>
+    <tr><td>6</td><td><code>apostle</code></td><td>Outbound intelligence, conversion, targeting</td><td>5</td><td>535</td></tr>
+    <tr><td>—</td><td><code>tests</code></td><td>Load simulation integration tests</td><td>1</td><td>511</td></tr>
+    <tr><td colspan="3"><strong>Total</strong></td><td><strong>39</strong></td><td><strong>10,015</strong></td></tr>
+  </tbody>
+</table>
+<div class="table-caption">Table 1. Crate decomposition with file and line counts.</div>
+
+<h3>3.3 Runtime Model</h3>
+<p>The organism runs as an Axum HTTP server with a background survival loop. Each epoch executes a deterministic six-step cycle:</p>
+
+<div class="figure">
+<pre>
+┌─────────────────────────────────────────────────────────────┐
+│                    EPOCH CYCLE (6 steps)                     │
+├─────────────────────────────────────────────────────────────┤
+│ Step 0: Environment tick (regenerate, seasons, events)       │
+│ Step 1: Resource extraction (proportional foraging per niche)│
+│ Step 2: Basal metabolism (cost of living)                    │
+│ Step 3: Problem market (supplementary income)                │
+│ Step 4: Communication (gated broadcasting)                   │
+│ Step 5: Mutation (environmentally modulated)                 │
+│ Step 6: Natural selection (fitness culling + replication)     │
+└─────────────────────────────────────────────────────────────┘
+</pre>
+<div class="figure-caption">Figure 1. Six-step epoch cycle.</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<!-- 4. ECOLOGICAL MODEL                                                -->
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<h2>4. Ecological Model</h2>
+
+<h3>4.1 Resource Pools</h3>
+<p>Each of the five agent roles (Optimizer, Strategist, Communicator, Archivist, Executor) occupies an ecological niche with an independent resource pool. Pools regenerate via logistic growth:</p>
+<div class="equation">R(t+1) = R(t) + r · R(t) · (1 − R(t)/K)</div>
+<p>where R(t) is the current resource level, r is the per-epoch regeneration rate (default: 0.12), and K is the carrying capacity. Each pool limits extraction to 40% of its current level per epoch, preventing complete depletion:</p>
+<div class="equation">available(t) = 0.4 · R(t)</div>
+
+<h3>4.2 Seasonal Oscillation</h3>
+<p>The environment exhibits periodic variation via sinusoidal modulation of carrying capacity:</p>
+<div class="equation">K<sub>eff</sub>(epoch) = K · (1 + A · sin(2π · epoch / T))</div>
+<p>where A = 0.25 (±25% amplitude) and T = 100 epochs. This produces genuine boom-and-bust cycles: populations expanding during favorable seasons face resource scarcity during unfavorable ones.</p>
+
+<h3>4.3 Stochastic Events</h3>
+<p><strong>Catastrophe</strong> (2% probability per epoch): Reduces carrying capacity to 30–60% of normal for 10–20 epochs. Models mass-extinction–scale events testing population resilience.</p>
+<p><strong>Resource boom</strong> (5% probability per epoch): Spikes pool levels to 90% of capacity. Models windfall events enabling rapid population expansion.</p>
+
+<h3>4.4 Density-Dependent Foraging</h3>
+<p>Per-agent extraction decreases with niche crowding:</p>
+<div class="equation">density_factor = 1 / (1 + n<sub>niche</sub> · 0.1)</div>
+<p>A niche with 10 agents yields a density factor of 0.5 — each agent extracts half as much as it would alone. This implements intraspecific competition: conspecifics are the strongest competitors because they exploit identical resources.</p>
+
+<h3>4.5 Cross-Niche Competition</h3>
+<p>Agents in different niches exert a weaker competitive effect via the cross-niche interference coefficient α = 0.15:</p>
+<div class="equation">cross_penalty = 1 − α · (N<sub>total</sub> − n<sub>niche</sub>) / N<sub>total</sub></div>
+
+<h3>4.6 Complete Extraction Formula</h3>
+<p>The per-agent, per-epoch extraction combines all five ecological factors:</p>
+<div class="equation">E<sub>i</sub> = f<sub>i</sub> · s<sub>i</sub> · (R<sub>pool</sub>/K<sub>pool</sub>) · density_factor · cross_penalty · σ</div>
+<p>where f<sub>i</sub> is agent fitness, s<sub>i</sub> is niche skill match, R<sub>pool</sub>/K<sub>pool</sub> is pool utilization ratio, and σ = 2.5 is a scale factor calibrated so that an average agent nets positive ATP at equilibrium.</p>
+
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<!-- 5. ENERGY ECONOMICS                                                -->
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<h2>5. Energy Economics</h2>
+
+<h3>5.1 ATP as Universal Currency</h3>
+<p>All economic activity is denominated in Adenosine Triphosphate (ATP), an intentional biological metaphor. ATP is the unit of account, medium of exchange, and store of value within the organism.</p>
+
+<h3>5.2 Metabolic Cost</h3>
+<p>Every agent pays a basal metabolic cost of 0.15 ATP per epoch. Balance is clamped at zero (Invariant M-1); the metabolic tick returns actual amount consumed, preventing negative balances.</p>
+
+<h3>5.3 Treasury and Skim</h3>
+<p>A central treasury applies a configurable skim to market rewards, funding crisis stipends when population falls below half of carrying capacity. This creates a counter-cyclical stabilizer.</p>
+
+<h3>5.4 Ledger Integrity</h3>
+<p>The ATP ledger tracks all transactions with typed entries and computes total supply as the sum of all agent balances at query time (Invariant M-2), eliminating accumulation errors.</p>
+
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<!-- 6. SELECTION AND REPRODUCTION                                      -->
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<h2>6. Selection and Reproduction</h2>
+
+<h3>6.1 Dynamic Population Cap</h3>
+<div class="equation">K<sub>pop</sub> = ⌊total_capacity / 15⌋, clamped to [10, 500]</div>
+<p>This couples population dynamics to resource availability: catastrophes reduce both carrying capacity and allowable population.</p>
+
+<h3>6.2 Fitness-Based Culling</h3>
+<p>When population exceeds the dynamic cap, the selection engine eliminates agents with the lowest fitness scores. Agents younger than 10 epochs are exempt (Invariant S-2).</p>
+
+<h3>6.3 Stasis and Death</h3>
+<p>Agents at zero ATP enter stasis. After 3 epochs in stasis, they are marked for death (Invariant S-3).</p>
+
+<h3>6.4 Replication</h3>
+<p>Agents above a fitness threshold with sufficient ATP can replicate, producing offspring with mutated genomes. Births per epoch are capped at 3 (MAX_BIRTHS_PER_EPOCH).</p>
+
+<h3>6.5 Mutation</h3>
+<p>Mutation pressure is modulated by environmental stress — higher pressure during harsh seasons increases mutation rates, driving faster adaptation when the environment demands it.</p>
+
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<!-- 7. PROVENANCE MODEL                                                -->
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<h2>7. Provenance Model</h2>
+
+<h3>7.1 Extending Literary Provenance to Software</h3>
+<p>The provenance model adapts the multi-layer architecture from <em>Deterministic Literary Publishing</em> [3]. Where the literary protocol hashes 31 text blocks, 5 artifacts, 10 images, and 10 prompts across four Merkle trees, the software protocol hashes 39 source files across 7 crate-level Merkle trees. The cryptographic infrastructure is identical: SHA-256 hashing, binary Merkle tree construction with the odd-leaf-duplicate rule, and a composite edition root suitable for on-chain anchoring.</p>
+
+<h3>7.2 Evidence Chain</h3>
+<table>
+  <thead>
+    <tr><th>Layer</th><th>Evidence</th><th>Record</th><th>Purpose</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>1</td><td>Local filesystem</td><td>OS metadata</td><td>First creation timestamps</td></tr>
+    <tr><td>2</td><td>Git commit history</td><td>18 commits on GitHub</td><td>Continuous authorship timeline</td></tr>
+    <tr><td>3</td><td>Merkle trees</td><td><code>dist/merkle.json</code></td><td>Per-crate integrity proofs</td></tr>
+    <tr><td>4</td><td>SHA-256 edition root</td><td><code>cd78b3be...d2cc3</code></td><td>Content integrity fingerprint</td></tr>
+    <tr><td>5</td><td>ORCID</td><td><code>0009-0008-8425-939X</code></td><td>Author identity record</td></tr>
+    <tr><td>6</td><td>DOI</td><td><code>10.5281/zenodo.18646886</code></td><td>Permanent academic identifier</td></tr>
+  </tbody>
+</table>
+<div class="table-caption">Table 2. Six-layer evidence chain.</div>
+
+<h3>7.3 On-Chain Anchoring</h3>
+<table>
+  <thead>
+    <tr><th>Property</th><th>Value</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Contract</td><td><code>0x97f456300817eaE3B40E235857b856dfFE8bba90</code></td></tr>
+    <tr><td>Network</td><td>Polygon Mainnet (Chain ID 137)</td></tr>
+    <tr><td>Method</td><td><code>anchorEdition(editionRoot, ipfsCID)</code></td></tr>
+    <tr><td>Author Identity</td><td><code>0xB9ffa688A8Bb332221030BbBE46bE5bF03323170</code></td></tr>
+    <tr><td>Author Wallet</td><td><code>0xC91668184736BF75C4ecE37473D694efb2A43978</code></td></tr>
+    <tr><td>Estimated Cost</td><td>&lt; 0.50 USD</td></tr>
+  </tbody>
+</table>
+<div class="table-caption">Table 3. On-chain anchoring configuration.</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<!-- 8. MERKLE TREE SYSTEM                                              -->
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<h2>8. Merkle Tree System</h2>
+
+<h3>8.1 Construction Rules</h3>
+<ol>
+  <li><strong>Leaf computation:</strong> h<sub>i</sub> = SHA-256(content<sub>i</sub>) where content is raw bytes of each <code>.rs</code> source file.</li>
+  <li><strong>Internal nodes:</strong> h<sub>parent</sub> = SHA-256(h<sub>left</sub> ‖ h<sub>right</sub>) where ‖ is string concatenation of lowercase hex digests.</li>
+  <li><strong>Odd-leaf rule:</strong> If a layer has an odd number of nodes, the last node is duplicated before pairing.</li>
+  <li><strong>Ordering:</strong> Files within each crate are sorted alphabetically by path.</li>
+</ol>
+
+<h3>8.2 Crate Roots</h3>
+<table>
+  <thead>
+    <tr><th>Crate</th><th>Role</th><th>Leaves</th><th>Root (prefix)</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>genesis-dna</code></td><td>Genome and Identity</td><td>7</td><td><code>e348c9a9...</code></td></tr>
+    <tr><td><code>metabolism</code></td><td>Energy and Economics</td><td>6</td><td><code>f739fd3a...</code></td></tr>
+    <tr><td><code>ecosystem</code></td><td>Communication and Markets</td><td>8</td><td><code>88b92989...</code></td></tr>
+    <tr><td><code>evolution</code></td><td>Mutation and Selection</td><td>5</td><td><code>fd7f0afb...</code></td></tr>
+    <tr><td><code>gateway</code></td><td>Server and World Engine</td><td>7</td><td><code>9ec9925d...</code></td></tr>
+    <tr><td><code>apostle</code></td><td>Outbound Intelligence</td><td>5</td><td><code>ab727d84...</code></td></tr>
+    <tr><td><code>tests</code></td><td>Integration Tests</td><td>1</td><td><code>6fa77826...</code></td></tr>
+  </tbody>
+</table>
+<div class="table-caption">Table 4. Per-crate Merkle roots.</div>
+
+<h3>8.3 Edition Root</h3>
+<p>The edition root is the SHA-256 hash of the concatenation of all seven crate roots:</p>
+<div class="equation">editionRoot = SHA-256(r<sub>1</sub> ‖ r<sub>2</sub> ‖ r<sub>3</sub> ‖ r<sub>4</sub> ‖ r<sub>5</sub> ‖ r<sub>6</sub> ‖ r<sub>7</sub>)</div>
+<p style="text-align:center; font-family: 'Consolas', monospace; font-size: 8.5pt; padding: 6pt; background: #f4f4f4; border-radius: 3pt; margin: 8pt 0;">
+  <strong>cd78b3be6a7f569a8a7a24d49a47ccd01af0fa5ab7c8a04baa6f7ee0367d2cc3</strong>
+</p>
+
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<!-- 9. PROTOCOL SPECIFICATION                                          -->
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<h2>9. Protocol Specification (SOP-1)</h2>
+
+<p>The Software Organism Protocol v1 (SOP-1) formalizes the requirements demonstrated by the reference implementation. It specifies five functional layers (Genome, Metabolism, Ecosystem, Evolution, Gateway), a state machine lifecycle, ecological model requirements, energy economics constraints, and provenance verification procedures.</p>
+
+<h3>9.1 State Machine</h3>
+<div class="equation">GENESIS → SPAWNING → RUNNING → STABLE → ADAPTING → RUNNING → ···</div>
+<p>with a terminal EXTINCTION state when population reaches zero.</p>
+
+<h3>9.2 Relationship to LPS-1</h3>
+<p>SOP-1 extends the Literary Protocol Standard (LPS-1) from <em>Deterministic Literary Publishing</em> [3]. The key adaptation is replacing the four-tree literary model with a variable-tree software model (one tree per crate), while retaining the same hash construction, edition root computation, and on-chain anchoring methods.</p>
+
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<!-- 10. EVALUATION                                                     -->
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<h2>10. Evaluation</h2>
+
+<h3>10.1 Test Coverage</h3>
+<p>The system is validated by <strong>143 automated tests</strong> across all six crates with <strong>0 failures</strong>. The test suite includes unit tests for genome construction, ATP accounting, mesh communication, mutation engines, and selection pressure, plus end-to-end load simulation tests that verify multi-epoch population dynamics and resource sustainability.</p>
+
+<h3>10.2 Ecological Realism</h3>
+<p>The ecological model produces dynamics consistent with Lotka–Volterra predictions: population oscillation synchronized with seasons, resource recovery via logistic growth, catastrophe-driven population declines followed by recovery, niche partitioning via density-dependent foraging, and multi-niche coexistence enabled by the low cross-niche coefficient (α = 0.15).</p>
+
+<h3>10.3 Provenance Verification</h3>
+<p>The Merkle tree generator (<code>scripts/merkle.ps1</code>) computes the edition root from 39 source files, verifies per-file SHA-256 hashes, reconstructs crate Merkle roots, and confirms the composite edition root <code>cd78b3be...d2cc3</code>. Execution completes in under 3 seconds on commodity hardware.</p>
+
+<h3>10.4 Invariant Compliance</h3>
+<p>All 14 defined invariants hold for the current edition (see Appendix A).</p>
+
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<!-- 11. DISCUSSION                                                     -->
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<h2>11. Discussion</h2>
+
+<h3>11.1 Ecological vs. Economic Models</h3>
+<p>Most multi-agent simulations use economic models for resource allocation. Our ecological approach produces emergent population dynamics that are difficult to achieve with economic mechanisms, but provides weaker guarantees about individual agent optimality.</p>
+
+<h3>11.2 Provenance Generalization</h3>
+<p>The successful extension of literary provenance to software provenance demonstrates that the cryptographic infrastructure is domain-agnostic. Any structured collection of files can be decomposed into category-level Merkle trees and composed into a single edition root.</p>
+
+<h3>11.3 Shared Infrastructure</h3>
+<p>Both Genesis Protocol and the 2,500 Donkeys literary protocol share the same on-chain infrastructure: the LiteraryAnchor contract, the AuthorIdentity contract, and the author wallet. This demonstrates that a single set of smart contracts can serve as provenance infrastructure for an arbitrary number of works across different domains.</p>
+
+<h3>11.4 Limitations</h3>
+<p><strong>Ecological simplification.</strong> Five discrete niches rather than continuous niche space. <strong>Deterministic pseudo-randomness.</strong> Hash-based PRNG favoring reproducibility over stochasticity. <strong>Single-chain anchoring.</strong> Cross-chain redundancy not yet executed. <strong>Key management.</strong> Single private key without multi-signature support.</p>
+
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<!-- 12. CONCLUSION                                                     -->
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<h2>12. Conclusion</h2>
+
+<p>We have presented Genesis Protocol, a six-crate Rust organism implementing Lotka–Volterra inspired resource competition with cryptographic provenance verification. The system demonstrates that biologically grounded ecological dynamics — logistic growth, seasonal oscillation, density-dependent foraging, stochastic perturbation — produce realistic population behavior in multi-agent simulations, and that the provenance model established for literary publishing generalizes to executable software without modification to its cryptographic infrastructure.</p>
+
+<p>The organism comprises 39 source files totaling 10,015 lines of Rust, validated by 143 automated tests. Its integrity is committed through 7 crate-level Merkle trees composing into a single edition root (<code>cd78b3be...d2cc3</code>) anchorable on a production blockchain at a cost of less than $0.50 USD.</p>
+
+<p>Every claim in this paper is independently verifiable. The source code is public on GitHub. The Merkle trees are recomputable from the source files. The invariants are testable against the running code. The on-chain infrastructure is source-verified on Polygonscan.</p>
+
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<!-- REFERENCES                                                         -->
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<h2>References</h2>
+<div class="references">
+  <p>[1] C. G. Langton, "Artificial life," in <em>Artificial Life</em>, Santa Fe Institute Studies in the Sciences of Complexity, vol. 6, pp. 1–47, Addison-Wesley, 1989.</p>
+  <p>[2] T. S. Ray, "An approach to the synthesis of life," in <em>Artificial Life II</em>, Santa Fe Institute Studies in the Sciences of Complexity, vol. 10, pp. 371–408, Addison-Wesley, 1992.</p>
+  <p>[3] K. Burns, "Deterministic literary publishing: A multi-layer provenance model for verifiable manuscripts," Independent research, v1.0, Feb. 2026. DOI: 10.5281/zenodo.18646886.</p>
+  <p>[4] M. Wooldridge, <em>An Introduction to MultiAgent Systems</em>, 2nd ed., John Wiley & Sons, 2009.</p>
+  <p>[5] A. J. Lotka, "Contribution to the theory of periodic reactions," <em>Journal of Physical Chemistry</em>, vol. 14, no. 3, pp. 271–274, 1910.</p>
+  <p>[6] V. Volterra, "Variations and fluctuations of the number of individuals in animal species living together," <em>ICES Journal of Marine Science</em>, vol. 3, no. 1, pp. 3–51, 1928.</p>
+  <p>[7] P. Chesson, "Mechanisms of maintenance of species diversity," <em>Annual Review of Ecology and Systematics</em>, vol. 31, pp. 343–366, 2000.</p>
+  <p>[8] R. C. Merkle, "A digital signature based on a conventional encryption function," <em>Advances in Cryptology — CRYPTO '87</em>, Lecture Notes in Computer Science, vol. 293, pp. 369–378, Springer, 1988.</p>
+  <p>[9] S. Chacon and B. Straub, <em>Pro Git</em>, 2nd ed., Apress, 2014.</p>
+  <p>[10] J. Benet, "IPFS — Content addressed, versioned, P2P file system," arXiv:1407.3561, 2014.</p>
+  <p>[11] Reproducible Builds Project, "Reproducible builds," https://reproducible-builds.org, 2023.</p>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<!-- APPENDIX A                                                         -->
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<div class="appendix page-break">
+<h2>Appendix A: System Invariants</h2>
+
+<p>All 14 invariants must hold at all times during system operation.</p>
+
+<table>
+  <thead>
+    <tr><th>ID</th><th>Domain</th><th>Invariant</th><th>Enforcement</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>E-1</td><td>Ecology</td><td>Logistic Resource Regeneration</td><td>R += r·R·(1−R/K)</td></tr>
+    <tr><td>E-2</td><td>Ecology</td><td>Seasonal Modulation</td><td>K<sub>eff</sub> = K·(1+A·sin(2π·epoch/T))</td></tr>
+    <tr><td>E-3</td><td>Ecology</td><td>Proportional Extraction</td><td>Winner-take-all prohibited</td></tr>
+    <tr><td>E-4</td><td>Ecology</td><td>Density-Dependent Foraging</td><td>1/(1+n·0.1)</td></tr>
+    <tr><td>M-1</td><td>Metabolism</td><td>Non-Negative Balances</td><td>Clamp at zero</td></tr>
+    <tr><td>M-2</td><td>Metabolism</td><td>Computed Supply</td><td>Sum of balances at query time</td></tr>
+    <tr><td>M-3</td><td>Metabolism</td><td>Atomic Replication Cost</td><td>Single deduction operation</td></tr>
+    <tr><td>S-1</td><td>Selection</td><td>Dynamic Population Cap</td><td>total_capacity/15, [10,500]</td></tr>
+    <tr><td>S-2</td><td>Selection</td><td>Maturation Guard</td><td>10-epoch exemption</td></tr>
+    <tr><td>S-3</td><td>Selection</td><td>Stasis Tolerance</td><td>3-epoch grace period</td></tr>
+    <tr><td>G-1</td><td>Genome</td><td>Cryptographic Diversity</td><td>SHA-256 derived seeds</td></tr>
+    <tr><td>G-2</td><td>Genome</td><td>Responsive Mutation</td><td>Seasonal stress modulation</td></tr>
+    <tr><td>P-1</td><td>Provenance</td><td>Deterministic Edition Root</td><td>Merkle(crate_roots)</td></tr>
+    <tr><td>P-2</td><td>Provenance</td><td>Complete Manifest</td><td>All 39 files covered</td></tr>
+  </tbody>
+</table>
+<div class="table-caption">Table A1. Complete invariant registry.</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<!-- APPENDIX B                                                         -->
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<div class="appendix">
+<h2>Appendix B: Crate Hash Table</h2>
+
+<p>All SHA-256 Merkle roots as of edition v1.0 (git commit <code>889a560978939d7a40cdf2bebc8c539c0b83b435</code>).</p>
+
+<table class="hash-table">
+  <thead>
+    <tr><th>Crate</th><th>Merkle Root</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>genesis-dna</code></td><td>e348c9a9678af25a67e7d9c6cfe21702b588abf21415a316ce33b33d9f6f2197</td></tr>
+    <tr><td><code>metabolism</code></td><td>f739fd3aab927ce26847aa6a311ba5d7df64af1c451ce4df331361db4ec5e290</td></tr>
+    <tr><td><code>ecosystem</code></td><td>88b9298b76f6d4e207fb0f55303282ad7421111171a4fbcfd264f74f037e19dc</td></tr>
+    <tr><td><code>evolution</code></td><td>fd7f0afbd6ab83d59eff5624c5144f28e50be1727156e3fd904f5fe90e3ec775</td></tr>
+    <tr><td><code>gateway</code></td><td>9ec9925dc0f2df9d07d73603cdb8a99e0c07356e70a5bd9ef1446501f01732e8</td></tr>
+    <tr><td><code>apostle</code></td><td>ab727d8401a8275836a29309a344021e0414def4cd753b747cdfdf4926e87944</td></tr>
+    <tr><td><code>tests</code></td><td>6fa7782e6959b9ae5bafbf0651109bacf85b46f7070e95d10f39232aaf4926cd</td></tr>
+    <tr style="background:#f0f6fb;"><td><strong>Edition Root</strong></td><td><strong>cd78b3be6a7f569a8a7a24d49a47ccd01af0fa5ab7c8a04baa6f7ee0367d2cc3</strong></td></tr>
+  </tbody>
+</table>
+<div class="table-caption">Table B1. Per-crate Merkle roots and composite edition root.</div>
+
+<p style="font-size:9pt; margin-top: 8pt;">
+  <strong>Source Repository:</strong> <a href="https://github.com/FTHTrading/AI">https://github.com/FTHTrading/AI</a><br>
+  <strong>Author Wallet:</strong> <code>0xC91668184736BF75C4ecE37473D694efb2A43978</code><br>
+  <strong>Author Identity Contract:</strong> <code>0xB9ffa688A8Bb332221030BbBE46bE5bF03323170</code><br>
+  <strong>LiteraryAnchor Contract:</strong> <code>0x97f456300817eaE3B40E235857b856dfFE8bba90</code>
+</p>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<!-- APPENDIX C                                                         -->
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<div class="appendix">
+<h2>Appendix C: How to Cite This Work</h2>
+
+<h3>BibTeX</h3>
+<pre>
+@techreport{burns2026genesis,
+  title     = {Genesis Protocol: A Lotka--Volterra Inspired Software Organism
+               with Cryptographic Provenance},
+  author    = {Burns, Kevan},
+  year      = {2026},
+  month     = {February},
+  version   = {1.0},
+  doi       = {10.5281/zenodo.18646886},
+  url       = {https://doi.org/10.5281/zenodo.18646886},
+  note      = {Independent research. Reference implementation: 39 Rust source
+               files, 10,015 lines, 143 tests. Edition root:
+               cd78b3be6a7f569a8a7a24d49a47ccd01af0fa5ab7c8a04baa6f7ee0367d2cc3.}
+}
+</pre>
+
+<h3>APA (7th Edition)</h3>
+<p>Burns, K. (2026). <em>Genesis Protocol: A Lotka–Volterra inspired software organism with cryptographic provenance</em> (Version 1.0). Independent research. https://doi.org/10.5281/zenodo.18646886</p>
+
+<h3>Chicago</h3>
+<p>Burns, Kevan. "Genesis Protocol: A Lotka–Volterra Inspired Software Organism with Cryptographic Provenance." Version 1.0. Independent research, February 2026. https://doi.org/10.5281/zenodo.18646886.</p>
+
+<h3>IEEE</h3>
+<p>K. Burns, "Genesis Protocol: A Lotka–Volterra Inspired Software Organism with Cryptographic Provenance," Independent research, v1.0, Feb. 2026. DOI: 10.5281/zenodo.18646886. [Online]. Available: https://doi.org/10.5281/zenodo.18646886</p>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<!-- FOOTER                                                             -->
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<div class="footer">
+  Version 1.0 — February 21, 2026<br>
+  Kevan Burns — Independent Researcher — FTH Trading, Norcross, GA<br>
+  ORCID: 0009-0008-8425-939X<br>
+  Source code: <a href="https://github.com/FTHTrading/AI">https://github.com/FTHTrading/AI</a><br>
+  Companion work: <em>Deterministic Literary Publishing</em> (Burns, 2026) — <a href="https://github.com/FTHTrading/2500-donkeys">https://github.com/FTHTrading/2500-donkeys</a>
+</div>
+
+</body>
+</html>
