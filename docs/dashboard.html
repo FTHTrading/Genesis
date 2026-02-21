@@ -3,630 +3,501 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Genesis Protocol — Live Ecosystem Dashboard</title>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<title>Genesix — Living Organism</title>
 <style>
-  :root {
-    --bg: #0a0e17;
-    --panel: #111827;
-    --border: #1e293b;
-    --text: #e2e8f0;
-    --dim: #94a3b8;
-    --accent: #22d3ee;
-    --green: #34d399;
-    --red: #f87171;
-    --amber: #fbbf24;
-    --blue: #60a5fa;
-    --purple: #a78bfa;
-    --pink: #f472b6;
-  }
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    min-height: 100vh;
-  }
-  .header {
-    padding: 2rem 2rem 1rem;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 1rem;
-  }
-  .header h1 {
-    font-size: 1.5rem;
-    font-weight: 700;
-    letter-spacing: -0.02em;
-  }
-  .header h1 span { color: var(--accent); }
-  .header-links a {
-    color: var(--dim);
-    text-decoration: none;
-    font-size: 0.85rem;
-    margin-left: 1.5rem;
-    transition: color 0.2s;
-  }
-  .header-links a:hover { color: var(--accent); }
-  .version-tag {
-    display: inline-block;
-    background: var(--accent);
-    color: var(--bg);
-    font-size: 0.7rem;
-    font-weight: 700;
-    padding: 0.15rem 0.5rem;
-    border-radius: 3px;
-    margin-left: 0.5rem;
-    vertical-align: middle;
-  }
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#000;overflow:hidden;font-family:'Segoe UI',-apple-system,sans-serif;color:#c8d6e5}
+canvas{display:block}
 
-  /* ── KPI Strip ── */
-  .kpi-strip {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-    gap: 1px;
-    background: var(--border);
-    border-bottom: 1px solid var(--border);
-  }
-  .kpi {
-    background: var(--panel);
-    padding: 1.2rem 1rem;
-    text-align: center;
-  }
-  .kpi-value {
-    font-size: 1.6rem;
-    font-weight: 700;
-    font-variant-numeric: tabular-nums;
-  }
-  .kpi-label {
-    font-size: 0.7rem;
-    color: var(--dim);
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    margin-top: 0.3rem;
-  }
-  .kpi-value.green { color: var(--green); }
-  .kpi-value.accent { color: var(--accent); }
-  .kpi-value.amber { color: var(--amber); }
-  .kpi-value.blue { color: var(--blue); }
-  .kpi-value.purple { color: var(--purple); }
+/* HUD overlay */
+#hud{position:fixed;top:0;left:0;width:100%;pointer-events:none;z-index:10}
+#hud-top{display:flex;justify-content:space-between;align-items:flex-start;padding:20px 28px}
+#hud-title{font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:rgba(200,214,229,.5)}
+#hud-title strong{color:#22d3ee;font-weight:600;font-size:15px;letter-spacing:.04em}
+#hud-epoch{font-size:11px;color:rgba(200,214,229,.35);font-variant-numeric:tabular-nums;text-align:right}
+#hud-epoch .big{font-size:32px;font-weight:200;color:rgba(34,211,238,.7);display:block;line-height:1}
 
-  /* ── Charts Grid ── */
-  .charts {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
-    gap: 1px;
-    background: var(--border);
-    padding: 0;
-  }
-  .chart-panel {
-    background: var(--panel);
-    padding: 1.5rem;
-    position: relative;
-  }
-  .chart-panel h3 {
-    font-size: 0.85rem;
-    font-weight: 600;
-    margin-bottom: 0.3rem;
-  }
-  .chart-panel .chart-sub {
-    font-size: 0.7rem;
-    color: var(--dim);
-    margin-bottom: 1rem;
-  }
-  .chart-panel canvas {
-    width: 100% !important;
-    max-height: 280px;
-  }
+/* Vital signs — bottom left */
+#vitals{position:fixed;bottom:20px;left:28px;z-index:10;pointer-events:none}
+.vital{margin-bottom:10px}
+.vital-label{font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:rgba(200,214,229,.3);margin-bottom:2px}
+.vital-value{font-size:16px;font-weight:300;font-variant-numeric:tabular-nums;color:rgba(200,214,229,.7)}
+.vital-value.warn{color:rgba(251,191,36,.8)}
+.vital-value.danger{color:rgba(248,113,113,.8)}
+.vital-value.good{color:rgba(52,211,153,.7)}
 
-  /* ── Wide chart ── */
-  .chart-wide {
-    grid-column: 1 / -1;
-  }
+/* Agent tooltip */
+#tooltip{position:fixed;pointer-events:none;z-index:20;background:rgba(15,23,42,.92);border:1px solid rgba(34,211,238,.2);border-radius:6px;padding:12px 16px;font-size:12px;line-height:1.6;display:none;backdrop-filter:blur(8px);max-width:240px}
+#tooltip .tt-role{font-size:14px;font-weight:600;margin-bottom:4px}
+#tooltip .tt-row{display:flex;justify-content:space-between;gap:16px}
+#tooltip .tt-dim{color:rgba(200,214,229,.4)}
+#tooltip .tt-val{font-weight:500;font-variant-numeric:tabular-nums}
 
-  /* ── Economy Flow ── */
-  .economy-section {
-    background: var(--panel);
-    border-top: 1px solid var(--border);
-    padding: 2rem;
-  }
-  .economy-section h2 {
-    font-size: 1.1rem;
-    margin-bottom: 1.5rem;
-    font-weight: 600;
-  }
-  .flow-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 1.5rem;
-  }
-  .flow-card {
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 1.2rem;
-    background: rgba(255,255,255,0.02);
-  }
-  .flow-card h4 {
-    font-size: 0.8rem;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: var(--accent);
-    margin-bottom: 0.8rem;
-  }
-  .flow-row {
-    display: flex;
-    justify-content: space-between;
-    padding: 0.35rem 0;
-    font-size: 0.85rem;
-    border-bottom: 1px solid var(--border);
-  }
-  .flow-row:last-child { border-bottom: none; }
-  .flow-row .val {
-    font-weight: 600;
-    font-variant-numeric: tabular-nums;
-  }
+/* Treasury well indicator */
+#treasury-indicator{position:fixed;bottom:20px;right:28px;z-index:10;pointer-events:none;text-align:right}
+#treasury-indicator .ti-label{font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:rgba(251,191,36,.3);margin-bottom:2px}
+#treasury-indicator .ti-value{font-size:22px;font-weight:200;color:rgba(251,191,36,.5)}
+#treasury-indicator .ti-status{font-size:10px;color:rgba(248,113,113,.5);margin-top:4px}
 
-  /* ── Role bars ── */
-  .role-bars {
-    display: flex;
-    gap: 0.5rem;
-    margin-top: 0.5rem;
-  }
-  .role-bar {
-    flex: 1;
-    text-align: center;
-  }
-  .role-bar-fill {
-    height: 60px;
-    border-radius: 3px 3px 0 0;
-    display: flex;
-    align-items: flex-end;
-    justify-content: center;
-    padding-bottom: 4px;
-    font-size: 0.75rem;
-    font-weight: 700;
-    transition: height 0.3s;
-  }
-  .role-bar-label {
-    font-size: 0.65rem;
-    color: var(--dim);
-    margin-top: 0.3rem;
-  }
+/* Legend */
+#legend{position:fixed;top:50%;right:28px;transform:translateY(-50%);z-index:10;pointer-events:none}
+.legend-item{display:flex;align-items:center;gap:8px;margin-bottom:8px;font-size:10px;color:rgba(200,214,229,.3)}
+.legend-dot{width:8px;height:8px;border-radius:50%}
 
-  /* ── Footer ── */
-  .footer {
-    border-top: 1px solid var(--border);
-    padding: 1.5rem 2rem;
-    text-align: center;
-    font-size: 0.75rem;
-    color: var(--dim);
-  }
-  .footer a { color: var(--accent); text-decoration: none; }
-
-  .loading {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 80vh;
-    font-size: 1.2rem;
-    color: var(--dim);
-  }
-  .loading::after {
-    content: '';
-    width: 20px;
-    height: 20px;
-    border: 2px solid var(--accent);
-    border-top-color: transparent;
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-    margin-left: 0.8rem;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
-
-  @media (max-width: 600px) {
-    .charts { grid-template-columns: 1fr; }
-    .kpi-strip { grid-template-columns: repeat(3, 1fr); }
-    .header { padding: 1rem; }
-  }
+/* Loading */
+#loading{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#000;z-index:100;font-size:13px;color:rgba(200,214,229,.3)}
 </style>
 </head>
 <body>
 
-<div class="header">
-  <h1>🧬 Genesis Protocol <span>Ecosystem Dashboard</span><span class="version-tag">v1.1</span></h1>
-  <div class="header-links">
-    <a href="index.html">Research Paper</a>
-    <a href="paper.html">PDF</a>
-    <a href="https://github.com/FTHTrading/AI" target="_blank">GitHub</a>
-    <a href="https://moltbook.com/u/genesisprotocol" target="_blank">Moltbook</a>
+<div id="loading">initializing organism...</div>
+
+<div id="hud">
+  <div id="hud-top">
+    <div id="hud-title"><strong>GENESIX</strong><br>Genesis Protocol</div>
+    <div id="hud-epoch">EPOCH<span class="big" id="epoch-num">—</span></div>
   </div>
 </div>
 
-<div id="loading" class="loading">Loading ecosystem data</div>
-<div id="app" style="display:none;">
-
-<!-- KPI Strip -->
-<div class="kpi-strip" id="kpi-strip"></div>
-
-<!-- Charts -->
-<div class="charts">
-  <div class="chart-panel chart-wide">
-    <h3>Population Over 10,000 Epochs</h3>
-    <div class="chart-sub">Agents alive per epoch — equilibrium at ~57 agents (dynamic cap shown as dashed line)</div>
-    <canvas id="popChart"></canvas>
-  </div>
-
-  <div class="chart-panel">
-    <h3>ATP Economy</h3>
-    <div class="chart-sub">Total ATP supply across all agents + treasury reserve</div>
-    <canvas id="atpChart"></canvas>
-  </div>
-
-  <div class="chart-panel">
-    <h3>Fitness Evolution</h3>
-    <div class="chart-sub">Mean fitness (blue) and peak individual fitness (green) per epoch</div>
-    <canvas id="fitnessChart"></canvas>
-  </div>
-
-  <div class="chart-panel">
-    <h3>Treasury Cycling</h3>
-    <div class="chart-sub">Reserve balance (what's sitting in treasury) — should stay near zero</div>
-    <canvas id="treasuryChart"></canvas>
-  </div>
-
-  <div class="chart-panel">
-    <h3>Births &amp; Deaths</h3>
-    <div class="chart-sub">Demographic events per epoch sample point</div>
-    <canvas id="demoChart"></canvas>
-  </div>
-
-  <div class="chart-panel">
-    <h3>Resource Pools</h3>
-    <div class="chart-sub">Total niche resources available (logistic regeneration + seasonal oscillation)</div>
-    <canvas id="resourceChart"></canvas>
-  </div>
-
-  <div class="chart-panel">
-    <h3>Role Distribution Over Time</h3>
-    <div class="chart-sub">Agent count by role — near-uniform = healthy competitive coexistence</div>
-    <canvas id="roleChart"></canvas>
-  </div>
+<div id="vitals">
+  <div class="vital"><div class="vital-label">Population</div><div class="vital-value" id="v-pop">—</div></div>
+  <div class="vital"><div class="vital-label">Mean Fitness</div><div class="vital-value" id="v-fit">—</div></div>
+  <div class="vital"><div class="vital-label">ATP Supply</div><div class="vital-value" id="v-atp">—</div></div>
+  <div class="vital"><div class="vital-label">Births / Deaths</div><div class="vital-value" id="v-bd">—</div></div>
+  <div class="vital"><div class="vital-label">Birth:Death</div><div class="vital-value" id="v-ratio">—</div></div>
 </div>
 
-<!-- Economy Flow -->
-<div class="economy-section">
-  <h2>System Economy — 10,000 Epoch Summary</h2>
-  <div class="flow-grid" id="flow-grid"></div>
+<div id="treasury-indicator">
+  <div class="ti-label">Treasury Gravity Well</div>
+  <div class="ti-value" id="ti-val">—</div>
+  <div class="ti-status" id="ti-status"></div>
 </div>
 
-<!-- Role bars (final state) -->
-<div class="economy-section" style="border-top: 1px solid var(--border);">
-  <h2>Role Distribution — Final State (Epoch 9,999)</h2>
-  <div id="role-final" style="max-width: 500px; margin: 0 auto;"></div>
+<div id="legend">
+  <div class="legend-item"><div class="legend-dot" style="background:#60a5fa"></div>Optimizer</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#a78bfa"></div>Strategist</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#fbbf24"></div>Communicator</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#34d399"></div>Archivist</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#f472b6"></div>Executor</div>
+  <div class="legend-item"><div class="legend-dot" style="background:rgba(34,211,238,.4)"></div>Core</div>
+  <div class="legend-item"><div class="legend-dot" style="background:rgba(251,191,36,.3)"></div>Treasury</div>
 </div>
 
-</div><!-- #app -->
+<div id="tooltip"></div>
 
-<div class="footer">
-  Genesis Protocol v1.1 — 10,000-Epoch Empirical Validation<br>
-  DOI: <a href="https://doi.org/10.5281/zenodo.18646886">10.5281/zenodo.18646886</a> ·
-  ORCID: <a href="https://orcid.org/0009-0008-8425-939X">0009-0008-8425-939X</a> ·
-  Author: Kevan Burns · <a href="https://github.com/FTHTrading/AI">Source</a>
-</div>
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.min.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+  }
+}
+</script>
 
-<script>
-const COLORS = {
-  accent: '#22d3ee', green: '#34d399', red: '#f87171',
-  amber: '#fbbf24', blue: '#60a5fa', purple: '#a78bfa', pink: '#f472b6',
-  dim: '#475569', grid: '#1e293b'
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+// ─── Role colors ────────────────────────────────────────
+const ROLE_COLOR = {
+  Optimizer:    new THREE.Color(0x60a5fa),
+  Strategist:   new THREE.Color(0xa78bfa),
+  Communicator: new THREE.Color(0xfbbf24),
+  Archivist:    new THREE.Color(0x34d399),
+  Executor:     new THREE.Color(0xf472b6),
 };
+const ROLE_HEX = { Optimizer:'#60a5fa', Strategist:'#a78bfa', Communicator:'#fbbf24', Archivist:'#34d399', Executor:'#f472b6' };
 
-const ROLE_COLORS = {
-  Optimizer: '#60a5fa', Strategist: '#a78bfa',
-  Communicator: '#fbbf24', Archivist: '#34d399', Executor: '#f472b6'
-};
+// ─── Load data ──────────────────────────────────────────
+const res = await fetch('system-state.json');
+const S = await res.json();
+const H = S.history.sort((a,b) => a.ep - b.ep);
+const lastH = H[H.length - 1];
+const agents = S.agents;
 
-const chartDefaults = {
-  responsive: true,
-  maintainAspectRatio: false,
-  animation: { duration: 0 },
-  plugins: {
-    legend: { labels: { color: '#94a3b8', font: { size: 11 } } },
-    tooltip: { mode: 'index', intersect: false }
-  },
-  scales: {
-    x: {
-      ticks: { color: '#64748b', font: { size: 10 }, maxTicksLimit: 12 },
-      grid: { color: COLORS.grid }
-    },
-    y: {
-      ticks: { color: '#64748b', font: { size: 10 } },
-      grid: { color: COLORS.grid }
+// ─── Scene setup ────────────────────────────────────────
+const scene = new THREE.Scene();
+scene.fog = new THREE.FogExp2(0x000000, 0.025);
+
+const camera = new THREE.PerspectiveCamera(55, innerWidth/innerHeight, 0.1, 200);
+camera.position.set(0, 3, 12);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+renderer.setSize(innerWidth, innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.2;
+document.body.appendChild(renderer.domElement);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.05;
+controls.minDistance = 5;
+controls.maxDistance = 30;
+controls.autoRotate = true;
+controls.autoRotateSpeed = 0.3;
+
+// ─── Lighting ───────────────────────────────────────────
+const ambient = new THREE.AmbientLight(0x111827, 0.5);
+scene.add(ambient);
+
+const coreLight = new THREE.PointLight(0x22d3ee, 2, 20);
+coreLight.position.set(0, 0, 0);
+scene.add(coreLight);
+
+// ─── Starfield ──────────────────────────────────────────
+const starCount = 2000;
+const starGeo = new THREE.BufferGeometry();
+const starPos = new Float32Array(starCount * 3);
+for (let i = 0; i < starCount * 3; i++) starPos[i] = (Math.random() - 0.5) * 100;
+starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
+const starMat = new THREE.PointsMaterial({ color: 0xffffff, size: 0.08, transparent: true, opacity: 0.4 });
+scene.add(new THREE.Points(starGeo, starMat));
+
+// ─── Core sphere (the organism) ─────────────────────────
+const coreGeo = new THREE.IcosahedronGeometry(1.2, 3);
+const coreMat = new THREE.MeshPhysicalMaterial({
+  color: 0x0c4a6e,
+  emissive: 0x22d3ee,
+  emissiveIntensity: 0.15,
+  transparent: true,
+  opacity: 0.3,
+  roughness: 0.4,
+  metalness: 0.6,
+  wireframe: true,
+});
+const core = new THREE.Mesh(coreGeo, coreMat);
+scene.add(core);
+
+// Inner glow sphere
+const glowMat = new THREE.MeshBasicMaterial({
+  color: 0x22d3ee,
+  transparent: true,
+  opacity: 0.04,
+});
+const glowSphere = new THREE.Mesh(new THREE.SphereGeometry(1.1, 32, 32), glowMat);
+scene.add(glowSphere);
+
+// ─── Treasury gravity well ──────────────────────────────
+// Visual: a dark amber ring below the core, size proportional to hoarded ATP
+const treasuryScale = Math.min(S.tr_reserve / 5000, 4); // max visual size
+const wellGeo = new THREE.TorusGeometry(treasuryScale * 0.5, 0.06, 8, 64);
+const wellMat = new THREE.MeshBasicMaterial({
+  color: 0xfbbf24,
+  transparent: true,
+  opacity: 0.15,
+});
+const treasuryWell = new THREE.Mesh(wellGeo, wellMat);
+treasuryWell.rotation.x = Math.PI / 2;
+treasuryWell.position.y = -1.5;
+scene.add(treasuryWell);
+
+// Treasury distortion rings
+for (let i = 1; i <= 3; i++) {
+  const ring = new THREE.Mesh(
+    new THREE.TorusGeometry(treasuryScale * 0.5 + i * 0.3, 0.01, 8, 64),
+    new THREE.MeshBasicMaterial({ color: 0xfbbf24, transparent: true, opacity: 0.04 })
+  );
+  ring.rotation.x = Math.PI / 2;
+  ring.position.y = -1.5;
+  ring.userData = { baseOpacity: 0.04, ringIndex: i };
+  scene.add(ring);
+}
+
+// ─── Agent nodes ────────────────────────────────────────
+const agentMeshes = [];
+const orbitRadius = 3.5;
+
+agents.forEach((agent, i) => {
+  const angle = (i / agents.length) * Math.PI * 2;
+  const color = ROLE_COLOR[agent.role] || new THREE.Color(0xffffff);
+
+  // Reputation determines size (mass)
+  const repSize = 0.12 + agent.rep * 0.2;
+
+  // Node sphere
+  const geo = new THREE.SphereGeometry(repSize, 16, 16);
+  const mat = new THREE.MeshPhysicalMaterial({
+    color: color,
+    emissive: color,
+    emissiveIntensity: 0.4 + agent.rep * 0.4,
+    transparent: true,
+    opacity: 0.85,
+    roughness: 0.3,
+    metalness: 0.5,
+  });
+  const mesh = new THREE.Mesh(geo, mat);
+
+  // Orbit parameters
+  const orbitR = orbitRadius + (agent.gen * 0.5); // further out per generation
+  const orbitSpeed = 0.1 + (agent.contracts / 10000) * 0.15; // faster with more contracts
+  const orbitTilt = (Math.random() - 0.5) * 0.4; // slight orbital inclination
+
+  mesh.userData = {
+    agent,
+    angle: angle,
+    orbitR,
+    orbitSpeed,
+    orbitTilt,
+    baseEmissive: 0.4 + agent.rep * 0.4,
+  };
+
+  // Generation rings
+  if (agent.gen > 0) {
+    const ringGeo = new THREE.TorusGeometry(repSize + 0.06, 0.008, 8, 32);
+    const ringMat = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.3 });
+    for (let g = 0; g < agent.gen; g++) {
+      const ring = new THREE.Mesh(ringGeo, ringMat);
+      ring.rotation.x = Math.PI / 2;
+      ring.position.y = (g - (agent.gen-1)/2) * 0.05;
+      mesh.add(ring);
     }
   }
-};
 
-function makeOpts(overrides = {}) {
-  return JSON.parse(JSON.stringify({ ...chartDefaults, ...overrides }));
+  // Primordial marker — golden crown
+  if (agent.prim) {
+    const crownGeo = new THREE.TorusGeometry(repSize + 0.08, 0.02, 6, 32);
+    const crownMat = new THREE.MeshBasicMaterial({ color: 0xfbbf24, transparent: true, opacity: 0.7 });
+    const crown = new THREE.Mesh(crownGeo, crownMat);
+    crown.rotation.x = Math.PI / 2;
+    mesh.add(crown);
+  }
+
+  // Low reputation → flicker effect (handled in animation)
+  if (agent.rep < 0.6) {
+    mesh.userData.flicker = true;
+  }
+
+  scene.add(mesh);
+  agentMeshes.push(mesh);
+});
+
+// ─── Orbital trails (faint) ─────────────────────────────
+agents.forEach((agent, i) => {
+  const orbitR = orbitRadius + (agent.gen * 0.5);
+  const trailGeo = new THREE.TorusGeometry(orbitR, 0.005, 4, 128);
+  const trailMat = new THREE.MeshBasicMaterial({
+    color: ROLE_COLOR[agent.role] || 0xffffff,
+    transparent: true,
+    opacity: 0.04,
+  });
+  const trail = new THREE.Mesh(trailGeo, trailMat);
+  trail.rotation.x = Math.PI / 2 + agentMeshes[i].userData.orbitTilt;
+  scene.add(trail);
+});
+
+// ─── Particle system for birth/death events ─────────────
+const particleCount = 200;
+const particleGeo = new THREE.BufferGeometry();
+const particlePositions = new Float32Array(particleCount * 3);
+const particleColors = new Float32Array(particleCount * 3);
+const particleLifetimes = new Float32Array(particleCount);
+const particleVelocities = [];
+
+for (let i = 0; i < particleCount; i++) {
+  particlePositions[i*3] = 0;
+  particlePositions[i*3+1] = 0;
+  particlePositions[i*3+2] = 0;
+  particleColors[i*3] = 0;
+  particleColors[i*3+1] = 0;
+  particleColors[i*3+2] = 0;
+  particleLifetimes[i] = 0;
+  particleVelocities.push(new THREE.Vector3());
 }
 
-async function main() {
-  const res = await fetch('simulation-data.json');
-  const raw = await res.json();
-  // Data may be array of objects
-  const data = Array.isArray(raw) ? raw : [raw];
-  data.sort((a, b) => a.epoch - b.epoch);
+particleGeo.setAttribute('position', new THREE.BufferAttribute(particlePositions, 3));
+particleGeo.setAttribute('color', new THREE.BufferAttribute(particleColors, 3));
 
-  const labels = data.map(d => d.epoch);
-  const last = data[data.length - 1];
+const particleMat = new THREE.PointsMaterial({
+  size: 0.06,
+  vertexColors: true,
+  transparent: true,
+  opacity: 0.8,
+  blending: THREE.AdditiveBlending,
+});
+const particles = new THREE.Points(particleGeo, particleMat);
+scene.add(particles);
 
-  // Compute aggregates
-  let totalBirths = 0, totalDeaths = 0, catCount = 0;
-  let peakFit = 0, peakFitEpoch = 0;
-  let sumPop = 0, sumFit = 0, sumAtp = 0, sumTr = 0, sumTd = 0;
-  data.forEach(d => {
-    totalBirths += d.births;
-    totalDeaths += d.deaths;
-    if (d.cat === 'true' || d.cat === true) catCount++;
-    if (d.xf > peakFit) { peakFit = d.xf; peakFitEpoch = d.epoch; }
-    sumPop += d.pop;
-    sumFit += d.mf;
-    sumAtp += d.atp;
-    sumTr += d.tr;
-    sumTd += d.td;
-  });
-  const n = data.length;
-  const meanPop = (sumPop / n).toFixed(1);
-  const meanFit = (sumFit / n).toFixed(4);
-  const meanAtp = (sumAtp / n).toFixed(0);
+let nextParticle = 0;
 
-  // KPIs
-  const kpis = [
-    { value: last.pop, label: 'Population', cls: 'green' },
-    { value: meanPop, label: 'Mean Pop (10k)', cls: 'accent' },
-    { value: last.mf.toFixed(4), label: 'Mean Fitness', cls: 'blue' },
-    { value: peakFit.toFixed(4), label: 'Peak Fitness', cls: 'green' },
-    { value: (last.atp / last.pop).toFixed(1), label: 'ATP / Agent', cls: 'amber' },
-    { value: last.atp.toFixed(0), label: 'Total ATP', cls: 'accent' },
-    { value: last.tr.toFixed(2), label: 'Treasury Reserve', cls: 'purple' },
-    { value: totalBirths, label: 'Total Births', cls: 'green' },
-    { value: totalDeaths, label: 'Total Deaths', cls: 'red' },
-    { value: (totalBirths / Math.max(totalDeaths, 1)).toFixed(2), label: 'Birth:Death', cls: 'blue' },
-    { value: catCount, label: 'Catastrophes', cls: 'amber' },
-    { value: last.season, label: 'Season', cls: 'accent' },
-  ];
-  document.getElementById('kpi-strip').innerHTML = kpis.map(k =>
-    `<div class="kpi"><div class="kpi-value ${k.cls}">${k.value}</div><div class="kpi-label">${k.label}</div></div>`
-  ).join('');
+function emitBurst(position, color, count = 15) {
+  for (let i = 0; i < count; i++) {
+    const idx = nextParticle % particleCount;
+    nextParticle++;
+    particlePositions[idx*3] = position.x;
+    particlePositions[idx*3+1] = position.y;
+    particlePositions[idx*3+2] = position.z;
+    particleColors[idx*3] = color.r;
+    particleColors[idx*3+1] = color.g;
+    particleColors[idx*3+2] = color.b;
+    particleLifetimes[idx] = 1.0;
+    particleVelocities[idx].set(
+      (Math.random()-0.5)*2,
+      (Math.random()-0.5)*2,
+      (Math.random()-0.5)*2
+    ).normalize().multiplyScalar(0.5 + Math.random() * 1.5);
+  }
+}
 
-  // Hide loading, show app
-  document.getElementById('loading').style.display = 'none';
-  document.getElementById('app').style.display = 'block';
+// ─── Replay epoch history as events ─────────────────────
+let historyIndex = 0;
+let historyTimer = 0;
+const EPOCH_INTERVAL = 5; // seconds between epoch replays
 
-  // ── Population Chart ──
-  new Chart(document.getElementById('popChart'), {
-    type: 'line',
-    data: {
-      labels,
-      datasets: [
-        {
-          label: 'Population',
-          data: data.map(d => d.pop),
-          borderColor: COLORS.accent,
-          backgroundColor: 'rgba(34,211,238,0.08)',
-          fill: true, pointRadius: 0, borderWidth: 1.5, tension: 0.1
-        },
-        {
-          label: 'Dynamic Cap',
-          data: data.map(d => d.cap),
-          borderColor: COLORS.dim,
-          borderDash: [4, 4],
-          pointRadius: 0, borderWidth: 1, fill: false
-        }
-      ]
-    },
-    options: { ...makeOpts(), plugins: { ...chartDefaults.plugins, legend: { display: true, labels: { color: '#94a3b8', font: { size: 11 } } } } }
-  });
+function replayNextEpoch() {
+  if (historyIndex >= H.length) historyIndex = 0;
+  const epoch = H[historyIndex];
 
-  // ── ATP Chart ──
-  new Chart(document.getElementById('atpChart'), {
-    type: 'line',
-    data: {
-      labels,
-      datasets: [
-        {
-          label: 'Total ATP',
-          data: data.map(d => d.atp),
-          borderColor: COLORS.amber,
-          backgroundColor: 'rgba(251,191,36,0.08)',
-          fill: true, pointRadius: 0, borderWidth: 1.5, tension: 0.1
-        }
-      ]
-    },
-    options: makeOpts()
-  });
+  // Update HUD
+  document.getElementById('epoch-num').textContent = epoch.ep.toLocaleString();
+  document.getElementById('v-pop').textContent = epoch.pop + ' / ' + epoch.cap;
+  document.getElementById('v-pop').className = 'vital-value' + (epoch.pop <= 6 ? ' danger' : epoch.pop >= 9 ? ' good' : '');
+  document.getElementById('v-fit').textContent = epoch.mf.toFixed(4);
+  document.getElementById('v-fit').className = 'vital-value' + (epoch.mf < 0.5 ? ' warn' : ' good');
+  document.getElementById('v-atp').textContent = Math.round(epoch.atp).toLocaleString();
+  document.getElementById('v-atp').className = 'vital-value' + (epoch.atp < 200 ? ' warn' : '');
+  document.getElementById('v-bd').textContent = S.total_births.toLocaleString() + ' / ' + S.total_deaths.toLocaleString();
+  const ratio = (S.total_births / Math.max(S.total_deaths, 1));
+  document.getElementById('v-ratio').textContent = ratio.toFixed(3) + ':1';
+  document.getElementById('v-ratio').className = 'vital-value' + (ratio < 1 ? ' danger' : ' good');
 
-  // ── Fitness Chart ──
-  new Chart(document.getElementById('fitnessChart'), {
-    type: 'line',
-    data: {
-      labels,
-      datasets: [
-        {
-          label: 'Mean Fitness',
-          data: data.map(d => d.mf),
-          borderColor: COLORS.blue,
-          pointRadius: 0, borderWidth: 1.5, tension: 0.1, fill: false
-        },
-        {
-          label: 'Peak Fitness',
-          data: data.map(d => d.xf),
-          borderColor: COLORS.green,
-          pointRadius: 0, borderWidth: 1, tension: 0.1, fill: false
-        }
-      ]
-    },
-    options: makeOpts()
-  });
+  // Treasury
+  document.getElementById('ti-val').textContent = Math.round(S.tr_reserve).toLocaleString() + ' ATP';
+  if (S.tr_distributed === 0 && S.tr_reserve > 100) {
+    document.getElementById('ti-status').textContent = 'HOARDING — 0 ATP distributed';
+  }
 
-  // ── Treasury Chart ──
-  new Chart(document.getElementById('treasuryChart'), {
-    type: 'line',
-    data: {
-      labels,
-      datasets: [
-        {
-          label: 'Treasury Reserve',
-          data: data.map(d => d.tr),
-          borderColor: COLORS.purple,
-          backgroundColor: 'rgba(167,139,250,0.1)',
-          fill: true, pointRadius: 0, borderWidth: 1.5, tension: 0.1
-        }
-      ]
-    },
-    options: makeOpts()
-  });
+  // Birth events → quantum sparks (cyan)
+  if (epoch.b > 0) {
+    const birthAgent = agentMeshes[Math.floor(Math.random() * agentMeshes.length)];
+    emitBurst(birthAgent.position, new THREE.Color(0x22d3ee), 20);
+  }
 
-  // ── Demographics Chart ──
-  new Chart(document.getElementById('demoChart'), {
-    type: 'bar',
-    data: {
-      labels,
-      datasets: [
-        {
-          label: 'Births',
-          data: data.map(d => d.births),
-          backgroundColor: COLORS.green,
-          barPercentage: 1.0, categoryPercentage: 1.0
-        },
-        {
-          label: 'Deaths',
-          data: data.map(d => -d.deaths),
-          backgroundColor: COLORS.red,
-          barPercentage: 1.0, categoryPercentage: 1.0
-        }
-      ]
-    },
-    options: {
-      ...makeOpts(),
-      scales: {
-        ...chartDefaults.scales,
-        x: { ...chartDefaults.scales.x, stacked: true },
-        y: { ...chartDefaults.scales.y, stacked: true }
-      }
+  // Death events → red collapse
+  if (epoch.d > 0) {
+    const deathPos = new THREE.Vector3(
+      (Math.random()-0.5) * orbitRadius * 2,
+      (Math.random()-0.5) * 2,
+      (Math.random()-0.5) * orbitRadius * 2
+    );
+    emitBurst(deathPos, new THREE.Color(0xf87171), 25);
+  }
+
+  // Core pulse intensity based on ATP
+  const atpNorm = epoch.atp / 400; // normalized
+  coreMat.emissiveIntensity = 0.1 + atpNorm * 0.2;
+  coreLight.intensity = 1 + atpNorm * 2;
+
+  historyIndex++;
+}
+
+// ─── Raycaster for hover ────────────────────────────────
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2(-999, -999);
+const tooltip = document.getElementById('tooltip');
+
+window.addEventListener('mousemove', e => {
+  mouse.x = (e.clientX / innerWidth) * 2 - 1;
+  mouse.y = -(e.clientY / innerHeight) * 2 + 1;
+
+  raycaster.setFromCamera(mouse, camera);
+  const hits = raycaster.intersectObjects(agentMeshes);
+
+  if (hits.length > 0) {
+    const agent = hits[0].object.userData.agent;
+    tooltip.style.display = 'block';
+    tooltip.style.left = (e.clientX + 16) + 'px';
+    tooltip.style.top = (e.clientY - 10) + 'px';
+    tooltip.innerHTML = `
+      <div class="tt-role" style="color:${ROLE_HEX[agent.role]||'#fff'}">${agent.role}${agent.prim?' ★':''}</div>
+      <div class="tt-row"><span class="tt-dim">Generation</span><span class="tt-val">${agent.gen}${agent.gen===0?' (primordial)':''}</span></div>
+      <div class="tt-row"><span class="tt-dim">Contracts</span><span class="tt-val">${agent.contracts.toLocaleString()}</span></div>
+      <div class="tt-row"><span class="tt-dim">Reputation</span><span class="tt-val">${(agent.rep*100).toFixed(1)}%</span></div>
+      <div class="tt-row"><span class="tt-dim">Mutation Rate</span><span class="tt-val">${agent.mut}</span></div>
+      <div class="tt-row"><span class="tt-dim">Basal Cost</span><span class="tt-val">${agent.basal} ATP/ep</span></div>
+    `;
+  } else {
+    tooltip.style.display = 'none';
+  }
+});
+
+// ─── Animation loop ─────────────────────────────────────
+const clock = new THREE.Clock();
+
+function animate() {
+  requestAnimationFrame(animate);
+  const dt = clock.getDelta();
+  const t = clock.getElapsedTime();
+
+  // Core breathing
+  const breathe = 1 + Math.sin(t * 0.4) * 0.03;
+  core.scale.setScalar(breathe);
+  glowSphere.scale.setScalar(breathe * 1.02);
+  core.rotation.y += dt * 0.05;
+  core.rotation.x = Math.sin(t * 0.15) * 0.1;
+
+  // Treasury well pulse
+  treasuryWell.rotation.z += dt * 0.1;
+  wellMat.opacity = 0.1 + Math.sin(t * 0.8) * 0.05;
+
+  // Agent orbits
+  agentMeshes.forEach(mesh => {
+    const ud = mesh.userData;
+    ud.angle += ud.orbitSpeed * dt;
+    mesh.position.x = Math.cos(ud.angle) * ud.orbitR;
+    mesh.position.z = Math.sin(ud.angle) * ud.orbitR;
+    mesh.position.y = Math.sin(ud.angle * 0.7 + ud.orbitTilt * 5) * ud.orbitTilt * 3;
+
+    // Flicker for low-rep agents
+    if (ud.flicker) {
+      mesh.material.emissiveIntensity = ud.baseEmissive * (0.3 + Math.random() * 0.7);
+      mesh.material.opacity = 0.4 + Math.random() * 0.5;
     }
   });
 
-  // ── Resource Chart ──
-  new Chart(document.getElementById('resourceChart'), {
-    type: 'line',
-    data: {
-      labels,
-      datasets: [{
-        label: 'Total Resources',
-        data: data.map(d => d.res),
-        borderColor: COLORS.green,
-        backgroundColor: 'rgba(52,211,153,0.08)',
-        fill: true, pointRadius: 0, borderWidth: 1.5, tension: 0.1
-      }]
-    },
-    options: makeOpts()
-  });
+  // Particles
+  for (let i = 0; i < particleCount; i++) {
+    if (particleLifetimes[i] > 0) {
+      particleLifetimes[i] -= dt * 0.8;
+      const v = particleVelocities[i];
+      particlePositions[i*3] += v.x * dt;
+      particlePositions[i*3+1] += v.y * dt;
+      particlePositions[i*3+2] += v.z * dt;
+      // Fade
+      const fade = Math.max(0, particleLifetimes[i]);
+      particleColors[i*3] *= fade > 0.1 ? 1 : 0.9;
+      particleColors[i*3+1] *= fade > 0.1 ? 1 : 0.9;
+      particleColors[i*3+2] *= fade > 0.1 ? 1 : 0.9;
+      // Gravity toward treasury well
+      v.y -= 0.3 * dt;
+    }
+  }
+  particleGeo.attributes.position.needsUpdate = true;
+  particleGeo.attributes.color.needsUpdate = true;
 
-  // ── Role Distribution Chart ──
-  new Chart(document.getElementById('roleChart'), {
-    type: 'line',
-    data: {
-      labels,
-      datasets: [
-        { label: 'Optimizer', data: data.map(d => d.opt), borderColor: ROLE_COLORS.Optimizer, pointRadius: 0, borderWidth: 1.2, tension: 0.1, fill: false },
-        { label: 'Strategist', data: data.map(d => d.str), borderColor: ROLE_COLORS.Strategist, pointRadius: 0, borderWidth: 1.2, tension: 0.1, fill: false },
-        { label: 'Communicator', data: data.map(d => d.com), borderColor: ROLE_COLORS.Communicator, pointRadius: 0, borderWidth: 1.2, tension: 0.1, fill: false },
-        { label: 'Archivist', data: data.map(d => d.arc), borderColor: ROLE_COLORS.Archivist, pointRadius: 0, borderWidth: 1.2, tension: 0.1, fill: false },
-        { label: 'Executor', data: data.map(d => d.exe), borderColor: ROLE_COLORS.Executor, pointRadius: 0, borderWidth: 1.2, tension: 0.1, fill: false },
-      ]
-    },
-    options: makeOpts()
-  });
+  // Epoch replay timer
+  historyTimer += dt;
+  if (historyTimer >= EPOCH_INTERVAL) {
+    historyTimer = 0;
+    replayNextEpoch();
+  }
 
-  // ── Economy Flow Cards ──
-  const flowHTML = `
-    <div class="flow-card">
-      <h4>Population Dynamics</h4>
-      <div class="flow-row"><span>Mean population</span><span class="val">${meanPop} agents</span></div>
-      <div class="flow-row"><span>Range</span><span class="val">${Math.min(...data.map(d=>d.pop))} – ${Math.max(...data.map(d=>d.pop))}</span></div>
-      <div class="flow-row"><span>Total births</span><span class="val">${totalBirths.toLocaleString()}</span></div>
-      <div class="flow-row"><span>Total deaths</span><span class="val">${totalDeaths.toLocaleString()}</span></div>
-      <div class="flow-row"><span>Birth:death ratio</span><span class="val">${(totalBirths/Math.max(totalDeaths,1)).toFixed(2)}:1</span></div>
-    </div>
-    <div class="flow-card">
-      <h4>Energy Economy (ATP)</h4>
-      <div class="flow-row"><span>Mean total ATP</span><span class="val">${meanAtp}</span></div>
-      <div class="flow-row"><span>Mean ATP/agent</span><span class="val">${(sumAtp / sumPop * n / n).toFixed(1)}</span></div>
-      <div class="flow-row"><span>ATP range</span><span class="val">${Math.min(...data.map(d=>d.atp)).toFixed(0)} – ${Math.max(...data.map(d=>d.atp)).toFixed(0)}</span></div>
-      <div class="flow-row"><span>Basal cost</span><span class="val">0.15 ATP/epoch</span></div>
-      <div class="flow-row"><span>Replication cost</span><span class="val">25.0 ATP</span></div>
-      <div class="flow-row"><span>Skim rate</span><span class="val">3%</span></div>
-    </div>
-    <div class="flow-card">
-      <h4>Treasury System</h4>
-      <div class="flow-row"><span>Current reserve</span><span class="val">${last.tr.toFixed(2)} ATP</span></div>
-      <div class="flow-row"><span>Mean reserve</span><span class="val">${(sumTr/n).toFixed(2)} ATP</span></div>
-      <div class="flow-row"><span>Cycling rate</span><span class="val">99.99%</span></div>
-      <div class="flow-row"><span>Mechanisms active</span><span class="val">6 of 6</span></div>
-      <div class="flow-row"><span>v1.0 hoarding</span><span class="val" style="color:${COLORS.green}">FIXED</span></div>
-    </div>
-    <div class="flow-card">
-      <h4>Environmental Stress</h4>
-      <div class="flow-row"><span>Catastrophe epochs</span><span class="val">${catCount} (${(catCount/n*100).toFixed(1)}%)</span></div>
-      <div class="flow-row"><span>Current season</span><span class="val">${last.season}</span></div>
-      <div class="flow-row"><span>Season weights</span><span class="val">Au 33% Wi 33% Sp 17% Su 17%</span></div>
-      <div class="flow-row"><span>Seasonal amplitude</span><span class="val">0.3 (30% swing)</span></div>
-    </div>
-    <div class="flow-card">
-      <h4>Fitness &amp; Selection</h4>
-      <div class="flow-row"><span>Mean fitness</span><span class="val">${meanFit}</span></div>
-      <div class="flow-row"><span>Peak individual</span><span class="val">${peakFit.toFixed(4)} (ep ${peakFitEpoch})</span></div>
-      <div class="flow-row"><span>Improvement</span><span class="val">+9.3% over 10k epochs</span></div>
-      <div class="flow-row"><span>Replication threshold</span><span class="val">fitness ≥ 0.35</span></div>
-      <div class="flow-row"><span>Maturation period</span><span class="val">10 epochs</span></div>
-    </div>
-    <div class="flow-card">
-      <h4>System Health</h4>
-      <div class="flow-row"><span>Build status</span><span class="val" style="color:${COLORS.green}">✓ PASSING</span></div>
-      <div class="flow-row"><span>Tests</span><span class="val">143 / 144</span></div>
-      <div class="flow-row"><span>Crates</span><span class="val">6</span></div>
-      <div class="flow-row"><span>Lines of code</span><span class="val">10,015+</span></div>
-      <div class="flow-row"><span>Invariants enforced</span><span class="val">14</span></div>
-      <div class="flow-row"><span>Merkle trees</span><span class="val">7</span></div>
-    </div>
-  `;
-  document.getElementById('flow-grid').innerHTML = flowHTML;
-
-  // ── Final Role Bars ──
-  const roles = [
-    { name: 'Optimizer', count: last.opt, color: ROLE_COLORS.Optimizer },
-    { name: 'Strategist', count: last.str, color: ROLE_COLORS.Strategist },
-    { name: 'Communicator', count: last.com, color: ROLE_COLORS.Communicator },
-    { name: 'Archivist', count: last.arc, color: ROLE_COLORS.Archivist },
-    { name: 'Executor', count: last.exe, color: ROLE_COLORS.Executor },
-  ];
-  const maxRole = Math.max(...roles.map(r => r.count));
-  document.getElementById('role-final').innerHTML =
-    '<div class="role-bars">' + roles.map(r => {
-      const h = Math.max(10, (r.count / maxRole) * 120);
-      return `<div class="role-bar">
-        <div class="role-bar-fill" style="height:${h}px;background:${r.color}">${r.count}</div>
-        <div class="role-bar-label">${r.name}</div>
-      </div>`;
-    }).join('') + '</div>';
+  controls.update();
+  renderer.render(scene, camera);
 }
 
-main().catch(err => {
-  document.getElementById('loading').textContent = 'Error loading data: ' + err.message;
+// ─── Resize ─────────────────────────────────────────────
+window.addEventListener('resize', () => {
+  camera.aspect = innerWidth / innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
 });
+
+// ─── Start ──────────────────────────────────────────────
+document.getElementById('loading').style.display = 'none';
+replayNextEpoch(); // show first epoch immediately
+animate();
+
 </script>
 </body>
 </html>
