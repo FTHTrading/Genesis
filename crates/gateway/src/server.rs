@@ -181,6 +181,7 @@ pub fn build_router_with_controls(world: SharedWorld, controls: SharedControls) 
         .route("/stream", get(get_sse_stream))
         .route("/observatory", get(get_observatory))
         .route("/control", get(get_control_surface))
+        .route("/dashboard", get(get_dashboard))
         .with_state(world);
 
     // CORS layer: allow the observatory to connect from any origin
@@ -729,6 +730,11 @@ async fn get_observatory() -> impl IntoResponse {
 /// GET /control — serves the Genesis Control Surface (live SSE dashboard).
 async fn get_control_surface() -> impl IntoResponse {
     Html(include_str!("control.html"))
+}
+
+/// GET /dashboard — serves the cockpit command-hub dashboard.
+async fn get_dashboard() -> impl IntoResponse {
+    Html(include_str!("dashboard.html"))
 }
 
 #[cfg(test)]
