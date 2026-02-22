@@ -153,13 +153,23 @@ impl ExperimentReport {
     }
 
     /// Save report files to a directory.
+    /// Optionally provide a slug to use as the filename prefix.
     pub fn save_to_dir(&self, dir: &str) -> std::io::Result<()> {
+        self.save_to_dir_with_slug(dir, None)
+    }
+
+    /// Save report files to a directory with a custom slug prefix.
+    pub fn save_to_dir_with_slug(&self, dir: &str, slug: Option<&str>) -> std::io::Result<()> {
         std::fs::create_dir_all(dir)?;
 
-        let safe_name = self.manifest.config.name
-            .replace(' ', "_")
-            .replace('/', "_")
-            .to_lowercase();
+        let safe_name = match slug {
+            Some(s) => s.to_string(),
+            None => self.manifest.config.name
+                .chars()
+                .map(|c| if c.is_alphanumeric() || c == '-' || c == '_' { c } else { '_' })
+                .collect::<String>()
+                .to_lowercase(),
+        };
 
         // Text report
         std::fs::write(
