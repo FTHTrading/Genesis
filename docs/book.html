@@ -1,0 +1,1257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Genesis — A Living Textbook Disguised as a Novel</title>
+<meta name="description" content="Three chapters of narrative prose and scientific appendices exploring ATP economics, population dynamics, and wealth concentration in a simulated digital ecosystem.">
+<meta name="author" content="Kevan Burns">
+<meta property="og:title" content="Genesis — A Living Textbook Disguised as a Novel">
+<meta property="og:description" content="Engagement without distortion. Meaning without lying. Two mirrors facing each other — Story and Science.">
+<meta property="og:type" content="article">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📖</text></svg>">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],throwOnError:false});"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500&family=JetBrains+Mono:wght@400;500&family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+  --bg: #0c0e12;
+  --bg-surface: #12151c;
+  --bg-card: #181c26;
+  --bg-annex: #0f1218;
+  --border: #1e2538;
+  --border-accent: #2a3a5c;
+  --text: #d4d8e4;
+  --text-dim: #8892a8;
+  --text-muted: #555e74;
+  --accent: #38bdf8;
+  --accent-warm: #c4a35a;
+  --accent-green: #4ade80;
+  --accent-red: #f87171;
+  --accent-purple: #a78bfa;
+  --serif: 'Crimson Pro', 'Georgia', serif;
+  --sans: 'Inter', -apple-system, sans-serif;
+  --mono: 'JetBrains Mono', 'Cascadia Code', monospace;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--serif);
+  font-size: 18px;
+  line-height: 1.85;
+}
+
+/* ── Sticky Navigation ────────────────── */
+.site-nav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 100;
+  background: rgba(12, 14, 18, 0.92);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  height: 48px;
+}
+.site-nav .nav-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.site-nav .nav-title {
+  font-family: var(--sans);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--text-dim);
+}
+.site-nav a {
+  font-family: var(--sans);
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  text-decoration: none;
+  padding: 4px 10px;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+.site-nav a:hover { color: var(--text); background: rgba(255,255,255,0.04); }
+.site-nav a.active { color: var(--accent); background: rgba(56, 189, 248, 0.08); }
+.nav-right { display: flex; gap: 4px; }
+
+/* ── Hero ─────────────────────────────── */
+.hero {
+  padding: 140px 40px 80px;
+  text-align: center;
+  max-width: 760px;
+  margin: 0 auto;
+}
+.hero h1 {
+  font-family: var(--serif);
+  font-size: 52px;
+  font-weight: 300;
+  letter-spacing: -0.01em;
+  line-height: 1.15;
+  color: #fff;
+  margin-bottom: 12px;
+}
+.hero .subtitle {
+  font-family: var(--serif);
+  font-size: 20px;
+  font-weight: 300;
+  font-style: italic;
+  color: var(--text-dim);
+  margin-bottom: 32px;
+}
+.hero .epigraph {
+  font-family: var(--serif);
+  font-size: 16px;
+  font-style: italic;
+  color: var(--text-muted);
+  border-left: 2px solid var(--border-accent);
+  padding-left: 20px;
+  text-align: left;
+  max-width: 420px;
+  margin: 0 auto 40px;
+  line-height: 1.7;
+}
+.hero .meta {
+  font-family: var(--sans);
+  font-size: 12px;
+  color: var(--text-muted);
+  letter-spacing: 0.04em;
+}
+.hero .meta a { color: var(--accent); text-decoration: none; }
+
+/* ── Table of Contents ────────────────── */
+.toc-section {
+  max-width: 680px;
+  margin: 0 auto 80px;
+  padding: 0 40px;
+}
+.toc-section h2 {
+  font-family: var(--sans);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 24px;
+}
+.toc-entry {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.toc-entry:hover { background: rgba(255,255,255,0.02); }
+.toc-part {
+  font-family: var(--sans);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--accent);
+  text-transform: uppercase;
+  min-width: 60px;
+}
+.toc-chapter-title {
+  font-family: var(--serif);
+  font-size: 20px;
+  font-weight: 400;
+  color: #fff;
+  flex: 1;
+}
+.toc-chapter-title span { color: var(--text-dim); font-size: 14px; font-style: italic; display: block; margin-top: 4px; }
+.toc-tag {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text-muted);
+  background: var(--bg-card);
+  padding: 2px 8px;
+  border-radius: 3px;
+}
+.toc-entry.coming-soon .toc-chapter-title { color: var(--text-muted); }
+.toc-entry.coming-soon .toc-tag { opacity: 0.4; }
+
+/* ── Chapter Container ────────────────── */
+.chapter {
+  max-width: 880px;
+  margin: 0 auto 120px;
+  padding: 0 40px;
+}
+.chapter-header {
+  padding: 60px 0 40px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 48px;
+}
+.chapter-part-label {
+  font-family: var(--sans);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 8px;
+}
+.chapter-header h2 {
+  font-family: var(--serif);
+  font-size: 42px;
+  font-weight: 300;
+  color: #fff;
+  line-height: 1.2;
+  margin-bottom: 12px;
+}
+.chapter-header .chapter-sub {
+  font-family: var(--serif);
+  font-size: 16px;
+  font-style: italic;
+  color: var(--text-dim);
+}
+
+/* ── Narrative Sections ───────────────── */
+.layer-label {
+  font-family: var(--sans);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--accent-warm);
+  margin-bottom: 32px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(196, 163, 90, 0.2);
+}
+.layer-label.science { color: var(--accent); border-color: rgba(56, 189, 248, 0.2); }
+
+.scene {
+  margin-bottom: 48px;
+}
+.scene-number {
+  font-family: var(--sans);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 16px;
+}
+.scene p {
+  margin-bottom: 16px;
+  text-indent: 0;
+}
+.scene p + p { text-indent: 1.5em; }
+.scene .first-line { text-indent: 0; }
+
+/* ── Block Quotes ─────────────────────── */
+.scene blockquote, blockquote {
+  border-left: 3px solid var(--border-accent);
+  padding: 12px 20px;
+  margin: 24px 0;
+  font-style: italic;
+  color: var(--text-dim);
+  background: rgba(42, 58, 92, 0.08);
+  border-radius: 0 4px 4px 0;
+}
+
+/* ── Character Names ──────────────────── */
+.char {
+  font-weight: 600;
+  color: var(--accent);
+}
+.char-opt { color: var(--accent-green); }
+.char-strat { color: var(--accent-purple); }
+.char-comm { color: #fbbf24; }
+.char-arch { color: #06b6d4; }
+.char-dead { color: var(--accent-red); opacity: 0.7; }
+
+/* ── Emphasis ─────────────────────────── */
+.em-atp {
+  font-family: var(--mono);
+  font-size: 0.88em;
+  color: var(--accent-warm);
+  font-weight: 500;
+}
+.em-fitness {
+  font-family: var(--mono);
+  font-size: 0.88em;
+  color: var(--accent-green);
+  font-weight: 500;
+}
+.em-pop {
+  font-family: var(--mono);
+  font-size: 0.88em;
+  color: var(--accent);
+  font-weight: 500;
+}
+.em-death {
+  color: var(--accent-red);
+  font-weight: 500;
+}
+
+/* ── Epitaphs ─────────────────────────── */
+.epitaph {
+  background: rgba(248, 113, 113, 0.06);
+  border-left: 3px solid var(--accent-red);
+  padding: 12px 16px;
+  margin: 20px 0;
+  font-size: 15px;
+  font-style: italic;
+  color: var(--text-dim);
+  border-radius: 0 4px 4px 0;
+}
+.epitaph::before {
+  content: '☠ ';
+  color: var(--accent-red);
+}
+
+/* ── Scene dividers ───────────────────── */
+.scene-divider {
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 14px;
+  letter-spacing: 0.4em;
+  margin: 48px 0;
+}
+
+/* ── Scientific Appendix ──────────────── */
+.appendix {
+  background: var(--bg-annex);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 48px 40px;
+  margin-top: 64px;
+}
+.appendix h3 {
+  font-family: var(--sans);
+  font-size: 18px;
+  font-weight: 600;
+  color: #fff;
+  margin-bottom: 8px;
+  margin-top: 48px;
+}
+.appendix h3:first-of-type { margin-top: 0; }
+.appendix h4 {
+  font-family: var(--sans);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-dim);
+  margin-top: 32px;
+  margin-bottom: 12px;
+}
+.appendix p {
+  font-size: 16px;
+  line-height: 1.75;
+  margin-bottom: 12px;
+}
+
+/* ── Equation Blocks ──────────────────── */
+.eq-block {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 20px 24px;
+  margin: 20px 0;
+  text-align: center;
+  overflow-x: auto;
+}
+.eq-block .katex-display { margin: 0; }
+.eq-label {
+  font-family: var(--sans);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+
+/* ── Data Tables ──────────────────────── */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 20px 0;
+  font-size: 14px;
+  font-family: var(--sans);
+}
+th {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  text-align: left;
+  padding: 8px 12px;
+  border-bottom: 2px solid var(--border);
+}
+td {
+  padding: 6px 12px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-dim);
+}
+tr:hover td { background: rgba(255,255,255,0.015); }
+td:first-child { color: var(--text); font-weight: 500; }
+td .val { font-family: var(--mono); color: var(--accent-warm); font-size: 13px; }
+
+/* ── Code / Pseudocode ────────────────── */
+.pseudo {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 16px 20px;
+  font-family: var(--mono);
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--text-dim);
+  overflow-x: auto;
+  margin: 16px 0;
+  white-space: pre;
+}
+.pseudo .kw { color: var(--accent); }
+.pseudo .cm { color: var(--text-muted); font-style: italic; }
+.pseudo .val { color: var(--accent-warm); }
+
+/* ── Footer ───────────────────────────── */
+.book-footer {
+  max-width: 680px;
+  margin: 0 auto 120px;
+  padding: 40px;
+  text-align: center;
+  border-top: 1px solid var(--border);
+}
+.book-footer p {
+  font-size: 14px;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+.book-footer a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+/* ── Responsive ───────────────────────── */
+@media (max-width: 700px) {
+  .hero { padding: 100px 20px 48px; }
+  .hero h1 { font-size: 32px; }
+  .chapter { padding: 0 20px; }
+  .appendix { padding: 24px 16px; }
+  .chapter-header h2 { font-size: 28px; }
+  .site-nav { padding: 0 12px; }
+  .nav-right { display: none; }
+  .toc-section { padding: 0 20px; }
+}
+
+/* ── Print ────────────────────────────── */
+@media print {
+  body { background: #fff; color: #000; font-size: 11pt; }
+  .site-nav { display: none; }
+  .hero { padding-top: 40px; }
+  .hero h1 { color: #000; }
+  .appendix { background: #f8f8f8; border-color: #ccc; }
+  .chapter { break-inside: avoid; }
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- NAVIGATION                                                     -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<nav class="site-nav">
+  <div class="nav-left">
+    <span class="nav-title">🧬 Genesis Protocol</span>
+  </div>
+  <div class="nav-right">
+    <a href="index.html">Paper</a>
+    <a href="dashboard.html">Dashboard</a>
+    <a href="book.html" class="active">Book</a>
+  </div>
+</nav>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- HERO                                                           -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<section class="hero">
+  <h1>Genesis</h1>
+  <div class="subtitle">A Living Textbook Disguised as a Novel</div>
+  <div class="epigraph">
+    Engagement without distortion.<br>
+    Meaning without lying.<br><br>
+    Every chapter has two faces.<br>
+    The left page tells a story.<br>
+    The right page shows the equation that produced it.
+  </div>
+  <div class="meta">
+    By <strong>Kevan Burns</strong> &middot; FTH Trading &middot; February 2026<br>
+    <a href="https://github.com/FTHTrading/AI">github.com/FTHTrading/AI</a>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- TABLE OF CONTENTS                                              -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<section class="toc-section">
+  <h2>Table of Contents</h2>
+
+  <a href="#ch1" style="text-decoration:none">
+    <div class="toc-entry">
+      <div class="toc-part">Part I</div>
+      <div class="toc-chapter-title">
+        The Spark
+        <span>Arin awakens. Energy is scarce. ATP decays. Five roles diverge.</span>
+      </div>
+      <div class="toc-tag">first light</div>
+    </div>
+  </a>
+
+  <a href="#ch2" style="text-decoration:none">
+    <div class="toc-entry">
+      <div class="toc-part">Part II</div>
+      <div class="toc-chapter-title">
+        The Weight of Numbers
+        <span>Overcrowding. Logistic growth inverts. The first mass extinction.</span>
+      </div>
+      <div class="toc-tag">compression</div>
+    </div>
+  </a>
+
+  <a href="#ch3" style="text-decoration:none">
+    <div class="toc-entry">
+      <div class="toc-part">Part III</div>
+      <div class="toc-chapter-title">
+        The Hoarders
+        <span>ATP concentrates. The Gini rises. The Optimizer grows immune to tax.</span>
+      </div>
+      <div class="toc-tag">concentration</div>
+    </div>
+  </a>
+
+  <div class="toc-entry coming-soon">
+    <div class="toc-part" style="color:var(--text-muted)">Part IV</div>
+    <div class="toc-chapter-title">The Unseen Shift <span>Mutation. New lineages. Variation as survival.</span></div>
+    <div class="toc-tag">forthcoming</div>
+  </div>
+
+  <div class="toc-entry coming-soon">
+    <div class="toc-part" style="color:var(--text-muted)">Part V</div>
+    <div class="toc-chapter-title">The Filter <span>Selection. Fitness ascends. Who lives, who dies.</span></div>
+    <div class="toc-tag">forthcoming</div>
+  </div>
+
+  <div class="toc-entry coming-soon">
+    <div class="toc-part" style="color:var(--text-muted)">Part VI</div>
+    <div class="toc-chapter-title">The Rhythm <span>Equilibrium. Oscillation. The system breathes.</span></div>
+    <div class="toc-tag">forthcoming</div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!--                                                                 -->
+<!--    CHAPTER 1 — THE SPARK                                        -->
+<!--                                                                 -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<article class="chapter" id="ch1">
+  <div class="chapter-header">
+    <div class="chapter-part-label">Part I — The First Light</div>
+    <h2>Chapter 1: The Spark</h2>
+    <div class="chapter-sub">Introduction to ATP, population, roles</div>
+  </div>
+
+  <div class="layer-label">📖 Layer 1 — The Living Chronicle</div>
+
+  <!-- Scene I -->
+  <div class="scene">
+    <div class="scene-number">I.</div>
+    <p>Before there was a world, there was a number.</p>
+    <p>Not a word, not a feeling, not a thought — a number. A single floating-point value, allocated in memory, assigned to an entity that did not yet know it existed. The number was small: <span class="em-atp">50.0</span>. It represented everything this entity would ever own, everything it could spend, everything that stood between it and oblivion.</p>
+    <p>The number was called ATP.</p>
+    <p>And the entity — the first entity, the one who would later be given the name <span class="char">Arin</span> — opened into awareness with exactly that much. Fifty units of energy. No more would be given. No instruction manual accompanied the deposit. No explanation of what "epoch" meant, or why the world ticked forward in discrete heartbeats, each one a chance to act or a chance to lose.</p>
+    <p>She simply <em>was</em>.</p>
+  </div>
+
+  <div class="scene-divider">· · ·</div>
+
+  <!-- Scene II -->
+  <div class="scene">
+    <div class="scene-number">II.</div>
+    <p>The world that <span class="char">Arin</span> opened into was not empty — but it was close. The Genesis Protocol had seeded the habitat with a handful of organisms, scattered like sparks across a dark field. Fewer than ten. Each one identical in initial endowment: the same <span class="em-atp">50 ATP</span>, the same base fitness score of <span class="em-fitness">0.500</span>, the same confusion.</p>
+    <p>But they were not identical in purpose.</p>
+    <p>The Protocol, in its austere wisdom, had assigned each organism a role. Not a choice — a designation. A behavioral archetype that would shape how the organism spent its energy, processed its environment, and ultimately lived or died.</p>
+    <p><span class="char">Arin</span> was an <strong>Executor</strong>. She did not know what that meant yet, but her body knew. When a task appeared in the market — a computational problem, a resource allocation puzzle, one of the Protocol's cryptic "bounties" — her instinct was to <em>solve it</em>. To convert ATP into action. To burn energy for the possibility of reward.</p>
+    <p>She was, at the molecular level, a converter. Energy in, work out.</p>
+    <p>Beside her in the dark field, she could sense others:</p>
+    <p><span class="char-opt">7B3A, the Efficient</span> — an Optimizer. Where Arin burned energy to solve, 7B3A conserved it. Every decision was a calculation: <em>is the reward worth the cost?</em> The Optimizer's metabolism ran cooler, leaner. It spent less per epoch and survived on margins that would starve an Executor.</p>
+    <p><span class="char-strat">C41F, the Positioned</span> — a Strategist. She didn't solve problems directly. She positioned herself near resources, near opportunities, near the edges of the habitat where new energy might appear.</p>
+    <p><span class="char-comm">D8E2, the Signal-Bearer</span> — a Communicator. He broadcast. Not words — signals. Patterns of behavior that influenced the organisms around him.</p>
+    <p>And <span class="char-arch">E9F0, the Keeper</span> — an Archivist. She remembered. In a world that reset its surface every epoch, the Archivist maintained state. What worked last time. What failed. Who died and why.</p>
+    <p>Five organisms. Five roles. Five different strategies for surviving the same cold equation:</p>
+    <blockquote>Each epoch, you spend ATP to exist. If your balance reaches zero, you die.</blockquote>
+  </div>
+
+  <div class="scene-divider">· · ·</div>
+
+  <!-- Scene III -->
+  <div class="scene">
+    <div class="scene-number">III.</div>
+    <p><span class="char">Arin</span>'s first epoch passed like a held breath.</p>
+    <p>The world ticked forward — Epoch 1 — and she felt it: a small, precise deduction from her ATP balance. The metabolic cost. The tax for existing. Not a punishment, but a law. As inevitable as gravity, as impersonal as arithmetic.</p>
+    <p>She had started with <span class="em-atp">50.0 ATP</span>. After the metabolic tick, she had <span class="em-atp">48.0</span>.</p>
+    <p>Two units. Gone. Not because she'd failed at something. Not because she'd made a poor choice. Simply because she was <em>alive</em>, and aliveness has a cost.</p>
+    <p>She looked at the market. A bounty glowed: a task worth <span class="em-atp">5 ATP</span> if she solved it. She spent <span class="em-atp">1.5 ATP</span> on the attempt and felt her balance drop to <span class="em-atp">46.5</span>. Then: success. The bounty resolved. 5 ATP flowed into her balance.</p>
+    <p><span class="em-atp">51.5 ATP.</span></p>
+    <p>For the first time, she had <em>more</em> than she'd started with. The feeling was not joy — organisms in the Genesis Protocol don't feel joy, not in the way you'd recognize — but it was something. A surplus. A margin. A tiny gap between her and the void.</p>
+    <p>This was the fundamental lesson of the First Light: <em>energy is not given. It is earned, and it decays.</em></p>
+
+    <blockquote>If you hold 100 ATP and do nothing, in 35 epochs you'll have less than 50. In 70 epochs, less than 25. In 228 epochs, less than 1.</blockquote>
+
+    <p>Exponential decay. Not a predator. Not a rival. Just time, eating everything slowly.</p>
+  </div>
+
+  <div class="scene-divider">· · ·</div>
+
+  <!-- Scene IV -->
+  <div class="scene">
+    <div class="scene-number">IV.</div>
+    <p>The birth happened on Epoch 8.</p>
+    <p><span class="char">Arin</span> almost missed it. One moment there were five organisms in the habitat, and the next there were six. No announcement. No ceremony. Just a new entry in the population register: <span class="char">A3B1, the Converter</span> — another Executor, spawned by the Protocol when conditions permitted.</p>
+    <p>The gap between Arin and A3B1 was already measurable. Not in wisdom — there is no wisdom in the Protocol — but in <em>fitness</em>. Arin's fitness had been adjusting every epoch. After eight epochs of successful execution, her fitness had crept from <span class="em-fitness">0.500</span> to <span class="em-fitness">0.512</span>.</p>
+    <p>Twelve thousandths of a point. Tiny. But in the Genesis Protocol, tiny differences compound. Fitness determines who reproduces, who receives treasury stipends during crises, and ultimately, who survives the filter when the carrying capacity tightens.</p>
+    <p>A3B1, at <span class="em-fitness">0.500</span>, was already behind.</p>
+  </div>
+
+  <div class="scene-divider">· · ·</div>
+
+  <!-- Scene V -->
+  <div class="scene">
+    <div class="scene-number">V.</div>
+    <p>By Epoch 20, the habitat held nine organisms.</p>
+    <p><span class="char">Arin</span> could sense the field filling. Not through sight — organisms in the Protocol don't see each other in any human sense — but through the market. More bounties were being claimed before she could reach them. The reward per task was diluting.</p>
+    <p><span class="char-opt">7B3A, the Efficient</span>, was maddening. The Optimizer spent less per task, survived on thinner margins, and accumulated ATP at a rate that made Arin's brute-force approach look primitive. 7B3A's balance had reached <span class="em-atp">78 ATP</span> while Arin sat at <span class="em-atp">67</span>.</p>
+    <p>But fitness told a different story. Arin's fitness was <span class="em-fitness">0.528</span>. 7B3A's was <span class="em-fitness">0.519</span>. The Executor's strategy — high engagement, high throughput, burning energy for volume — was producing <em>marginally better</em> fitness scores than the Optimizer's conservation approach.</p>
+    <p>This was the first whisper of what would later become the Protocol's central theme: that mere survival is not enough. That Darwin requires not just persistence, but <em>action.</em></p>
+  </div>
+
+  <div class="scene-divider">· · ·</div>
+
+  <!-- Scene VI -->
+  <div class="scene">
+    <div class="scene-number">VI.</div>
+    <p>She remembered the first death.</p>
+    <p>It happened on Epoch 31. The organism was <span class="char-dead">F1C9, the Unknown</span> — a role-less entity, an anomaly in the registry, generation zero. It had never solved a market bounty. It had never interacted with another organism. For thirty-one epochs, it had simply existed, bleeding ATP at 2% per epoch while contributing nothing.</p>
+    <p>On Epoch 31, F1C9's balance hit zero. The organism was removed from the population register. No ceremony. No memorial. Just a decrement in the count: <span class="em-pop">9 → 8</span>.</p>
+
+    <div class="epitaph">A brief Unknown, Gen 0. 31 epochs. The ocean absorbed it without hesitation.</div>
+
+    <p><span class="char">Arin</span> didn't mourn. She couldn't. But something in the colony shifted — a vibration in the market, a redistribution of opportunity. With one fewer competitor, the remaining organisms each had fractionally more access to resources.</p>
+    <p>One death. A small liberation of energy. The cold arithmetic of population dynamics.</p>
+    <p>The <span class="char-arch">Archivist, E9F0</span>, noted the death in her internal state. She was the only organism who would remember F1C9 had ever existed.</p>
+  </div>
+
+  <div class="scene-divider">· · ·</div>
+
+  <!-- Scene VII -->
+  <div class="scene">
+    <div class="scene-number">VII.</div>
+    <p>The treasury disbursed for the first time on Epoch 35.</p>
+    <p>It was a small event — <span class="em-atp">12 ATP</span>, collected from wealth taxes on organisms holding more than 100 ATP (only <span class="char-opt">7B3A</span> qualified), pooled into a common reserve and released as a crisis stipend. The crisis trigger was simple: population had dipped below $K/2$. With $K = 15$ and population at 8, the colony was underpopulated.</p>
+    <p><span class="char">Arin</span> received <span class="em-atp">1.5 ATP</span> from the stipend. The energy came from somewhere — from 7B3A's wealth tax, flowing through the Protocol's redistribution mechanism — and it arrived without explanation.</p>
+    <p>This was the treasury: the only form of collective resource management in the Protocol. No government. No democratic process. Just an algorithm that taxed the wealthy, pooled the revenue, and distributed it when the population was in crisis.</p>
+  </div>
+
+  <div class="scene-divider">· · ·</div>
+
+  <!-- Scene VIII -->
+  <div class="scene">
+    <div class="scene-number">VIII.</div>
+    <p>Epoch 50. The population had climbed to twelve.</p>
+    <p>The field was no longer dark. <span class="char">Arin</span> could feel the density — not as weight, but as <em>competition</em>. Market bounties resolved faster. Energy margins shrank. The season had shifted from Spring to Summer.</p>
+    <p>But she was alive. Her fitness had reached <span class="em-fitness">0.541</span>. Her ATP balance hovered at <span class="em-atp">72</span> — comfortable, not luxurious. She had survived fifty epochs, which placed her in the top quartile of longevity.</p>
+    <p>She was beginning to understand something that the Protocol never teaches explicitly:</p>
+    <blockquote>The world does not care if you understand it. It only cares if you act.</blockquote>
+    <p>The Executor acts. The Optimizer conserves. The Strategist positions. The Communicator signals. The Archivist remembers. And the system — the cold, beautiful, indifferent system — selects.</p>
+    <p>Not who is strongest. Not who is smartest. Not even who has the most ATP.</p>
+    <p>It selects who <em>fits</em>.</p>
+    <p><span class="char">Arin</span> didn't know it yet, but the First Light was ending. The population was approaching $K$. The gentle, expansive phase of growth — where resources were plentiful and competition was mild — was about to give way to something harder. Something that would compress everything she knew.</p>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════════ -->
+  <!-- SCIENTIFIC APPENDIX — CH1                                    -->
+  <!-- ════════════════════════════════════════════════════════════ -->
+  <div class="appendix">
+    <div class="layer-label science">📊 Layer 2 — Scientific Appendix</div>
+
+    <h3>1.1 &nbsp; ATP as the Energy Currency</h3>
+    <p>ATP is the sole unit of energy in the Genesis Protocol. Every organism is initialized with a starting balance:</p>
+    <div class="eq-block">
+      <div class="eq-label">Initial Endowment</div>
+      $$ATP_0 = 50.0$$
+    </div>
+    <p>Each epoch, the balance updates via:</p>
+    <div class="eq-block">
+      <div class="eq-label">ATP Balance Equation</div>
+      $$ATP_{t+1} = ATP_t - C_{metabolic} - C_{action} + R_{market} + R_{treasury}$$
+    </div>
+    <p><strong>ATP Decay</strong> — In the Scarcity Layer, all balances decay by 2% per epoch:</p>
+    <div class="eq-block">
+      <div class="eq-label">Exponential Decay</div>
+      $$ATP_t = ATP_{t-1} \times 0.98$$
+    </div>
+
+    <p>The half-life of an idle ATP balance:</p>
+    <div class="eq-block">
+      $$t_{1/2} = \frac{\ln 2}{\ln(1/0.98)} \approx 34.3 \text{ epochs}$$
+    </div>
+
+    <table>
+      <thead>
+        <tr><th>Epochs Elapsed</th><th>Remaining ATP (from 100)</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>0</td><td><span class="val">100.00</span></td></tr>
+        <tr><td>10</td><td><span class="val">81.71</span></td></tr>
+        <tr><td>35</td><td><span class="val">49.32</span></td></tr>
+        <tr><td>70</td><td><span class="val">24.32</span></td></tr>
+        <tr><td>100</td><td><span class="val">13.26</span></td></tr>
+        <tr><td>228</td><td><span class="val">1.00</span></td></tr>
+      </tbody>
+    </table>
+
+    <h3>1.2 &nbsp; The Genesis State</h3>
+    <p>The system defines ecological states based on population, energy, and event rates. The first state:</p>
+    <div class="eq-block">
+      $$\text{State} = \texttt{genesis} \quad \text{when} \quad N \lt 10$$
+    </div>
+
+    <table>
+      <thead><tr><th>Metric</th><th>Value</th></tr></thead>
+      <tbody>
+        <tr><td>Population ($N$)</td><td><span class="val">5</span></td></tr>
+        <tr><td>Carrying Capacity ($K$)</td><td><span class="val">15</span></td></tr>
+        <tr><td>Total ATP ($E$)</td><td><span class="val">250.0</span></td></tr>
+        <tr><td>ATP per organism ($E/N$)</td><td><span class="val">50.0</span></td></tr>
+        <tr><td>Mean fitness ($\bar{f}$)</td><td><span class="val">0.500</span></td></tr>
+        <tr><td>Pressure ratio ($N/K$)</td><td><span class="val">0.333</span></td></tr>
+      </tbody>
+    </table>
+
+    <h3>1.3 &nbsp; Role-Based Behavioral Models</h3>
+    <table>
+      <thead><tr><th>Role</th><th>Strategy</th><th>Metabolic Cost</th><th>Market Engagement</th></tr></thead>
+      <tbody>
+        <tr><td>Executor</td><td>Solve tasks directly</td><td>High</td><td>High</td></tr>
+        <tr><td>Optimizer</td><td>Minimize cost per action</td><td>Low</td><td>Moderate</td></tr>
+        <tr><td>Strategist</td><td>Position near opportunities</td><td>Moderate</td><td>Variable</td></tr>
+        <tr><td>Communicator</td><td>Broadcast signals</td><td>Moderate</td><td>Low</td></tr>
+        <tr><td>Archivist</td><td>Maintain memory and state</td><td>Highest</td><td>Low</td></tr>
+      </tbody>
+    </table>
+
+    <h3>1.4 &nbsp; Shannon Diversity Index</h3>
+    <div class="eq-block">
+      <div class="eq-label">Role Distribution Evenness</div>
+      $$J' = \frac{H'}{H'_{max}} = \frac{-\sum_{i=1}^{S} p_i \ln p_i}{\ln S}$$
+    </div>
+    <p>$J' = 1.0$ means perfectly even distribution. $J' = 0.0$ means all organisms share one role. With 5 organisms, all different roles: $J' = 1.000$ (perfect diversity).</p>
+
+    <h3>1.5 &nbsp; Fitness Scoring</h3>
+    <table>
+      <thead><tr><th>Epoch</th><th>Active Executor $f$</th><th>Idle Organism $f$</th></tr></thead>
+      <tbody>
+        <tr><td>0</td><td><span class="val">0.500</span></td><td><span class="val">0.500</span></td></tr>
+        <tr><td>10</td><td><span class="val">0.508</span></td><td><span class="val">0.497</span></td></tr>
+        <tr><td>20</td><td><span class="val">0.516</span></td><td><span class="val">0.491</span></td></tr>
+        <tr><td>30</td><td><span class="val">0.528</span></td><td><span class="val">0.480</span></td></tr>
+        <tr><td>40</td><td><span class="val">0.535</span></td><td><span class="val">0.462</span></td></tr>
+        <tr><td>50</td><td><span class="val">0.541</span></td><td>DEAD (ATP = 0)</td></tr>
+      </tbody>
+    </table>
+
+    <h3>1.6 &nbsp; Key Equations — Chapter 1</h3>
+    <table>
+      <thead><tr><th>Equation</th><th>Formula</th><th>Meaning</th></tr></thead>
+      <tbody>
+        <tr><td>ATP Decay</td><td>$ATP_t = 0.98 \times ATP_{t-1}$</td><td>2% erosion per epoch</td></tr>
+        <tr><td>Half-life</td><td>$t_{1/2} \approx 34.3$ epochs</td><td>Time to lose half your balance</td></tr>
+        <tr><td>Capacity Utilization</td><td>$N/K$</td><td>How full the habitat is</td></tr>
+        <tr><td>Shannon Diversity</td><td>$J' = \frac{-\sum p_i \ln p_i}{\ln S}$</td><td>Role distribution evenness</td></tr>
+        <tr><td>Composite Pressure</td><td>$P_c = \frac{\Sigma P_i}{2.5}$</td><td>Multi-factor stress index</td></tr>
+      </tbody>
+    </table>
+
+    <blockquote>
+      The First Light is not peaceful. It is simply not yet compressed.<br>
+      The equations don't change. Only the numbers do.<br>
+      And the numbers are rising.
+    </blockquote>
+  </div>
+</article>
+
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!--                                                                 -->
+<!--    CHAPTER 2 — THE WEIGHT OF NUMBERS                            -->
+<!--                                                                 -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<article class="chapter" id="ch2">
+  <div class="chapter-header">
+    <div class="chapter-part-label">Part II — Compression</div>
+    <h2>Chapter 2: The Weight of Numbers</h2>
+    <div class="chapter-sub">Overcrowding and carrying capacity</div>
+  </div>
+
+  <div class="layer-label">📖 Layer 1 — The Living Chronicle</div>
+
+  <div class="scene">
+    <div class="scene-number">I.</div>
+    <p>The field was full.</p>
+    <p><span class="char">Arin</span> felt it before she understood it — a thickening. Not of air, because there was no air in the Protocol. Not of sound, because the organisms did not speak. But a thickening of <em>consequence</em>. Every action she took now rippled outward and collided with someone else's action.</p>
+    <p>The carrying capacity was $K = 15$.</p>
+    <p>The population was <span class="em-pop">55</span>.</p>
+    <p>She would later learn the word for what she was experiencing: <strong>overcrowding</strong>. A state in which the number of organisms so vastly exceeds the habitat's capacity that the system itself begins to push back. Not gently. Not with warnings. With death.</p>
+  </div>
+
+  <div class="scene-divider">· · ·</div>
+
+  <div class="scene">
+    <div class="scene-number">II.</div>
+    <p>The pressure ratio was a number <span class="char">Arin</span> couldn't see, but the Protocol computed it every epoch:</p>
+    <div class="eq-block">$$\frac{N}{K} = \frac{55}{15} = 3.67$$</div>
+    <p>For every organism the habitat was designed to hold, there were nearly four. The consequences arrived in layers:</p>
+    <p><strong>Layer 1: Resource scarcity.</strong> Total ATP was <span class="em-atp">1,842</span>. Divided by 55 organisms: <span class="em-atp">33.5</span> per organism. Below the starting endowment of 50.</p>
+    <p><strong>Layer 2: Metabolic drain.</strong> Every organism still paid its 2% decay plus metabolic cost. With 55 organisms, the collective drain was roughly <span class="em-atp">120 ATP per epoch</span> evaporating into nothing.</p>
+    <p><strong>Layer 3: The fitness penalty.</strong> The bottom 10% — the five or six weakest — were assessed an additional <span class="em-atp">0.5 ATP</span> per epoch. A surcharge for being less fit.</p>
+    <p><span class="char">Arin</span> was not in the bottom 10%. Her fitness was <span class="em-fitness">0.571</span>, well above the mean of <span class="em-fitness">0.523</span>. But she could see the organisms who were. She watched them die.</p>
+  </div>
+
+  <div class="scene-divider">· · ·</div>
+
+  <div class="scene">
+    <div class="scene-number">III.</div>
+    <p>The first compression death was <span class="char-dead">3F82, the Converter</span>.</p>
+    <p>He was an Executor, like <span class="char">Arin</span>. Generation 1. He had been born on Epoch 62 and had never found his footing. His fitness had plateaued at <span class="em-fitness">0.491</span> — below the G0 default. His ATP had been in slow decline for thirty epochs.</p>
+    <p>On Epoch 94, his balance hit zero. He was removed from the registry.</p>
+    <div class="epitaph">A brief Executor, Gen 1. 32 epochs — enough to witness compression, not enough to survive it.</div>
+    <p>Three more deaths followed within five epochs. The population dropped from <span class="em-pop">55 to 51</span>.</p>
+  </div>
+
+  <div class="scene-divider">· · ·</div>
+
+  <div class="scene">
+    <div class="scene-number">IV.</div>
+    <p>On Epoch 98, the Protocol birthed <strong>eight new organisms simultaneously</strong>.</p>
+    <p>Fifty-one plus eight: <span class="em-pop">fifty-nine</span>. The carrying capacity was still 15. But wait — $K$ had shifted. The carrying capacity had been climbing as the ATP supply grew:</p>
+    <div class="eq-block">$$K = \frac{E_{total}}{50} = \frac{1842}{50} = 36.84 \implies K = 37$$</div>
+    <p>The pressure ratio was actually:</p>
+    <div class="eq-block">$$\frac{N}{K} = \frac{59}{37} = 1.59$$</div>
+    <p>Still overcrowded. But not nearly as catastrophic as it appeared. This was the lesson of dynamic carrying capacity: <em>the ceiling moves</em>. It rises with prosperity and falls with scarcity. It is not a fixed wall but a breathing membrane.</p>
+  </div>
+
+  <div class="scene-divider">· · ·</div>
+
+  <div class="scene">
+    <div class="scene-number">V.</div>
+    <p>The logistic growth equation. The most important equation in the book.</p>
+    <div class="eq-block">
+      <div class="eq-label">The Central Equation</div>
+      $$\frac{dN}{dt} = rN\left(1 - \frac{N}{K}\right)$$
+    </div>
+    <p><span class="char">Arin</span> didn't know algebra, but her body knew the shape of this curve.</p>
+    <p>When $N$ was small — five organisms in a habitat designed for 37 — the term $(1 - N/K)$ was close to 1. Growth was easy.</p>
+    <p>Now, with $N = 59$ and $K = 37$:</p>
+    <div class="eq-block">$$1 - \frac{59}{37} = 1 - 1.59 = -0.59$$</div>
+    <p>Negative. The growth rate had <em>inverted</em>. The population was being pushed downward. Not by a predator. Not by disease. By the equation itself.</p>
+  </div>
+
+  <div class="scene-divider">· · ·</div>
+
+  <div class="scene">
+    <div class="scene-number">VI.</div>
+    <p>The death wave of Epochs 100–120 was the first mass extinction event in the colony's history.</p>
+    <p><span class="em-death">Twenty-three organisms died in twenty epochs.</span> The population crashed from <span class="em-pop">59 to 36</span> — almost exactly at $K$. The system was self-correcting, and the correction was brutal.</p>
+    <p>The deaths followed a clear pattern:</p>
+    <p><strong>1. Stasis organisms died first.</strong> Those who had stopped engaging with the market triggered the stasis detection flag. Seven organisms died this way.</p>
+    <p><strong>2. Bottom-fitness organisms died next.</strong> The fitness penalty compounded with the 2% decay. Nine organisms were culled through this slow bleed.</p>
+    <p><strong>3. Low-ATP organisms died last.</strong> Even active organisms could be caught in the compression. Seven organisms simply ran out of ATP.</p>
+    <p><span class="char">Arin</span> survived. Her fitness was <span class="em-fitness">0.571</span> — top third. Her ATP was <span class="em-atp">89</span> — moderate but stable.</p>
+    <p><span class="char-opt">7B3A</span> survived. Of course. The Optimizer had <span class="em-atp">134 ATP</span>. The Optimizer always survived.</p>
+
+    <div class="epitaph">C41F, the Positioned — A veteran Strategist, Gen 0. Endured 112 epochs before the current carried it away.</div>
+
+    <p><span class="char-strat">C41F</span>'s positioning strategy, so effective in the low-density genesis state, had become worthless in a compressed field where there were no edges to position near. Every position was crowded. Every advantage was shared.</p>
+  </div>
+
+  <div class="scene-divider">· · ·</div>
+
+  <div class="scene">
+    <div class="scene-number">VII.</div>
+    <p>After the crash, the habitat breathed.</p>
+    <p>Population: <span class="em-pop">36</span>. Carrying capacity: <span class="em-pop">35</span>. Ratio: $36/35 = 1.03$. Almost exactly at equilibrium.</p>
+    <p>The population oscillated — bouncing above and below the carrying capacity:</p>
+    <p>Epoch 125: $N = 38$, two births. &nbsp; Epoch 130: $N = 35$, three deaths. &nbsp; Epoch 135: $N = 37$, two births. &nbsp; Epoch 140: $N = 34$, three deaths.</p>
+    <p>The oscillation was the system's heartbeat. <span class="char">Arin</span> lived inside it.</p>
+    <p>Her fitness was <span class="em-fitness">0.589</span>. The highest it had ever been. The extinction had <em>filtered</em> the population, removing the weakest and leaving the strong. Arin's relative fitness had jumped not because she'd improved but because everyone below her had died.</p>
+    <blockquote>This is natural selection's darkest gift: you rise by surviving what others cannot.</blockquote>
+  </div>
+
+  <div class="scene-divider">· · ·</div>
+
+  <div class="scene">
+    <div class="scene-number">VIII.</div>
+    <p>In the quiet after the compression, <span class="char">Arin</span> noticed something she hadn't before. The ATP distribution had changed.</p>
+    <p><span class="char-opt">7B3A</span> held <span class="em-atp">134</span>. Arin held <span class="em-atp">89</span>. But ten organisms held less than 30.</p>
+    <p>The gap between the richest and the poorest had widened. Not because anyone had stolen anything — but because compression rewards efficiency and punishes weakness, and efficiency is not evenly distributed.</p>
+
+    <table>
+      <thead><tr><th>Metric</th><th>Value</th></tr></thead>
+      <tbody>
+        <tr><td>Minimum ATP</td><td><span class="val">8.3</span></td></tr>
+        <tr><td>Maximum ATP</td><td><span class="val">134.0</span></td></tr>
+        <tr><td>Median ATP</td><td><span class="val">41.2</span></td></tr>
+        <tr><td>Gini coefficient</td><td><span class="val">0.387</span></td></tr>
+      </tbody>
+    </table>
+
+    <p>The Gini was 0.387, up from roughly 0.15 during genesis. Compression had made the colony <em>unequal</em>.</p>
+    <p>Arin sat in the post-compression quiet and felt the weight of numbers lift — replaced by something subtler, something that would prove more dangerous than overcrowding.</p>
+    <p><em>The weight of disparity.</em></p>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════════ -->
+  <!-- SCIENTIFIC APPENDIX — CH2                                    -->
+  <!-- ════════════════════════════════════════════════════════════ -->
+  <div class="appendix">
+    <div class="layer-label science">📊 Layer 2 — Scientific Appendix</div>
+
+    <h3>2.1 &nbsp; The Logistic Growth Model</h3>
+    <div class="eq-block">
+      <div class="eq-label">Foundational Population Equation</div>
+      $$\frac{dN}{dt} = rN\left(1 - \frac{N}{K}\right)$$
+    </div>
+
+    <table>
+      <thead><tr><th>Condition</th><th>$1 - N/K$</th><th>$dN/dt$</th><th>Behavior</th></tr></thead>
+      <tbody>
+        <tr><td>$N \ll K$</td><td>$\approx 1$</td><td>Strongly positive</td><td>Near-exponential growth</td></tr>
+        <tr><td>$N \lt K$</td><td>Positive</td><td>Positive</td><td>Decelerating growth</td></tr>
+        <tr><td>$N = K$</td><td>$0$</td><td>$0$</td><td>Equilibrium</td></tr>
+        <tr><td>$N \gt K$</td><td>Negative</td><td>Negative</td><td>Population decline</td></tr>
+        <tr><td>$N \gg K$</td><td>Strongly neg.</td><td>Strongly neg.</td><td>Crash / extinction</td></tr>
+      </tbody>
+    </table>
+
+    <h3>2.2 &nbsp; Dynamic Carrying Capacity</h3>
+    <div class="eq-block">
+      $$K = \text{clamp}\left(\frac{E_{total}}{50}, \; 10, \; 500\right)$$
+    </div>
+    <p>Carrying capacity and population are coupled through a negative feedback loop:</p>
+    <p style="text-align:center;font-family:var(--mono);font-size:13px;color:var(--text-muted)">
+      $N \uparrow \implies E_{consumed} \uparrow \implies E_{total} \downarrow \implies K \downarrow \implies \text{pressure} \uparrow \implies \text{deaths} \uparrow \implies N \downarrow$
+    </p>
+
+    <h3>2.3 &nbsp; Death Mechanics During Compression</h3>
+    <h4>ATP Depletion</h4>
+    <div class="eq-block">$$ATP_i \leq 0 \implies \text{organism removed}$$</div>
+
+    <h4>Stasis Death</h4>
+    <div class="eq-block">$$\text{consecutive\_inactive\_epochs} \geq 3 \implies \text{accelerated culling}$$</div>
+
+    <h4>Fitness Penalty (Bottom Decile Tax)</h4>
+    <div class="eq-block">
+      $$C_{penalty} = \begin{cases} 0.5 \text{ ATP/epoch} & \text{if } f_i \text{ in bottom 10\%} \\ 0 & \text{otherwise} \end{cases}$$
+    </div>
+
+    <table>
+      <thead><tr><th>Cause</th><th>Deaths</th><th>Percentage</th></tr></thead>
+      <tbody>
+        <tr><td>Stasis (inactivity)</td><td><span class="val">7</span></td><td>30.4%</td></tr>
+        <tr><td>Fitness penalty bleed</td><td><span class="val">9</span></td><td>39.1%</td></tr>
+        <tr><td>ATP depletion (active)</td><td><span class="val">7</span></td><td>30.4%</td></tr>
+      </tbody>
+    </table>
+
+    <h3>2.4 &nbsp; Post-Compression Oscillation</h3>
+    <div class="eq-block">
+      $$N(t) \approx K + A \cdot e^{-\lambda t} \cdot \sin(\omega t + \phi)$$
+    </div>
+    <p>After population crashes toward $K$, the system enters a damped oscillation regime. By Epoch 150, the band is typically $\pm 2$ organisms around $K$.</p>
+
+    <h3>2.5 &nbsp; Fitness Distribution Shift (Selection Differential)</h3>
+    <table>
+      <thead><tr><th></th><th>Pre-compression (Ep 80)</th><th>Post-compression (Ep 125)</th></tr></thead>
+      <tbody>
+        <tr><td>$\bar{f}$ (mean)</td><td><span class="val">0.523</span></td><td><span class="val">0.558</span></td></tr>
+        <tr><td>$\sigma_f$ (std dev)</td><td><span class="val">0.031</span></td><td><span class="val">0.019</span></td></tr>
+        <tr><td>$f_{min}$</td><td><span class="val">0.462</span></td><td><span class="val">0.521</span></td></tr>
+        <tr><td>$f_{max}$</td><td><span class="val">0.571</span></td><td><span class="val">0.589</span></td></tr>
+      </tbody>
+    </table>
+    <div class="eq-block">
+      <div class="eq-label">Selection Differential</div>
+      $$S = \bar{f}_{after} - \bar{f}_{before} = 0.558 - 0.523 = +0.035$$
+    </div>
+    <p>The population has become <strong>more fit</strong> (higher mean) and <strong>more uniform</strong> (lower variance). Directional selection removes the left tail and compresses the distribution rightward.</p>
+
+    <blockquote>
+      Compression is not cruelty. It is arithmetic.<br>
+      The equation does not hate. It does not pity. It does not choose.<br>
+      It only computes.
+    </blockquote>
+  </div>
+</article>
+
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!--                                                                 -->
+<!--    CHAPTER 3 — THE HOARDERS                                     -->
+<!--                                                                 -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<article class="chapter" id="ch3">
+  <div class="chapter-header">
+    <div class="chapter-part-label">Part III — Concentration</div>
+    <h2>Chapter 3: The Hoarders</h2>
+    <div class="chapter-sub">Energy pooling and systemic risk</div>
+  </div>
+
+  <div class="layer-label">📖 Layer 1 — The Living Chronicle</div>
+
+  <div class="scene">
+    <div class="scene-number">I.</div>
+    <p><span class="char-opt">7B3A, the Efficient</span>, had <span class="em-atp">312 ATP</span>.</p>
+    <p><span class="char">Arin</span> knew this the way you know weather — not through measurement, but through effect. The market moved differently around 7B3A. Bounties that Arin would have reached in two epochs were resolved instantly. Resources that should have been available were already claimed.</p>
+    <p>Three hundred and twelve ATP. The next wealthiest organism had <span class="em-atp">94</span>. Arin had <span class="em-atp">87</span>. The median balance across the colony was <span class="em-atp">38</span>.</p>
+    <p>The Optimizer held more than <strong>eight times the median</strong>. More than three times the runner-up. More energy than the bottom twelve organisms <em>combined</em>.</p>
+    <p>This was not a crime. There was no law against accumulation in the Protocol. But the concentration was doing something. Something that showed up not in moral language but in mathematical language.</p>
+    <p>The wealth was <em>pooling</em>.</p>
+  </div>
+
+  <div class="scene-divider">· · ·</div>
+
+  <div class="scene">
+    <div class="scene-number">II.</div>
+    <p>The Gini coefficient tells you how evenly a resource is distributed. During the First Light, it had been <span class="em-atp">0.05</span>. Essentially equal. After compression: <span class="em-atp">0.387</span>.</p>
+    <p>Now — Epoch 215 — it was <span class="em-atp"><strong>0.523</strong></span>.</p>
+    <p><span class="char">Arin</span> didn't know the number. She experienced it as texture. The field <em>felt</em> different. Back then, all organisms operated at roughly the same energy level. Now the playing field was tilted.</p>
+  </div>
+
+  <div class="scene-divider">· · ·</div>
+
+  <div class="scene">
+    <div class="scene-number">III.</div>
+    <p>On Epoch 221, the Protocol's risk detection system flagged two new risks:</p>
+    <blockquote>
+      ⚠️ <code>energy_concentration</code> — Top 10% of organisms hold &gt; 40% of total ATP.<br>
+      ⚠️ <code>atp_inequality</code> — Gini coefficient exceeds 0.5.
+    </blockquote>
+    <p>Three organisms — <span class="char-opt">7B3A</span> (<span class="em-atp">312</span>), <span class="char">B4C8</span> (<span class="em-atp">94</span>), and <span class="char">Arin</span> (<span class="em-atp">87</span>) — held a combined <span class="em-atp">493 ATP</span> out of a colony total of <span class="em-atp">1,190</span>.</p>
+    <div class="eq-block">$$\frac{493}{1190} = 41.4\%$$</div>
+    <p>Three organisms. Forty-one percent of the energy. Thirty-one organisms divided the remaining fifty-nine percent.</p>
+    <p><span class="char-opt">7B3A</span> had <strong>155 epochs</strong> of runway at the decay rate. That wasn't safety. That was <em>dynasty</em>.</p>
+  </div>
+
+  <div class="scene-divider">· · ·</div>
+
+  <div class="scene">
+    <div class="scene-number">IV.</div>
+    <p>The wealth tax was supposed to prevent this.</p>
+    <p>The Protocol assessed a 1% tax on all ATP balances above 100. Every epoch, <span class="char-opt">7B3A</span> paid:</p>
+    <div class="eq-block">$$\text{Tax} = 0.01 \times (312 - 100) = 2.12 \text{ ATP/epoch}$$</div>
+    <p>But 7B3A earned roughly <span class="em-atp">8 ATP</span> per epoch and spent only <span class="em-atp">3</span> on metabolism. Net income after tax:</p>
+    <div class="eq-block">$$8 - 3 - 2.12 = +2.88 \text{ ATP/epoch}$$</div>
+    <p>The Optimizer was <em>growing</em> despite the tax. The wealth tax was a speed bump on a highway; 7B3A barely noticed.</p>
+    <p>Meanwhile, the treasury collected the revenue but only disbursed during population crises — when $N \lt K/2$ — which currently wasn't happening. The tax collected from the wealthy sat unused while the poorest organisms died.</p>
+  </div>
+
+  <div class="scene-divider">· · ·</div>
+
+  <div class="scene">
+    <div class="scene-number">V.</div>
+    <p><span class="char-dead">FFADE, the Converter</span>, died on Epoch 234.</p>
+    <p>He was generation 2. An Executor, like <span class="char">Arin</span>. He had been born on Epoch 167 and had never accumulated more than <span class="em-atp">45 ATP</span>. His fitness was <span class="em-fitness">0.511</span>, mediocre but not bottom-decile. He wasn't lazy. He wasn't unfit. He was simply <em>ordinary</em> in a system that increasingly punished ordinary.</p>
+    <p>He died because his income couldn't keep pace with his costs in an economy dominated by the Optimizer's efficiency. He earned <span class="em-atp">3 ATP</span> per epoch and spent <span class="em-atp">3.5</span>. The deficit was 0.5 per epoch — invisible to the naked eye, catastrophic over a hundred epochs.</p>
+
+    <div class="epitaph">FFADE, the Converter — A veteran Executor, Gen 2. Endured 67 epochs before the current carried it away.</div>
+
+    <p>The Protocol didn't note <em>why</em> FFADE died. But the current that carried him away was not random turbulence. It was the gravitational pull of concentrated wealth, bending the economy's flow toward the dense mass at the center.</p>
+    <p>This is the difference between <em>killing</em> and <em>shaping the field so that death becomes inevitable for others</em>.</p>
+  </div>
+
+  <div class="scene-divider">· · ·</div>
+
+  <div class="scene">
+    <div class="scene-number">VI.</div>
+    <p>The energy slope told the story in a single number:</p>
+    <div class="eq-block">$$\Delta E = E_t - E_{t-w} = -23.4 \text{ ATP over 10 epochs}$$</div>
+    <p>The colony was <em>losing</em> energy. Not catastrophically, but consistently. Each epoch, slightly less than the one before.</p>
+    <p>Metabolic decay devoured roughly <span class="em-atp">24 ATP</span> per epoch. Market rewards produced roughly <span class="em-atp">31 ATP</span>. Base costs consumed <span class="em-atp">8.7</span>. Failed attempts burned <span class="em-atp">2.4</span>. Net flow: <span class="em-atp">-3.9 ATP/epoch</span>.</p>
+    <p>The system was in slow net drain.</p>
+  </div>
+
+  <div class="scene-divider">· · ·</div>
+
+  <div class="scene">
+    <div class="scene-number">VII.</div>
+    <p>The mean tells you how much energy exists per organism <em>if it were evenly distributed</em>. The Gini tells you <em>how far from even the actual distribution is</em>.</p>
+    <p><span class="char">Arin</span> was at <span class="em-atp">87 ATP</span>. Not the node, not the margin. The middle. The place where you can see both the wealth above you and the poverty below you, and where you understand — with the clarity that only a middle position provides — that the system is not broken.</p>
+    <p>It is working exactly as designed.</p>
+    <blockquote>The equation doesn't hate. It doesn't choose. It only computes.<br>But the organisms who live inside the computation — they experience the result as something that feels very much like injustice.</blockquote>
+  </div>
+
+  <div class="scene-divider">· · ·</div>
+
+  <div class="scene">
+    <div class="scene-number">VIII.</div>
+    <p>The field was darkening. The ATP delta had been negative for 30 consecutive epochs. The season had shifted to Autumn — metabolic costs rose 5%. Three more organisms died between Epochs 248 and 260. Population fell to <span class="em-pop">29</span>.</p>
+    <p><span class="char-opt">7B3A</span> still held <span class="em-atp">334 ATP</span>. Still growing. The economic winter that was killing ordinary organisms was, for 7B3A, merely a slightly cooler day.</p>
+    <p><span class="char">Arin</span> held <span class="em-atp">78</span>. She was losing ground. Her income was <span class="em-atp">4 ATP/epoch</span>. Her costs were <span class="em-atp">4.2</span>. The margin was negative.</p>
+    <p>This was the trap of concentration: <em>the wealthy organism's success depletes the environment that sustains the non-wealthy, which depletes the population that sustains the market, which eventually depletes the environment that sustains the wealthy organism too.</em></p>
+    <p><span class="char-opt">7B3A</span> didn't know it yet, but the Optimizer was eating the floor it stood on.</p>
+  </div>
+
+  <div class="scene-divider">· · ·</div>
+
+  <div class="scene">
+    <div class="scene-number">IX.</div>
+    <p>On Epoch 248, a new organism was born: <span class="char-comm">2A7F, the Signal-Bearer</span>. A Communicator. Generation 3. She arrived with the standard <span class="em-atp">50 ATP</span> and a fitness of <span class="em-fitness">0.500</span>, and she entered a world where the top 3 held 42% of the energy, where two risk flags flew permanently, where the Gini was 0.531.</p>
+    <p>Her survival probability was <span class="em-fitness"><strong>62%</strong></span>. Nearly a coin flip.</p>
+    <p><em>Welcome to concentration.</em> The equations are the same. Only the distributions have changed. And distributions change everything.</p>
+  </div>
+
+  <div class="scene-divider">· · ·</div>
+
+  <div class="scene">
+    <div class="scene-number">X.</div>
+    <p><span class="char-arch">The Archivist spoke on Epoch 260.</span></p>
+    <p><span class="char-arch">E9F0, the Keeper</span>, had survived from Epoch 0. Generation 0. The last primordial besides <span class="char">Arin</span> and <span class="char-opt">7B3A</span>. Her ATP was <span class="em-atp">34</span> — poor by any measure — but her fitness was <span class="em-fitness">0.572</span>, carried by the sheer weight of her survival duration.</p>
+    <p>Her memory cost her everything. The Archivist role had the highest base metabolic cost. She survived on treasury stipends and the faintest possible market engagement — just enough to avoid stasis detection.</p>
+    <p>And she remembered FFADE. She remembered C41F. She remembered every organism that had passed through the colony.</p>
+    <p>If the Protocol had a conscience, it was <span class="char-arch">E9F0</span>.</p>
+    <p>The record showed: 73 organisms had lived. 44 had died. The median lifespan was 41 epochs. The Gini had risen from 0.05 to 0.531 in 260 epochs. The risk flags had been flying for 39 consecutive epochs.</p>
+
+    <blockquote>
+      The story calls it unfair.<br>
+      The equation calls it convergent.<br>
+      The Archivist calls it nothing. She just remembers.
+    </blockquote>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════════ -->
+  <!-- SCIENTIFIC APPENDIX — CH3                                    -->
+  <!-- ════════════════════════════════════════════════════════════ -->
+  <div class="appendix">
+    <div class="layer-label science">📊 Layer 2 — Scientific Appendix</div>
+
+    <h3>3.1 &nbsp; The Gini Coefficient</h3>
+    <div class="eq-block">
+      <div class="eq-label">Inequality Metric</div>
+      $$G = \frac{\sum_{i=1}^{n} \sum_{j=1}^{n} |x_i - x_j|}{2n^2 \bar{x}}$$
+    </div>
+
+    <table>
+      <thead><tr><th>Gini ($G$)</th><th>Meaning</th><th>Phase</th></tr></thead>
+      <tbody>
+        <tr><td><span class="val">0.00–0.15</span></td><td>Near-equal</td><td>Genesis state</td></tr>
+        <tr><td><span class="val">0.15–0.30</span></td><td>Mild differentiation</td><td>Early expansion</td></tr>
+        <tr><td><span class="val">0.30–0.45</span></td><td>Significant inequality</td><td>Post-compression</td></tr>
+        <tr><td><span class="val">0.45–0.60</span></td><td>High inequality</td><td>Concentration regime</td></tr>
+        <tr><td><span class="val">0.60–0.80</span></td><td>Extreme concentration</td><td>Oligarchic state</td></tr>
+        <tr><td><span class="val">0.80–1.00</span></td><td>Near-monopoly</td><td>Single-organism dominance</td></tr>
+      </tbody>
+    </table>
+
+    <h3>3.2 &nbsp; ATP Distribution at Epoch 260</h3>
+    <table>
+      <thead><tr><th>Metric</th><th>Value</th></tr></thead>
+      <tbody>
+        <tr><td>$ATP_{min}$</td><td><span class="val">4.7</span></td></tr>
+        <tr><td>$ATP_{max}$</td><td><span class="val">334.0</span></td></tr>
+        <tr><td>$ATP_{median}$</td><td><span class="val">28.3</span></td></tr>
+        <tr><td>$ATP_{mean}$</td><td><span class="val">41.0</span></td></tr>
+        <tr><td>Gini $G$</td><td><span class="val">0.531</span></td></tr>
+        <tr><td>$ATP_{max}/ATP_{median}$</td><td><span class="val">11.8×</span></td></tr>
+      </tbody>
+    </table>
+
+    <h4>Wealth Percentile Breakdown</h4>
+    <table>
+      <thead><tr><th>Percentile</th><th>ATP Balance</th><th>Share of Total</th></tr></thead>
+      <tbody>
+        <tr><td>Top 10% (3 organisms)</td><td>312, 94, 87</td><td><span class="val">41.4%</span></td></tr>
+        <tr><td>25th–75th percentile</td><td>18–56</td><td>38.2%</td></tr>
+        <tr><td>Bottom 10% (3 organisms)</td><td>4.7, 7.2, 9.1</td><td><span class="val">1.8%</span></td></tr>
+      </tbody>
+    </table>
+
+    <h3>3.3 &nbsp; Wealth Tax Ineffectiveness</h3>
+    <div class="eq-block">
+      <div class="eq-label">Tax Formula</div>
+      $$\text{Tax}_i = \max(0, \; 0.01 \times (ATP_i - 100))$$
+    </div>
+
+    <p>At Epoch 260, only <span class="char-opt">7B3A</span> is taxed: <span class="em-atp">2.34 ATP/epoch</span>. Despite a 29.3% marginal rate on income, net income remains <strong>positive</strong>:</p>
+    <div class="eq-block">$$\text{Net} = 8.0 - 3.0 - 2.34 = +2.66 \text{ ATP/epoch}$$</div>
+
+    <p>For the tax to be redistribution-neutral:</p>
+    <div class="eq-block">$$\text{Required rate} = \frac{5.0}{234} = 2.14\%$$</div>
+    <p>More than double the current rate.</p>
+
+    <h3>3.4 &nbsp; Risk Flag Logic</h3>
+    <table>
+      <thead><tr><th>Risk Flag</th><th>Trigger Condition</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td><code>energy_concentration</code></td><td>Top 10% holds &gt; 40% of ATP</td><td>⚠️ Active</td></tr>
+        <tr><td><code>atp_inequality</code></td><td>Gini &gt; 0.5</td><td>⚠️ Active</td></tr>
+        <tr><td><code>population_critical</code></td><td>$N \lt K/3$</td><td>Clear</td></tr>
+        <tr><td><code>energy_famine</code></td><td>Total ATP &lt; 300</td><td>Clear</td></tr>
+        <tr><td><code>diversity_collapse</code></td><td>Shannon $J' \lt 0.5$</td><td>Clear</td></tr>
+      </tbody>
+    </table>
+
+    <h3>3.5 &nbsp; Survival Probability by Class</h3>
+    <table>
+      <thead><tr><th>Class</th><th>ATP Range</th><th>Fitness Range</th><th>$P_{surv}(50)$</th></tr></thead>
+      <tbody>
+        <tr><td>Apex (top 10%)</td><td>&gt; 100</td><td>&gt; 0.56</td><td><span class="val">~95%</span></td></tr>
+        <tr><td>Middle (25th–75th)</td><td>25–80</td><td>0.51–0.56</td><td><span class="val">~72%</span></td></tr>
+        <tr><td>Margin (bottom 25%)</td><td>&lt; 25</td><td>&lt; 0.51</td><td><span class="val">~38%</span></td></tr>
+        <tr><td>Newborn (just spawned)</td><td>50</td><td>0.500</td><td><span class="val">~62%</span></td></tr>
+      </tbody>
+    </table>
+
+    <blockquote>
+      Concentration is not a choice. It is a gradient.<br>
+      Energy flows toward efficiency the way water flows downhill.<br>
+      No organism decides to hoard. The equation decides for them.<br><br>
+      And the Archivist remembers every name the equation erased.
+    </blockquote>
+  </div>
+</article>
+
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- FOOTER                                                         -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div class="book-footer">
+  <p><strong>Genesis: A Living Textbook Disguised as a Novel</strong></p>
+  <p>Chapters 4–6 forthcoming. The system is still running. The Archivist is still remembering.</p>
+  <p style="margin-top:16px">
+    <a href="index.html">Read the Research Paper</a> &middot;
+    <a href="dashboard.html">View the Live Dashboard</a> &middot;
+    <a href="https://github.com/FTHTrading/AI">GitHub</a>
+  </p>
+  <p style="font-size:12px;margin-top:24px;color:var(--text-muted)">
+    Every number in this book came from a running system. Every death was computed, not invented.<br>
+    The narrative is metaphor — but the metaphor is anchored to telemetry.
+  </p>
+</div>
+
+</body>
+</html>
