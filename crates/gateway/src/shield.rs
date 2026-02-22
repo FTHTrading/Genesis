@@ -249,10 +249,10 @@ pub async fn security_headers_middleware(
         header::HeaderName::from_static("x-content-type-options"),
         header::HeaderValue::from_static("nosniff"),
     );
-    // Prevent clickjacking
+    // Prevent clickjacking — allow same-origin framing (for VS Code Simple Browser)
     headers.insert(
         header::HeaderName::from_static("x-frame-options"),
-        header::HeaderValue::from_static("DENY"),
+        header::HeaderValue::from_static("SAMEORIGIN"),
     );
     // XSS protection
     headers.insert(
@@ -269,10 +269,10 @@ pub async fn security_headers_middleware(
         header::HeaderName::from_static("strict-transport-security"),
         header::HeaderValue::from_static("max-age=31536000; includeSubDomains"),
     );
-    // Content security policy (restrict sources)
+    // Content security policy — allow inline scripts/styles and same-origin fetch
     headers.insert(
         header::HeaderName::from_static("content-security-policy"),
-        header::HeaderValue::from_static("default-src 'none'; style-src 'unsafe-inline'; img-src 'self'"),
+        header::HeaderValue::from_static("default-src 'self'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src *; img-src 'self' data:; font-src 'self' data:"),
     );
     // Server identity — reveal nothing
     headers.insert(
