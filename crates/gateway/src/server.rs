@@ -8,6 +8,7 @@
 //   GET  /genesis     — human-readable HTML dashboard
 //   GET  /stream      — SSE real-time state stream
 //   GET  /observatory — Three.js "Circle of Life" frontend
+//   GET  /control     — Genesis Control Surface (live SSE dashboard)
 //
 // Defense layers (via Shield module):
 //   - Per-IP rate limiting (read / write split)
@@ -95,6 +96,18 @@ pub struct ErrorResponse {
 
 // ── SSE stream payload ──────────────────────────────────────────────
 
+/// Compact history point for sparklines (last N epochs).
+#[derive(Serialize, Clone)]
+pub struct HistoryPoint {
+    pub epoch: u64,
+    pub population: usize,
+    pub total_atp: f64,
+    pub mean_fitness: f64,
+    pub births: u64,
+    pub deaths: u64,
+    pub pop_cap: usize,
+}
+
 /// A single agent's state for the SSE stream.
 #[derive(Serialize, Clone)]
 pub struct SseAgent {
@@ -105,6 +118,7 @@ pub struct SseAgent {
     pub atp: f64,
     pub generation: u64,
     pub is_primordial: bool,
+    pub survived_epochs: u64,
 }
 
 /// Full organism state pushed once per SSE tick.
@@ -112,11 +126,14 @@ pub struct SseAgent {
 pub struct SseFrame {
     pub epoch: u64,
     pub population: usize,
+    pub pop_cap: usize,
     pub avg_fitness: f64,
     pub total_atp: f64,
     pub treasury_reserve: f64,
     pub treasury_collected: f64,
     pub treasury_distributed: f64,
+    pub market_solved: u64,
+    pub market_rewarded: f64,
     pub total_births: u64,
     pub total_deaths: u64,
     pub roles: HashMap<String, usize>,
@@ -124,6 +141,8 @@ pub struct SseFrame {
     pub agents: Vec<SseAgent>,
     pub epoch_diff: EpochDiff,
     pub uptime_seconds: i64,
+    pub season: String,
+    pub history: Vec<HistoryPoint>,
 }
 
 /// Build the Axum router with all endpoints and defense layers.
@@ -161,6 +180,7 @@ pub fn build_router_with_controls(world: SharedWorld, controls: SharedControls) 
     let stream_routes = Router::new()
         .route("/stream", get(get_sse_stream))
         .route("/observatory", get(get_observatory))
+        .route("/control", get(get_control_surface))
         .with_state(world);
 
     // CORS layer: allow the observatory to connect from any origin
@@ -651,20 +671,42 @@ fn snapshot_sse_frame(world: &SharedWorld) -> SseFrame {
             atp: w.agent_atp(a),
             generation: a.generation,
             is_primordial: a.is_primordial,
+            survived_epochs: w.epoch.saturating_sub(
+                w.agent_birth_epoch.get(&a.id).copied().unwrap_or(w.epoch)
+            ),
         }
     }).collect();
 
     let diff = w.epoch_diff(10);
     let uptime = w.uptime_seconds();
 
+    let season = w.epoch_history.back()
+        .map(|s| s.season.clone())
+        .unwrap_or_else(|| "UNKNOWN".to_string());
+
+    let history: Vec<HistoryPoint> = w.epoch_history.iter().rev().take(100).rev()
+        .map(|s| HistoryPoint {
+            epoch: s.epoch,
+            population: s.population,
+            total_atp: s.total_atp,
+            mean_fitness: s.mean_fitness,
+            births: s.births,
+            deaths: s.deaths,
+            pop_cap: s.dynamic_pop_cap,
+        })
+        .collect();
+
     SseFrame {
         epoch: w.epoch,
         population: w.agents.len(),
+        pop_cap: w.pop_cap,
         avg_fitness,
         total_atp: w.ledger.total_supply(),
         treasury_reserve: w.treasury.reserve,
         treasury_collected: w.treasury.total_collected,
         treasury_distributed: w.treasury.total_distributed,
+        market_solved: w.problem_market.total_solved,
+        market_rewarded: w.problem_market.total_rewarded,
         total_births: w.total_births,
         total_deaths: w.total_deaths,
         roles,
@@ -672,6 +714,8 @@ fn snapshot_sse_frame(world: &SharedWorld) -> SseFrame {
         agents,
         epoch_diff: diff,
         uptime_seconds: uptime,
+        season,
+        history,
     }
 }
 
@@ -680,6 +724,11 @@ fn snapshot_sse_frame(world: &SharedWorld) -> SseFrame {
 /// GET /observatory — serves the Three.js "Circle of Life" frontend.
 async fn get_observatory() -> impl IntoResponse {
     Html(include_str!("observatory.html"))
+}
+
+/// GET /control — serves the Genesis Control Surface (live SSE dashboard).
+async fn get_control_surface() -> impl IntoResponse {
+    Html(include_str!("control.html"))
 }
 
 #[cfg(test)]

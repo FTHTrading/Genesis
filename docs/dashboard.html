@@ -2,84 +2,265 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Genesis Protocol</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Genesis Protocol — Dashboard</title>
 <style>
-body{background:#111;color:#ccc;font:14px/1.8 monospace;padding:20px;max-width:900px;margin:0 auto}
-h2{color:#888;font-size:14px;margin:24px 0 8px;border-bottom:1px solid #222;padding-bottom:4px}
-pre{margin:0;white-space:pre-wrap}
-#t{color:#555;font-size:12px;margin-bottom:16px}
+  :root {
+    --bg:      #070d1a;
+    --surface: #0d1525;
+    --border:  rgba(255,255,255,0.06);
+    --text:    #e2e8f0;
+    --dim:     #64748b;
+    --accent:  #38bdf8;
+    --green:   #4ade80;
+    --red:     #f87171;
+    --yellow:  #fbbf24;
+    --mono:    'Cascadia Code','JetBrains Mono','Fira Code','Courier New',monospace;
+    --radius:  10px;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
+    font-size: 13px;
+    line-height: 1.5;
+    padding-bottom: 40px;
+  }
+  #header {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(7,13,26,0.96);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 20px; flex-wrap: wrap; gap: 8px;
+  }
+  .brand { font-size:13px; font-weight:700; letter-spacing:2px; color:var(--accent); text-transform:uppercase; }
+  .hinfo { font-size:11px; color:var(--dim); font-family:var(--mono); text-align:right; }
+  .main { padding: 16px 20px; max-width: 1400px; margin: 0 auto; }
+  .row { display:flex; gap:14px; margin-bottom:14px; flex-wrap:wrap; }
+  .stat-card {
+    flex:1; min-width:180px;
+    background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+    padding:16px 18px 12px;
+  }
+  .stat-label { font-size:10px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; color:var(--dim); margin-bottom:6px; }
+  .stat-value { font-size:32px; font-weight:700; line-height:1; color:var(--text); font-variant-numeric:tabular-nums; margin-bottom:4px; }
+  .stat-sub   { font-size:11px; color:var(--dim); font-family:var(--mono); margin-bottom:8px; }
+  canvas.spark { width:100%; height:40px; display:block; border-radius:4px; }
+  .panel {
+    flex:1; min-width:220px;
+    background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+    padding:14px 16px;
+  }
+  .panel h3 {
+    font-size:10px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase;
+    color:var(--dim); margin-bottom:10px; padding-bottom:6px; border-bottom:1px solid var(--border);
+  }
+  .kv { display:flex; justify-content:space-between; padding:3px 0; }
+  .kv .k { color:var(--dim); }
+  .kv .v { font-family:var(--mono); color:var(--text); text-align:right; }
+  .role-row { display:flex; align-items:center; gap:8px; padding:3px 0; }
+  .role-row .rname { width:90px; color:var(--dim); font-size:11px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .role-bar-wrap { flex:1; height:6px; background:rgba(255,255,255,0.05); border-radius:3px; overflow:hidden; }
+  .role-bar-fill { height:100%; background:var(--accent); border-radius:3px; }
+  .role-count { font-family:var(--mono); color:var(--text); font-size:11px; width:20px; text-align:right; }
+  .section { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); margin-bottom:14px; overflow:hidden; }
+  .section h3 {
+    font-size:10px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase;
+    color:var(--dim); padding:10px 16px; border-bottom:1px solid var(--border);
+  }
+  table { width:100%; border-collapse:collapse; }
+  thead th {
+    font-size:10px; font-weight:700; letter-spacing:1px; text-transform:uppercase;
+    color:var(--dim); padding:7px 14px; text-align:left; border-bottom:1px solid var(--border);
+  }
+  tbody tr { border-bottom:1px solid rgba(255,255,255,0.02); }
+  tbody tr:hover { background:rgba(255,255,255,0.03); }
+  tbody td { padding:6px 14px; font-size:12px; font-family:var(--mono); }
+  .prim { font-size:9px; color:var(--accent); font-weight:700; margin-right:4px; }
+  .st-active { color:var(--green); }
+  .st-stasis { color:var(--dim); }
+  .st-new    { color:var(--yellow); }
+  #status-bar {
+    position:fixed; bottom:0; left:0; right:0;
+    background:rgba(7,13,26,0.96); border-top:1px solid var(--border);
+    padding:5px 20px; font-size:10px; color:var(--dim); font-family:var(--mono);
+    display:flex; justify-content:space-between; z-index:100;
+  }
 </style>
 </head>
 <body>
-<pre style="color:#888;font-size:16px;margin-bottom:4px">GENESIS PROTOCOL</pre>
-<div id="t">loading...</div>
-<div id="out"></div>
+<div id="header">
+  <div class="brand">Genesis Protocol</div>
+  <div class="hinfo">
+    <span id="epoch-tag">Epoch —</span>&nbsp;&nbsp;
+    <span>Static snapshot · 10s refresh</span>
+  </div>
+</div>
+<div class="main">
+  <div class="row">
+    <div class="stat-card">
+      <div class="stat-label">Population</div>
+      <div class="stat-value" id="s-pop">—</div>
+      <div class="stat-sub" id="s-pop-sub">cap —</div>
+      <canvas class="spark" id="spark-pop" height="40"></canvas>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Avg Fitness</div>
+      <div class="stat-value" id="s-fit">—</div>
+      <div class="stat-sub" id="s-fit-sub">—</div>
+      <canvas class="spark" id="spark-fit" height="40"></canvas>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">ATP Supply</div>
+      <div class="stat-value" id="s-atp">—</div>
+      <div class="stat-sub" id="s-atp-sub">—</div>
+      <canvas class="spark" id="spark-atp" height="40"></canvas>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Births / Deaths</div>
+      <div class="stat-value" id="s-bd">— / —</div>
+      <div class="stat-sub" id="s-bd-sub">ratio —</div>
+      <canvas class="spark" id="spark-births" height="40"></canvas>
+    </div>
+  </div>
+  <div class="row">
+    <div class="panel">
+      <h3>Economics</h3>
+      <div class="kv"><span class="k">Treasury</span><span class="v" id="p-treasury">—</span></div>
+      <div class="kv"><span class="k">Skim Rate</span><span class="v" id="p-skim">—</span></div>
+      <div class="kv"><span class="k">Stipend</span><span class="v" id="p-stipend">—</span></div>
+      <div class="kv"><span class="k">Collected</span><span class="v" id="p-collected">—</span></div>
+      <div class="kv"><span class="k">Distributed</span><span class="v" id="p-distributed">—</span></div>
+    </div>
+    <div class="panel">
+      <h3>Evolution (last 10 ep)</h3>
+      <div class="kv"><span class="k">Births</span><span class="v" id="p-b10">—</span></div>
+      <div class="kv"><span class="k">Deaths</span><span class="v" id="p-d10">—</span></div>
+      <div class="kv"><span class="k">B:D Ratio</span><span class="v" id="p-bd10">—</span></div>
+      <div class="kv"><span class="k">Avg Fitness</span><span class="v" id="p-mf">—</span></div>
+      <div class="kv"><span class="k">Max Fitness</span><span class="v" id="p-xf">—</span></div>
+    </div>
+    <div class="panel">
+      <h3>Roles</h3>
+      <div id="role-bars"></div>
+    </div>
+    <div class="panel">
+      <h3>Snapshot</h3>
+      <div class="kv"><span class="k">Epoch</span><span class="v" id="p-epoch">—</span></div>
+      <div class="kv"><span class="k">Pop Cap</span><span class="v" id="p-popcap">—</span></div>
+      <div class="kv"><span class="k">Total Births</span><span class="v" id="p-tbirths">—</span></div>
+      <div class="kv"><span class="k">Total Deaths</span><span class="v" id="p-tdeaths">—</span></div>
+      <div class="kv"><span class="k">Started</span><span class="v" id="p-started">—</span></div>
+    </div>
+  </div>
+  <div class="section">
+    <h3>Agents (<span id="agent-count">—</span>)</h3>
+    <table>
+      <thead><tr><th>Role</th><th>Gen</th><th>Rep</th><th>Contracts</th><th>Mut</th><th>Basal</th><th>Status</th></tr></thead>
+      <tbody id="agent-tbody"></tbody>
+    </table>
+  </div>
+  <div class="section">
+    <h3>Epoch History (last 100)</h3>
+    <table>
+      <thead><tr><th>Epoch</th><th>Pop</th><th>Cap</th><th>B</th><th>D</th><th>St</th><th>ATP</th><th>Avg Fit</th><th>Max Fit</th><th>Decay</th><th>Tax</th></tr></thead>
+      <tbody id="history-tbody"></tbody>
+    </table>
+  </div>
+</div>
+<div id="status-bar">
+  <span>Genesis Protocol · Static Snapshot (live: localhost:3000/control)</span>
+  <span id="last-update">—</span>
+</div>
 <script>
-async function poll(){
-  try{
+const $ = id => document.getElementById(id);
+const fmt = (n,d=2) => typeof n==='number' ? n.toFixed(d) : '—';
+const fmtInt = n => typeof n==='number' ? Math.round(n).toLocaleString() : '—';
+
+function drawSparkline(id, vals, color) {
+  const c = $(id); if (!c || vals.length < 2) return;
+  const ctx = c.getContext('2d');
+  const W = c.offsetWidth || 200, H = 40;
+  c.width = W; c.height = H; ctx.clearRect(0,0,W,H);
+  const mn = Math.min(...vals), mx = Math.max(...vals), range = mx-mn||1, pad=4;
+  ctx.beginPath();
+  vals.forEach((v,i) => {
+    const x = pad+(i/(vals.length-1))*(W-pad*2);
+    const y = (H-pad)-((v-mn)/range)*(H-pad*2);
+    i===0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+  });
+  ctx.strokeStyle=color; ctx.lineWidth=1.5; ctx.lineJoin='round'; ctx.stroke();
+  ctx.lineTo(W-pad,H); ctx.lineTo(pad,H); ctx.closePath();
+  const g=ctx.createLinearGradient(0,0,0,H);
+  g.addColorStop(0,color.replace(')',',.2)').replace('rgb','rgba'));
+  g.addColorStop(1,'transparent');
+  ctx.fillStyle=g; ctx.fill();
+}
+
+function render(d) {
+  const h=d.history||[], a=d.agents||[], last=h[h.length-1]||{};
+  $('epoch-tag').textContent = `Epoch ${d.epoch}`;
+  $('s-pop').textContent = a.length;
+  $('s-pop-sub').textContent = `cap ${d.pop_cap}`;
+  $('s-fit').textContent = fmt(last.mf,4);
+  $('s-atp').textContent = Math.round(last.atp||0).toLocaleString();
+  const tb=d.total_births||0, td=d.total_deaths||0;
+  $('s-bd').textContent = `${fmtInt(tb)} / ${fmtInt(td)}`;
+  $('s-bd-sub').textContent = `ratio ${td>0?(tb/td).toFixed(3):tb>0?'∞':'0'}`;
+  if (h.length>1) {
+    drawSparkline('spark-pop',    h.map(x=>x.pop),     '#38bdf8');
+    drawSparkline('spark-fit',    h.map(x=>x.mf),      '#4ade80');
+    drawSparkline('spark-atp',    h.map(x=>x.atp),     '#a78bfa');
+    drawSparkline('spark-births', h.map(x=>x.b-x.d),   '#fbbf24');
+  }
+  $('p-treasury').textContent   = fmt(d.tr_reserve,2)+' ATP';
+  $('p-skim').textContent       = ((d.tr_skim||0)*100).toFixed(1)+'%';
+  $('p-stipend').textContent    = fmt(d.tr_stipend,1)+' ATP';
+  $('p-collected').textContent  = fmt(d.tr_collected,2)+' ATP';
+  $('p-distributed').textContent= fmt(d.tr_distributed,2)+' ATP';
+  const l10=h.slice(-10), b10=l10.reduce((s,e)=>s+e.b,0), d10=l10.reduce((s,e)=>s+e.d,0);
+  $('p-b10').textContent  = b10;
+  $('p-d10').textContent  = d10;
+  $('p-bd10').textContent = d10>0?(b10/d10).toFixed(3):b10>0?'∞':'0';
+  $('p-mf').textContent   = fmt(last.mf,4);
+  $('p-xf').textContent   = fmt(last.xf,4);
+  $('p-epoch').textContent   = d.epoch;
+  $('p-popcap').textContent  = d.pop_cap;
+  $('p-tbirths').textContent = fmtInt(tb);
+  $('p-tdeaths').textContent = fmtInt(td);
+  $('p-started').textContent = d.started_at ? new Date(d.started_at).toLocaleDateString() : '—';
+  const rc={};
+  for (const ag of a) rc[ag.role]=(rc[ag.role]||0)+1;
+  const mx=Math.max(...Object.values(rc),1);
+  $('role-bars').innerHTML=Object.entries(rc).sort((x,y)=>y[1]-x[1]).map(([r,n])=>`
+    <div class="role-row"><span class="rname">${r}</span>
+    <div class="role-bar-wrap"><div class="role-bar-fill" style="width:${(n/mx*100).toFixed(0)}%"></div></div>
+    <span class="role-count">${n}</span></div>`).join('');
+  $('agent-count').textContent=a.length;
+  $('agent-tbody').innerHTML=[...a].sort((x,y)=>{if(x.prim!==y.prim)return x.prim?-1:1;return y.rep-x.rep}).map(ag=>{
+    const st=ag.contracts===0&&!ag.prim?'STASIS':ag.contracts<20&&!ag.prim?'NEW':'ACTIVE';
+    return `<tr><td>${ag.prim?'<span class="prim">✦</span>':''}${ag.role}</td><td>${ag.gen}</td><td>${fmt(ag.rep,4)}</td><td>${fmtInt(ag.contracts)}</td><td>${fmt(ag.mut,3)}</td><td>${fmt(ag.basal,2)}</td><td class="st-${st.toLowerCase()}">${st}</td></tr>`;
+  }).join('');
+  $('history-tbody').innerHTML=[...h].reverse().map(e=>`<tr>
+    <td>${e.ep}</td><td>${e.pop}</td><td>${e.cap}</td><td>${e.b}</td><td>${e.d}</td><td>${e.st}</td>
+    <td>${fmt(e.atp,1)}</td><td>${fmt(e.mf,4)}</td><td>${fmt(e.xf,4)}</td><td>${fmt(e.dec,2)}</td><td>${fmt(e.tax,2)}</td>
+  </tr>`).join('');
+  $('last-update').textContent='updated '+new Date().toLocaleTimeString('en-US',{hour12:false});
+}
+
+async function poll() {
+  try {
     const r=await fetch('system-state.json?'+Date.now());
-    const d=await r.json();
-    const a=d.agents||[];
-    const h=d.history||[];
-    const last=h[h.length-1]||{};
-    const tb=d.total_births||0;
-    const td=d.total_deaths||0;
-    const bd=td>0?(tb/td).toFixed(3):tb>0?'inf':'0';
-    const l10=h.slice(-10);
-    const rb=l10.reduce((s,e)=>s+e.b,0);
-    const rd=l10.reduce((s,e)=>s+e.d,0);
-    const rbd=rd>0?(rb/rd).toFixed(3):rb>0?'inf':'0';
-    const stasis=a.filter(x=>x.contracts===0&&!x.prim).length;
-    const start=d.started_at?new Date(d.started_at).toLocaleString():'?';
-
-    let s='';
-
-    s+=`EPOCH           ${d.epoch}\n`;
-    s+=`POPULATION      ${a.length} / ${d.pop_cap} cap\n`;
-    s+=`IN STASIS       ${stasis}\n`;
-    s+=`TREASURY        ${(d.tr_reserve||0).toFixed(2)} ATP\n`;
-    s+=`CIRCULATING     ${(last.atp||0).toFixed(1)} ATP\n`;
-    s+=`SKIM RATE       ${((d.tr_skim||0)*100).toFixed(1)}%\n`;
-    s+=`STIPEND         ${(d.tr_stipend||0).toFixed(1)} ATP\n`;
-    s+=`COLLECTED       ${(d.tr_collected||0).toFixed(2)}\n`;
-    s+=`DISTRIBUTED     ${(d.tr_distributed||0).toFixed(2)}\n`;
-    s+=`\n`;
-    s+=`TOTAL BIRTHS    ${tb}\n`;
-    s+=`TOTAL DEATHS    ${td}\n`;
-    s+=`B:D ALL TIME    ${bd}\n`;
-    s+=`B:D LAST 10     ${rbd}  (${rb}b ${rd}d)\n`;
-    s+=`AVG FITNESS     ${(last.mf||0).toFixed(4)}\n`;
-    s+=`MAX FITNESS     ${(last.xf||0).toFixed(4)}\n`;
-    s+=`STARTED         ${start}\n`;
-
-    // agents
-    s+=`\nAGENTS (${a.length})\n`;
-    s+=`${'ROLE'.padEnd(14)}${'GEN'.padStart(4)}${'REP'.padStart(8)}${'CONTRACTS'.padStart(11)}${'MUT'.padStart(6)}${'BASAL'.padStart(7)}${'STATUS'.padStart(9)}\n`;
-    s+=`${'-'.repeat(59)}\n`;
-    const sorted=[...a].sort((x,y)=>{if(x.prim&&!y.prim)return-1;if(!x.prim&&y.prim)return 1;return y.rep-x.rep});
-    for(const ag of sorted){
-      const st=ag.contracts===0&&!ag.prim?'STASIS':ag.contracts<20&&!ag.prim?'NEW':'ACTIVE';
-      const p=ag.prim?'*':'';
-      s+=`${(p+ag.role).padEnd(14)}${String(ag.gen).padStart(4)}${ag.rep.toFixed(4).padStart(8)}${String(ag.contracts).padStart(11)}${String(ag.mut).padStart(6)}${String(ag.basal).padStart(7)}${st.padStart(9)}\n`;
-    }
-
-    // history
-    s+=`\nEPOCH HISTORY (last ${h.length})\n`;
-    s+=`${'EP'.padStart(6)}${'POP'.padStart(5)}${'CAP'.padStart(5)}${'B'.padStart(4)}${'D'.padStart(4)}${'ST'.padStart(4)}${'ATP'.padStart(9)}${'AVG'.padStart(8)}${'MAX'.padStart(8)}${'DECAY'.padStart(7)}${'TAX'.padStart(7)}\n`;
-    s+=`${'-'.repeat(67)}\n`;
-    for(let i=h.length-1;i>=0;i--){
-      const e=h[i];
-      s+=`${String(e.ep).padStart(6)}${String(e.pop).padStart(5)}${String(e.cap).padStart(5)}${String(e.b).padStart(4)}${String(e.d).padStart(4)}${String(e.st).padStart(4)}${e.atp.toFixed(1).padStart(9)}${e.mf.toFixed(4).padStart(8)}${e.xf.toFixed(4).padStart(8)}${e.dec.toFixed(2).padStart(7)}${e.tax.toFixed(2).padStart(7)}\n`;
-    }
-
-    document.getElementById('out').innerHTML='<pre>'+s+'</pre>';
-    document.getElementById('t').textContent='updated '+new Date().toLocaleTimeString();
-  }catch(e){
-    document.getElementById('t').textContent='fetch failed — retrying';
+    if(!r.ok) throw new Error(r.status);
+    render(await r.json());
+  } catch(e) {
+    $('last-update').textContent='fetch failed — retrying';
   }
 }
 poll();
-setInterval(poll,6000);
+setInterval(poll,10000);
 </script>
 </body>
 </html>
