@@ -65,6 +65,8 @@ pub struct StatusResponse {
     pub total_births: u64,
     pub total_deaths: u64,
     pub epoch_diff: EpochDiff,
+    pub season: String,
+    pub pop_cap: usize,
 }
 
 /// Agent info response for GET /agent/:id.
@@ -286,6 +288,8 @@ async fn get_status(
         total_births: w.total_births,
         total_deaths: w.total_deaths,
         epoch_diff: w.epoch_diff(10),
+        season: w.eco_state.name().to_string(),
+        pop_cap: w.pop_cap,
     };
 
     // Drop lock explicitly before serialization
