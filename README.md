@@ -1,6 +1,6 @@
 ﻿# Genesis Protocol
 
-Deterministic evolutionary economics engine. 13 crates. 349 tests. Pure Rust.
+Deterministic evolutionary economics engine. 13 crates. 345 tests. Pure Rust.
 
 Digital organisms are born with cryptographic genomes, metabolize scarce resources, mutate under selective pressure, and die when they can't pay their entropy cost. Institutional mechanisms — treasury, taxation, catastrophe events, adaptive regulation — emerge as endogenous feedback loops, not exogenous parameters. Every state transition is deterministically replayable and cryptographically verifiable.
 
@@ -80,7 +80,7 @@ cargo run --release --bin run_experiments
 
 # Verify the full test suite
 cargo test --workspace
-# Expected: 349 passed, 0 failed
+# Expected: 345 passed, 0 failed
 ```
 
 Each experiment exports:
@@ -95,7 +95,7 @@ Each experiment exports:
 | Metric | Value |
 |---|---|
 | Crates | 13 |
-| Tests | 349 passing, 0 failed, 7 ignored |
+| Tests | 345 passing, 0 failed, 7 ignored |
 | Compiler warnings | 0 |
 | Experiment worlds | 1,220 |
 | Total epochs simulated | 610,000 |
