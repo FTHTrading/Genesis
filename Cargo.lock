@@ -519,6 +519,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "genesis-experiment"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "gateway",
+ "genesis-anchor",
+ "genesis-homeostasis",
+ "genesis-multiverse",
+ "hex",
+ "rand",
+ "serde",
+ "serde_json",
+ "sha2",
+ "tracing",
+ "uuid",
+]
+
+[[package]]
 name = "genesis-federation"
 version = "0.1.0"
 dependencies = [
@@ -576,6 +594,7 @@ dependencies = [
  "evolution",
  "gateway",
  "genesis-dna",
+ "genesis-experiment",
  "genesis-multiverse",
  "genesis-replay",
  "metabolism",
