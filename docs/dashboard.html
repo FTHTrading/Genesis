@@ -3,1110 +3,388 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Genesis Protocol — Living Census</title>
-<script type="importmap">
-{
-  "imports": {
-    "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
-    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
-  }
-}
-</script>
+<title>Genesis Protocol</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
-    background: #060a10;
-    color: #8ab4c8;
-    font-family: 'Courier New', Courier, monospace;
+    background: #0a0e14;
+    color: #c8d6e0;
+    font-family: 'Consolas', 'Courier New', monospace;
+    font-size: 14px;
+    padding: 24px 32px;
+    line-height: 1.6;
+    overflow-y: auto;
+  }
+  h1 {
+    font-size: 20px;
+    font-weight: 600;
+    color: #e0e8f0;
+    letter-spacing: 0.08em;
+    margin-bottom: 6px;
+  }
+  .subtitle {
+    font-size: 12px;
+    color: #4a6070;
+    margin-bottom: 28px;
+    letter-spacing: 0.04em;
+  }
+
+  /* ── SECTION HEADERS ── */
+  .section-head {
+    font-size: 13px;
+    font-weight: 600;
+    color: #6a9ab8;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    border-bottom: 1px solid #1a2a38;
+    padding-bottom: 6px;
+    margin: 28px 0 14px 0;
+  }
+  .section-head:first-of-type { margin-top: 0; }
+
+  /* ── KEY-VALUE GRID ── */
+  .kv-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 4px 32px;
+  }
+  .kv-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 3px 0;
+    border-bottom: 1px solid #0e1820;
+  }
+  .kv-label {
+    color: #4a6a80;
+    font-size: 13px;
+  }
+  .kv-val {
+    color: #c8d6e0;
+    font-size: 13px;
+    font-weight: 500;
+    text-align: right;
+  }
+  .kv-val.up   { color: #4caf6e; }
+  .kv-val.down { color: #c0392b; }
+  .kv-val.warn { color: #d4a84b; }
+  .kv-val.gold { color: #ffd700; }
+
+  /* ── AGENT TABLE ── */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 8px;
+    font-size: 13px;
+  }
+  th {
+    text-align: left;
+    color: #4a6a80;
+    font-weight: 500;
     font-size: 11px;
-    overflow: hidden;
-    user-select: none;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 6px 10px;
+    border-bottom: 1px solid #1a2a38;
+    white-space: nowrap;
   }
-  #canvas-host { position: fixed; inset: 0; }
+  th.r { text-align: right; }
+  td {
+    padding: 5px 10px;
+    border-bottom: 1px solid #0e1820;
+    white-space: nowrap;
+  }
+  td.r { text-align: right; font-variant-numeric: tabular-nums; }
+  tr:hover { background: rgba(26, 48, 80, 0.15); }
+  .prim-dot {
+    display: inline-block; width: 7px; height: 7px;
+    background: #ffd700; border-radius: 50%; margin-right: 6px;
+    vertical-align: middle;
+  }
+  .role-opt  { color: #5dade2; }
+  .role-exec { color: #58d68d; }
+  .role-comm { color: #f0b27a; }
+  .role-strt { color: #bb8fce; }
 
-  /* ── LEFT HUD ── */
-  #hud {
-    position: fixed; top: 16px; left: 16px; width: 230px;
-    pointer-events: none; z-index: 10;
-  }
-  .hud-title {
-    font-size: 9px; letter-spacing: 0.22em; color: #243850;
-    text-transform: uppercase; margin-bottom: 12px;
-    border-bottom: 1px solid #0f1e2c; padding-bottom: 5px;
-  }
-  .hud-row { display: flex; justify-content: space-between; margin-bottom: 4px; letter-spacing: 0.04em; }
-  .hud-label { color: #263e54; font-size: 10px; }
-  .hud-val   { color: #8ab4c8; font-size: 10px; }
-  .hud-val.warn    { color: #d4a84b; }
-  .hud-val.danger  { color: #c0392b; }
-  .hud-val.healthy { color: #4caf6e; }
-  .hud-sep { border: none; border-top: 1px solid #0f1f2e; margin: 6px 0; }
-  #season-badge {
-    margin-top: 8px; padding: 3px 7px; font-size: 9px;
-    letter-spacing: 0.12em; border: 1px solid #132030; color: #3a6080;
-  }
-  #stress-badge {
-    margin-top: 6px; padding: 3px 7px; border: 1px solid rgba(192,57,43,0.35);
-    color: #c0392b; font-size: 9px; letter-spacing: 0.14em; display: none;
-  }
-  #vital-signs {
-    margin-top: 10px; padding: 6px 0;
-    border-top: 1px solid #0f1f2e;
-  }
-  .vital-row { display: flex; justify-content: space-between; margin-bottom: 3px; }
-  .vital-label { color: #1e3548; font-size: 9px; letter-spacing: 0.06em; }
-  .vital-val { color: #5a8aa0; font-size: 9px; }
-  #event-feed {
-    margin-top: 8px; max-height: 55px; overflow: hidden;
-    border-top: 1px solid #0f1f2e; padding-top: 5px;
-  }
-  .event-line {
-    font-size: 8px; color: #2e4a60; letter-spacing: 0.04em;
-    margin-bottom: 2px; opacity: 0.8;
-    animation: eventFadeIn 0.5s ease;
-  }
-  .event-line.birth { color: #4caf6e; }
-  .event-line.death { color: #c0392b; }
-  .event-line.stasis { color: #d4a84b; }
-  @keyframes eventFadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 0.8; } }
+  /* status */
+  .status-active  { color: #4caf6e; }
+  .status-stasis  { color: #d4a84b; }
+  .status-new     { color: #5dade2; }
 
-  /* ── RIGHT CENSUS PANEL ── */
-  #census {
-    position: fixed; top: 16px; right: 16px; width: 210px;
-    pointer-events: none; z-index: 10;
+  /* ── EPOCH HISTORY TABLE ── */
+  #history-table {
+    font-size: 12px;
+    margin-top: 8px;
   }
-  .census-title {
-    font-size: 9px; letter-spacing: 0.20em; color: #243850;
-    text-transform: uppercase; margin-bottom: 8px;
-    border-bottom: 1px solid #0f1e2c; padding-bottom: 5px;
-  }
-  .census-agent {
-    padding: 5px 7px; margin-bottom: 3px;
-    background: rgba(8, 14, 22, 0.75);
-    border-left: 2px solid #1a3050;
-    transition: border-color 0.4s, background 0.3s;
-    position: relative;
-  }
-  .census-agent.primordial { border-left-color: #ffd700 !important; }
-  .census-agent .ca-top { display: flex; justify-content: space-between; align-items: center; }
-  .ca-role { font-size: 10px; font-weight: bold; letter-spacing: 0.06em; }
-  .ca-gen { font-size: 8px; color: #3a5a70; }
-  .ca-stats { display: flex; gap: 10px; margin-top: 3px; }
-  .ca-stat { font-size: 8px; color: #3a5a70; letter-spacing: 0.03em; }
-  .ca-stat span { color: #6a9ab0; }
-  .ca-bar {
-    position: absolute; bottom: 0; left: 0; height: 1px;
-    background: #1a5080; transition: width 0.6s ease;
-  }
-  .ca-prim-badge {
-    display: inline-block; width: 6px; height: 6px;
-    background: #ffd700; border-radius: 1px; margin-right: 4px;
-    vertical-align: middle; box-shadow: 0 0 4px rgba(255,215,0,0.4);
-  }
-  .ca-stasis-dot {
-    display: inline-block; width: 5px; height: 5px;
-    background: #d4a84b; border-radius: 50%; margin-left: 5px;
-    animation: stasisPulse 1.2s infinite;
-  }
-  @keyframes stasisPulse {
-    0%, 100% { opacity: 0.4; } 50% { opacity: 1; }
-  }
+  #history-table th { font-size: 10px; }
+  #history-table td { padding: 3px 8px; font-size: 12px; }
+  .birth-cell { color: #4caf6e; font-weight: 600; }
+  .death-cell { color: #c0392b; font-weight: 600; }
+  .stasis-cell { color: #d4a84b; }
 
-  /* ── BOTTOM SPARKLINES ── */
-  #spark-row {
-    position: fixed; bottom: 14px; left: 16px; right: 16px;
-    display: flex; gap: 12px; z-index: 10; pointer-events: none;
-    height: 62px;
+  /* ── LAST UPDATED ── */
+  #last-update {
+    position: fixed;
+    top: 10px; right: 16px;
+    font-size: 11px;
+    color: #2a4a5a;
   }
-  .spark-panel {
-    flex: 1; background: rgba(6, 10, 16, 0.80);
-    border: 1px solid #0f1e2c; padding: 4px 6px;
-    position: relative;
+  #poll-dot {
+    display: inline-block;
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: #1a3a50;
+    margin-right: 5px;
+    vertical-align: middle;
+    transition: background 0.3s;
   }
-  .spark-label {
-    font-size: 7px; letter-spacing: 0.14em; color: #1e3a50;
-    text-transform: uppercase; position: absolute; top: 3px; left: 6px;
-  }
-  .spark-val {
-    font-size: 9px; color: #5a8aa0; position: absolute; top: 2px; right: 6px;
-  }
-  .spark-canvas { width: 100%; height: 100%; display: block; }
+  #poll-dot.live { background: #4caf6e; }
 
-  /* ── TOOLTIP ── */
-  #tooltip {
-    position: fixed; pointer-events: none; z-index: 20;
-    background: rgba(5,8,14,0.94); border: 1px solid #1a3050;
-    padding: 8px 12px; font-size: 10px; line-height: 1.75;
-    color: #8ab4c8; display: none; max-width: 220px;
-  }
-  /* ── PHASE BANNER ── */
-  #phase-banner {
-    position: fixed; top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-    pointer-events: none; z-index: 30;
-    color: #c0392b; font-size: 11px; letter-spacing: 0.24em;
-    text-transform: uppercase; opacity: 0; transition: opacity 0.5s;
-    text-align: center; line-height: 2;
-  }
-  #birth-flash, #death-flash {
-    position: fixed; inset: 0; pointer-events: none; z-index: 25;
-    opacity: 0; transition: opacity 0.3s;
-  }
-  #birth-flash { background: radial-gradient(circle, rgba(76,175,110,0.08) 0%, transparent 70%); }
-  #death-flash { background: radial-gradient(circle, rgba(192,57,43,0.06) 0%, transparent 70%); }
-
-  #hud-help {
-    position: fixed; bottom: 82px; left: 16px;
-    pointer-events: none; z-index: 10;
-    color: #142430; font-size: 8px; letter-spacing: 0.06em; line-height: 2;
+  /* ── RESPONSIVE ── */
+  @media (max-width: 700px) {
+    body { padding: 16px; font-size: 12px; }
+    .kv-grid { grid-template-columns: 1fr; }
+    table { font-size: 11px; }
   }
 </style>
 </head>
 <body>
-<div id="canvas-host"></div>
 
-<!-- LEFT HUD -->
-<div id="hud">
-  <div class="hud-title">Genesis Protocol · Living Census</div>
-  <div class="hud-row"><span class="hud-label">EPOCH</span><span class="hud-val" id="h-epoch">—</span></div>
-  <div class="hud-row"><span class="hud-label">POPULATION</span><span class="hud-val" id="h-pop">—</span></div>
-  <div class="hud-row"><span class="hud-label">CIRCULATING</span><span class="hud-val" id="h-circ">—</span></div>
-  <div class="hud-row"><span class="hud-label">TREASURY</span><span class="hud-val" id="h-treas">—</span></div>
-  <hr class="hud-sep">
-  <div class="hud-row"><span class="hud-label">B:D RATIO</span><span class="hud-val" id="h-bd">—</span></div>
-  <div class="hud-row"><span class="hud-label">BIRTHS</span><span class="hud-val" id="h-births">—</span></div>
-  <div class="hud-row"><span class="hud-label">DEATHS</span><span class="hud-val" id="h-deaths">—</span></div>
-  <div class="hud-row"><span class="hud-label">DOMINANCE</span><span class="hud-val" id="h-dom">—</span></div>
-  <div class="hud-row"><span class="hud-label">AVG FITNESS</span><span class="hud-val" id="h-fit">—</span></div>
-  <div class="hud-row"><span class="hud-label">MAX FITNESS</span><span class="hud-val" id="h-xfit">—</span></div>
-  <hr class="hud-sep">
-  <div id="season-badge">SEASON: —</div>
-  <div id="stress-badge">⬡ ADVERSARIAL OVERLAY</div>
-  <div id="vital-signs">
-    <div class="vital-row"><span class="vital-label">SKIM RATE</span><span class="vital-val" id="v-skim">—</span></div>
-    <div class="vital-row"><span class="vital-label">STIPEND</span><span class="vital-val" id="v-stip">—</span></div>
-    <div class="vital-row"><span class="vital-label">POP CAP</span><span class="vital-val" id="v-cap">—</span></div>
-    <div class="vital-row"><span class="vital-label">STARTED</span><span class="vital-val" id="v-start">—</span></div>
-  </div>
-  <div id="event-feed"></div>
-</div>
+<div id="last-update"><span id="poll-dot"></span><span id="update-text">loading...</span></div>
 
-<!-- RIGHT CENSUS -->
-<div id="census">
-  <div class="census-title">Agent Census · <span id="c-count">0</span> alive</div>
-  <div id="census-list"></div>
-</div>
+<h1>GENESIS PROTOCOL</h1>
+<div class="subtitle">Sovereign digital organism — live state from system-state.json</div>
 
-<!-- BOTTOM SPARKLINES -->
-<div id="spark-row">
-  <div class="spark-panel">
-    <span class="spark-label">POPULATION</span>
-    <span class="spark-val" id="sp-pop-val">—</span>
-    <canvas class="spark-canvas" id="sp-pop"></canvas>
-  </div>
-  <div class="spark-panel">
-    <span class="spark-label">B:D RATIO</span>
-    <span class="spark-val" id="sp-bd-val">—</span>
-    <canvas class="spark-canvas" id="sp-bd"></canvas>
-  </div>
-  <div class="spark-panel">
-    <span class="spark-label">ATP</span>
-    <span class="spark-val" id="sp-atp-val">—</span>
-    <canvas class="spark-canvas" id="sp-atp"></canvas>
-  </div>
-  <div class="spark-panel">
-    <span class="spark-label">FITNESS</span>
-    <span class="spark-val" id="sp-fit-val">—</span>
-    <canvas class="spark-canvas" id="sp-fit"></canvas>
-  </div>
-</div>
+<!-- ── ORGANISM OVERVIEW ── -->
+<div class="section-head">Organism Overview</div>
+<div class="kv-grid" id="overview-grid"></div>
 
-<div id="hud-help">[A] adversarial &nbsp;·&nbsp; [click] isolate &nbsp;·&nbsp; [drag] orbit</div>
-<div id="tooltip"></div>
-<div id="phase-banner">PHASE TRANSITION<br>DETECTED</div>
-<div id="birth-flash"></div>
-<div id="death-flash"></div>
+<!-- ── ECONOMICS ── -->
+<div class="section-head">Economics</div>
+<div class="kv-grid" id="econ-grid"></div>
 
-<script type="module">
-import * as THREE from 'three';
-import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+<!-- ── POPULATION ── -->
+<div class="section-head">Population</div>
+<div class="kv-grid" id="pop-grid"></div>
 
-// ═══════════════════════════════════════════════════════
-//  CONSTANTS & PALETTES
-// ═══════════════════════════════════════════════════════
-const ROLE_COLOR = {
-  Optimizer:    0x4fc3f7,
-  Strategist:   0x81c784,
-  Communicator: 0xffd54f,
-  Archivist:    0xce93d8,
-  Executor:     0xef9a9a,
-};
-const ROLE_HEX = {
-  Optimizer:    '#4fc3f7',
-  Strategist:   '#81c784',
-  Communicator: '#ffd54f',
-  Archivist:    '#ce93d8',
-  Executor:     '#ef9a9a',
-};
-const SEASON_CFG = {
-  Spring: {
-    bg: 0x080e0b, fog: '#111c16', fogDensity: 0.032,
-    orbitSpeed: 0.55, shellAlpha: 0.42, hazeOpacity: 0.045,
-    coreEmit: 1.4, hazeDrift: 1.3, label: 'SPRING — RENEWAL',
-  },
-  Summer: {
-    bg: 0x080810, fog: '#0d0e1e', fogDensity: 0.035,
-    orbitSpeed: 0.68, shellAlpha: 0.55, hazeOpacity: 0.060,
-    coreEmit: 1.6, hazeDrift: 1.5, label: 'SUMMER — BLOOM',
-  },
-  Autumn: {
-    bg: 0x0d0906, fog: '#1c1006', fogDensity: 0.048,
-    orbitSpeed: 0.40, shellAlpha: 0.58, hazeOpacity: 0.072,
-    coreEmit: 1.0, hazeDrift: 0.8, label: 'AUTUMN — DECAY',
-  },
-  Winter: {
-    bg: 0x040810, fog: '#060e1a', fogDensity: 0.055,
-    orbitSpeed: 0.28, shellAlpha: 0.72, hazeOpacity: 0.085,
-    coreEmit: 0.7, hazeDrift: 0.5, label: 'WINTER — TENSION',
-  },
-};
+<!-- ── AGENT CENSUS ── -->
+<div class="section-head">Agent Census — <span id="agent-count">0</span> alive</div>
+<table id="agent-table">
+  <thead>
+    <tr>
+      <th></th>
+      <th>Role</th>
+      <th class="r">Gen</th>
+      <th class="r">Reputation</th>
+      <th class="r">Contracts</th>
+      <th class="r">Mutation</th>
+      <th class="r">Basal Cost</th>
+      <th>Status</th>
+    </tr>
+  </thead>
+  <tbody id="agent-body"></tbody>
+</table>
+
+<!-- ── EPOCH HISTORY (last 100) ── -->
+<div class="section-head">Epoch History — last <span id="hist-count">0</span> ticks</div>
+<table id="history-table">
+  <thead>
+    <tr>
+      <th class="r">Epoch</th>
+      <th class="r">Pop</th>
+      <th class="r">Cap</th>
+      <th class="r">Births</th>
+      <th class="r">Deaths</th>
+      <th class="r">Stasis</th>
+      <th class="r">ATP Circ</th>
+      <th class="r">Avg Fit</th>
+      <th class="r">Max Fit</th>
+      <th class="r">Decay</th>
+      <th class="r">Tax</th>
+    </tr>
+  </thead>
+  <tbody id="history-body"></tbody>
+</table>
+
+<script>
 const DATA_URL = 'system-state.json';
-const SPHERE_R  = 5.8;
-const TRAIL_LEN = 14;
-const HAZE_N    = 2200;
-const CURRENT_N = 250;
+const POLL_MS  = 6000;
+let prevData = null;
 
-// ═══════════════════════════════════════════════════════
-//  RENDERER
-// ═══════════════════════════════════════════════════════
-const renderer = new THREE.WebGLRenderer({ antialias: true });
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-renderer.setSize(innerWidth, innerHeight);
-renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 0.82;
-document.getElementById('canvas-host').appendChild(renderer.domElement);
-
-const scene  = new THREE.Scene();
-scene.background = new THREE.Color(0x060a10);
-scene.fog        = new THREE.FogExp2('#0a1018', 0.040);
-
-const camera = new THREE.PerspectiveCamera(50, innerWidth / innerHeight, 0.1, 200);
-camera.position.set(0, 2.5, 16);
-
-const controls = new OrbitControls(camera, renderer.domElement);
-controls.enableDamping    = true;
-controls.dampingFactor    = 0.06;
-controls.maxDistance      = 28;
-controls.minDistance      = 6;
-controls.autoRotate       = true;
-controls.autoRotateSpeed  = 0.5;
-
-// ═══════════════════════════════════════════════════════
-//  LIGHTS
-// ═══════════════════════════════════════════════════════
-scene.add(new THREE.AmbientLight(0x0c1e34, 2.0));
-
-const coreLight = new THREE.PointLight(0x2080c0, 2.5, 18, 1.8);
-scene.add(coreLight);
-
-const rimLight = new THREE.DirectionalLight(0x1a3a5a, 0.5);
-rimLight.position.set(-7, 5, -5);
-scene.add(rimLight);
-
-// ═══════════════════════════════════════════════════════
-//  CONTAINMENT SPHERE — Fresnel glass shell
-// ═══════════════════════════════════════════════════════
-const fresnelVert = /* glsl */`
-  varying vec3 vNormal;
-  varying vec3 vViewPos;
-  void main() {
-    vNormal  = normalize(normalMatrix * normal);
-    vec4 mv  = modelViewMatrix * vec4(position, 1.0);
-    vViewPos = -mv.xyz;
-    gl_Position = projectionMatrix * mv;
-  }
-`;
-const fresnelFrag = /* glsl */`
-  uniform vec3  rimColor;
-  uniform float rimStrength;
-  uniform float uTime;
-  uniform float uTension;
-  varying vec3 vNormal;
-  varying vec3 vViewPos;
-  void main() {
-    vec3  view = normalize(vViewPos);
-    float rim  = 1.0 - abs(dot(view, vNormal));
-    rim = pow(rim, 2.6 - uTension * 0.6);
-    float pulse = 1.0 + 0.05 * sin(uTime * 0.75)
-                      + uTension * 0.04 * sin(uTime * 2.3 + vNormal.y * 3.0);
-    gl_FragColor = vec4(rimColor, rim * rimStrength * pulse);
-  }
-`;
-
-function makeFresnel(radius, side, color, strength) {
-  return new THREE.ShaderMaterial({
-    uniforms: {
-      rimColor:    { value: new THREE.Color(color) },
-      rimStrength: { value: strength },
-      uTime:       { value: 0.0 },
-      uTension:    { value: 0.0 },
-    },
-    vertexShader:   fresnelVert,
-    fragmentShader: fresnelFrag,
-    side,
-    transparent:  true,
-    depthWrite:   false,
-    blending:     THREE.AdditiveBlending,
-  });
+// ── ROLE COLOR CLASS ──
+function roleClass(r) {
+  if (!r) return '';
+  const l = r.toLowerCase();
+  if (l === 'optimizer')     return 'role-opt';
+  if (l === 'executor')      return 'role-exec';
+  if (l === 'communicator')  return 'role-comm';
+  if (l === 'strategist')    return 'role-strt';
+  return '';
 }
 
-const shellMatInner = makeFresnel(SPHERE_R,        THREE.BackSide,  0x1a5080, 0.55);
-const shellMatOuter = makeFresnel(SPHERE_R * 1.04, THREE.FrontSide, 0x0a2840, 0.18);
-
-scene.add(new THREE.Mesh(new THREE.SphereGeometry(SPHERE_R,        64, 64), shellMatInner));
-scene.add(new THREE.Mesh(new THREE.SphereGeometry(SPHERE_R * 1.04, 48, 48), shellMatOuter));
-
-// ═══════════════════════════════════════════════════════
-//  LIQUID CORE — breathing nucleus
-// ═══════════════════════════════════════════════════════
-const coreGeo    = new THREE.SphereGeometry(1.0, 48, 48);
-const coreOrigPx = Float32Array.from(coreGeo.attributes.position.array);
-
-const coreMat = new THREE.MeshPhysicalMaterial({
-  color: new THREE.Color(0x0d4870), emissive: new THREE.Color(0x0a3060),
-  emissiveIntensity: 1.2, transmission: 0.35, roughness: 0.10,
-  metalness: 0.0, ior: 1.45, transparent: true, opacity: 0.90,
-});
-const coreMesh = new THREE.Mesh(coreGeo, coreMat);
-scene.add(coreMesh);
-
-const innerGlowMat = new THREE.MeshBasicMaterial({
-  color: 0x1a6090, transparent: true, opacity: 0.16, side: THREE.BackSide,
-});
-scene.add(new THREE.Mesh(new THREE.SphereGeometry(1.2, 24, 24), innerGlowMat));
-
-// ═══════════════════════════════════════════════════════
-//  TREASURY SEDIMENT
-// ═══════════════════════════════════════════════════════
-const sedGeo = new THREE.CylinderGeometry(2.1, 1.7, 0.30, 48);
-const sedMat = new THREE.MeshPhysicalMaterial({
-  color: new THREE.Color(0x1a1000), emissive: new THREE.Color(0x0d0800),
-  emissiveIntensity: 0.45, roughness: 0.60, metalness: 0.28,
-  transparent: true, opacity: 0.84,
-});
-const sediment = new THREE.Mesh(sedGeo, sedMat);
-sediment.position.y = -3.5;
-scene.add(sediment);
-
-const sedGlowMat = new THREE.MeshBasicMaterial({
-  color: 0x3a1a00, transparent: true, opacity: 0.20, side: THREE.BackSide,
-});
-const sedGlow = new THREE.Mesh(
-  new THREE.CylinderGeometry(2.25, 1.85, 0.34, 32), sedGlowMat
-);
-sedGlow.position.y = -3.5;
-scene.add(sedGlow);
-
-// ═══════════════════════════════════════════════════════
-//  TREASURY CURRENT PARTICLES
-// ═══════════════════════════════════════════════════════
-const cpBuf = new Float32Array(CURRENT_N * 3);
-const cpVel = Array.from({ length: CURRENT_N }, () => ({
-  x: (Math.random() - 0.5) * 0.014,
-  y: Math.random() * 0.04 + 0.018,
-  z: (Math.random() - 0.5) * 0.014,
-  life: Math.random(),
-}));
-for (let i = 0; i < CURRENT_N; i++) {
-  const a = Math.random() * Math.PI * 2, r = Math.random() * 1.6;
-  cpBuf[i*3]   = Math.cos(a) * r;
-  cpBuf[i*3+1] = -3.5 + Math.random() * 0.4;
-  cpBuf[i*3+2] = Math.sin(a) * r;
-}
-const cpGeo = new THREE.BufferGeometry();
-cpGeo.setAttribute('position', new THREE.BufferAttribute(cpBuf, 3));
-const cpMat = new THREE.PointsMaterial({
-  color: 0xc8860a, size: 0.09, transparent: true, opacity: 0.0,
-  blending: THREE.AdditiveBlending, depthWrite: false,
-});
-scene.add(new THREE.Points(cpGeo, cpMat));
-
-// ═══════════════════════════════════════════════════════
-//  VOLUMETRIC HAZE — organic brownian
-// ═══════════════════════════════════════════════════════
-const hzBuf = new Float32Array(HAZE_N * 3);
-const hzVel = Array.from({ length: HAZE_N }, () => ({
-  x: (Math.random() - 0.5) * 0.004,
-  y:  Math.random() * 0.005 + 0.001,
-  z: (Math.random() - 0.5) * 0.004,
-}));
-for (let i = 0; i < HAZE_N; i++) {
-  const phi   = Math.acos(1 - 2 * Math.random());
-  const theta = Math.random() * Math.PI * 2;
-  const r     = Math.cbrt(Math.random()) * SPHERE_R * 0.92;
-  hzBuf[i*3]   = r * Math.sin(phi) * Math.cos(theta);
-  hzBuf[i*3+1] = r * Math.sin(phi) * Math.sin(theta);
-  hzBuf[i*3+2] = r * Math.cos(phi);
-}
-const hzGeo = new THREE.BufferGeometry();
-hzGeo.setAttribute('position', new THREE.BufferAttribute(hzBuf, 3));
-const hzMat = new THREE.PointsMaterial({
-  color: 0x1a3a5a, size: 0.17, transparent: true, opacity: 0.055,
-  blending: THREE.AdditiveBlending, depthWrite: false,
-});
-const hazeMesh = new THREE.Points(hzGeo, hzMat);
-scene.add(hazeMesh);
-
-// ═══════════════════════════════════════════════════════
-//  AGENT DROPLETS — organic, alive
-// ═══════════════════════════════════════════════════════
-const agentObjs = [];
-let currentSeason = 'Autumn';
-let hazeDriftMul  = 1.0;
-
-function spawnAgentDroplet(agentData, idx, total) {
-  const phi   = Math.acos(-1 + (2 * (idx + 0.5)) / (total || 1));
-  const theta = idx * 2.3999632297;
-
-  const rol  = agentData.role || 'Optimizer';
-  const rep  = agentData.rep ?? 0.5;
-  const gen  = agentData.gen ?? 0;
-  const hex  = ROLE_COLOR[rol] ?? 0x4fc3f7;
-
-  // Reputation -> size: richer agents are visibly larger
-  const baseSize = 0.10 + rep * 0.24;
-  // Contracts -> activity indicator
-  const contracts = agentData.contracts ?? 0;
-  const activityGlow = Math.min(1.0, contracts / 6000);
-  const r = 2.5 + rep * 1.6;
-
-  const startPos = new THREE.Vector3(
-    r * Math.sin(phi) * Math.cos(theta),
-    r * Math.cos(phi),
-    r * Math.sin(phi) * Math.sin(theta),
-  );
-
-  const mat = new THREE.MeshPhysicalMaterial({
-    color: new THREE.Color(hex), emissive: new THREE.Color(hex),
-    emissiveIntensity: 0.45 + activityGlow * 0.35,
-    transmission: 0.22, roughness: 0.07, metalness: 0.0,
-    ior: 1.35, transparent: true, opacity: 0.88,
-  });
-  const mesh = new THREE.Mesh(new THREE.SphereGeometry(baseSize, 16, 16), mat);
-  mesh.position.copy(startPos);
-  mesh.userData = { agentData, index: idx };
-  scene.add(mesh);
-
-  // Generation ring (gen >= 2)
-  if (gen >= 2) {
-    const rGeo = new THREE.RingGeometry(baseSize * 1.4, baseSize * 1.6, 22);
-    const rMat = new THREE.MeshBasicMaterial({
-      color: hex, side: THREE.DoubleSide, transparent: true, opacity: 0.22,
-    });
-    mesh.add(new THREE.Mesh(rGeo, rMat));
-  }
-
-  // Primordial crown (gen 0)
-  if (gen === 0) {
-    const cMat = new THREE.MeshBasicMaterial({
-      color: 0xffd700, wireframe: true, transparent: true, opacity: 0.25,
-    });
-    mesh.add(new THREE.Mesh(new THREE.OctahedronGeometry(baseSize * 1.9, 0), cMat));
-  }
-
-  // Micro trail
-  const trailPx = new Float32Array(TRAIL_LEN * 3);
-  for (let j = 0; j < TRAIL_LEN * 3; j += 3) {
-    trailPx[j] = startPos.x; trailPx[j+1] = startPos.y; trailPx[j+2] = startPos.z;
-  }
-  const trailGeo = new THREE.BufferGeometry();
-  trailGeo.setAttribute('position', new THREE.BufferAttribute(trailPx, 3));
-  const trailMat = new THREE.LineBasicMaterial({
-    color: hex, transparent: true, opacity: 0.16,
-    blending: THREE.AdditiveBlending, depthWrite: false,
-  });
-  const trailLine = new THREE.Line(trailGeo, trailMat);
-  scene.add(trailLine);
-
-  // Unique noise offsets for organic motion
-  const noisePhase  = Math.random() * Math.PI * 2;
-  const noiseFreq   = 0.3 + Math.random() * 0.7;
-  const wobbleAmp   = 0.06 + Math.random() * 0.08;
-  const breathRate  = 0.4 + Math.random() * 0.6;
-  const jitterTimer = Math.random() * 100;
-
-  return {
-    mesh, trailGeo, trailLine,
-    trailHist: [startPos.clone()],
-    orbitPhase: Math.random() * Math.PI * 2,
-    orbitSpeed: 0.24 + Math.random() * 0.32,
-    r, phi, data: agentData, baseSize,
-    noisePhase, noiseFreq, wobbleAmp, breathRate, jitterTimer,
-    targetSize: baseSize,
-  };
+// ── STATUS ──
+function agentStatus(a) {
+  if (a.contracts === 0 && !a.prim) return ['STASIS', 'status-stasis'];
+  if (a.contracts < 20 && !a.prim)  return ['NEW', 'status-new'];
+  return ['ACTIVE', 'status-active'];
 }
 
-function clearAgents() {
-  agentObjs.forEach(o => {
-    scene.remove(o.mesh);
-    if (o.trailLine) scene.remove(o.trailLine);
-  });
-  agentObjs.length = 0;
+// ── SEASON ──
+function season(d) {
+  if (!d.history || d.history.length < 2) return 'Unknown';
+  const h = d.history;
+  const recent = h.slice(-10);
+  const births = recent.reduce((s, e) => s + e.b, 0);
+  const deaths = recent.reduce((s, e) => s + e.d, 0);
+  const bd = deaths > 0 ? births / deaths : births > 0 ? 99 : 1;
+  const pop = d.agents ? d.agents.length : 0;
+  const cap = d.pop_cap || 10;
+  if (pop <= Math.floor(cap * 0.4)) return 'Winter';
+  if (bd < 1.0) return 'Spring';
+  if (bd >= 1.0 && bd <= 1.2 && d.tr_reserve > 5000) return 'Summer';
+  return 'Autumn';
 }
 
-// ═══════════════════════════════════════════════════════
-//  SPARKLINE RENDERER
-// ═══════════════════════════════════════════════════════
-function drawSparkline(canvasId, data, color, minV, maxV) {
-  const canvas = document.getElementById(canvasId);
-  if (!canvas || !data.length) return;
-  const ctx = canvas.getContext('2d');
-  const dpr = window.devicePixelRatio || 1;
-  const w = canvas.parentElement.clientWidth - 12;
-  const h = canvas.parentElement.clientHeight - 4;
-  canvas.width  = w * dpr;
-  canvas.height = h * dpr;
-  canvas.style.width  = w + 'px';
-  canvas.style.height = h + 'px';
-  ctx.scale(dpr, dpr);
-  ctx.clearRect(0, 0, w, h);
-
-  const range = maxV - minV || 1;
-  const padTop = 14, padBot = 4;
-  const drawH = h - padTop - padBot;
-  const stepX = w / (data.length - 1 || 1);
-
-  // Gradient fill
-  const grad = ctx.createLinearGradient(0, padTop, 0, h - padBot);
-  grad.addColorStop(0, color + '30');
-  grad.addColorStop(1, color + '05');
-
-  ctx.beginPath();
-  ctx.moveTo(0, padTop + drawH - ((data[0] - minV) / range) * drawH);
-  for (let i = 1; i < data.length; i++) {
-    const x = i * stepX;
-    const y = padTop + drawH - ((data[i] - minV) / range) * drawH;
-    ctx.lineTo(x, y);
-  }
-  ctx.lineTo((data.length - 1) * stepX, h - padBot);
-  ctx.lineTo(0, h - padBot);
-  ctx.closePath();
-  ctx.fillStyle = grad;
-  ctx.fill();
-
-  // Stroke line
-  ctx.beginPath();
-  ctx.moveTo(0, padTop + drawH - ((data[0] - minV) / range) * drawH);
-  for (let i = 1; i < data.length; i++) {
-    ctx.lineTo(i * stepX, padTop + drawH - ((data[i] - minV) / range) * drawH);
-  }
-  ctx.strokeStyle = color + 'aa';
-  ctx.lineWidth = 1;
-  ctx.stroke();
-
-  // Endpoint dot
-  const lastY = padTop + drawH - ((data[data.length-1] - minV) / range) * drawH;
-  ctx.beginPath();
-  ctx.arc((data.length-1) * stepX, lastY, 2, 0, Math.PI * 2);
-  ctx.fillStyle = color;
-  ctx.fill();
-}
-
-// ═══════════════════════════════════════════════════════
-//  CENSUS PANEL
-// ═══════════════════════════════════════════════════════
-function buildCensus(agents) {
-  const list = document.getElementById('census-list');
-  document.getElementById('c-count').textContent = agents.length;
-
-  // Sort: primordial first, then by rep descending
-  const sorted = agents.map((a, i) => ({ ...a, _idx: i }))
-    .sort((a, b) => {
-      if (a.prim && !b.prim) return -1;
-      if (!a.prim && b.prim) return 1;
-      return (b.rep ?? 0) - (a.rep ?? 0);
-    });
-
-  list.innerHTML = sorted.map(a => {
-    const roleColor = ROLE_HEX[a.role] ?? '#8ab4c8';
-    const repPct = ((a.rep ?? 0) * 100).toFixed(0);
-    const isPrim = a.prim;
-    const stasis = (a.contracts ?? 0) === 0 && !a.prim;
-    return `<div class="census-agent${isPrim ? ' primordial' : ''}" style="border-left-color:${roleColor}">
-      <div class="ca-top">
-        <span class="ca-role" style="color:${roleColor}">
-          ${isPrim ? '<span class="ca-prim-badge"></span>' : ''}${a.role ?? '—'}${stasis ? '<span class="ca-stasis-dot" title="Low activity"></span>' : ''}
-        </span>
-        <span class="ca-gen">G${a.gen ?? 0}</span>
-      </div>
-      <div class="ca-stats">
-        <span class="ca-stat">rep <span>${(a.rep ?? 0).toFixed(3)}</span></span>
-        <span class="ca-stat">con <span>${(a.contracts ?? 0).toLocaleString()}</span></span>
-        <span class="ca-stat">mut <span>${(a.mut ?? 0.01).toFixed(2)}</span></span>
-      </div>
-      <div class="ca-bar" style="width:${repPct}%;background:${roleColor}40"></div>
-    </div>`;
-  }).join('');
-}
-
-// ═══════════════════════════════════════════════════════
-//  EVENT FEED
-// ═══════════════════════════════════════════════════════
-let lastSeenEpoch = null;
-const eventLines = [];
-
-function pushEvent(text, cls) {
-  eventLines.unshift({ text, cls, time: Date.now() });
-  if (eventLines.length > 6) eventLines.pop();
-  const feed = document.getElementById('event-feed');
-  feed.innerHTML = eventLines.map(e =>
-    `<div class="event-line ${e.cls}">${e.text}</div>`
+// ── BUILD KV ROWS ──
+function buildKV(containerId, rows) {
+  const el = document.getElementById(containerId);
+  el.innerHTML = rows.map(([label, val, cls]) =>
+    `<div class="kv-row"><span class="kv-label">${label}</span><span class="kv-val ${cls || ''}">${val}</span></div>`
   ).join('');
 }
 
-function flashScreen(type) {
-  const el = document.getElementById(type === 'birth' ? 'birth-flash' : 'death-flash');
-  el.style.opacity = '1';
-  setTimeout(() => { el.style.opacity = '0'; }, 600);
+// ── NUMBER FORMATTING ──
+function n(v, decimals = 0) {
+  if (v == null) return '—';
+  return Number(v).toLocaleString('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+}
+function pct(v, decimals = 1) {
+  if (v == null) return '—';
+  return (v * 100).toFixed(decimals) + '%';
 }
 
-// ═══════════════════════════════════════════════════════
-//  STATE & HUD BINDING
-// ═══════════════════════════════════════════════════════
-let adversarialMode = false;
-let isolatedIdx     = null;
-let lastBD          = 1.0;
-let targetTension   = 0.0;
-let currentTension  = 0.0;
-let targetSedScale  = 1.0;
+// ── RENDER ──
+function render(d) {
+  const agents = d.agents || [];
+  const hist   = d.history || [];
+  const latest = hist.length ? hist[hist.length - 1] : {};
+  const pop    = agents.length;
+  const circulating = latest.atp || 0;
+  const totalB = d.total_births || 0;
+  const totalD = d.total_deaths || 0;
+  const bdRatio = totalD > 0 ? (totalB / totalD) : (totalB > 0 ? '∞' : '—');
+  const avgFit = latest.mf || 0;
+  const maxFit = latest.xf || 0;
+  const startDate = d.started_at ? new Date(d.started_at).toLocaleDateString('en-US', { year:'numeric', month:'short', day:'numeric' }) : '—';
+  const uptime  = d.started_at ? Math.floor((Date.now() - new Date(d.started_at).getTime()) / 86400000) : 0;
+  const roleCounts = {};
+  agents.forEach(a => { roleCounts[a.role] = (roleCounts[a.role] || 0) + 1; });
+  const dominantRole = Object.entries(roleCounts).sort((a, b) => b[1] - a[1])[0];
+  const stasisCount = agents.filter(a => a.contracts === 0 && !a.prim).length;
 
-function setText(id, v) {
-  const el = document.getElementById(id);
-  if (el) el.textContent = v;
-}
-function setVal(id, v, cls) {
-  const el = document.getElementById(id);
-  if (!el) return;
-  el.textContent = v;
-  el.className = 'hud-val' + (cls ? ' ' + cls : '');
-}
+  // recent 10-epoch stats
+  const last10 = hist.slice(-10);
+  const recentB = last10.reduce((s, e) => s + e.b, 0);
+  const recentD = last10.reduce((s, e) => s + e.d, 0);
+  const recentBD = recentD > 0 ? (recentB / recentD).toFixed(3) : recentB > 0 ? '∞' : '0.000';
+  const avgDecay = last10.length ? (last10.reduce((s, e) => s + e.dec, 0) / last10.length) : 0;
 
-function applyState(d) {
-  const ep   = d.epoch ?? '—';
-  const hist = d.history ?? [];
-  const agents = d.agents ?? [];
-  const pop  = agents.length;
-  const tres = d.tr_reserve ?? 0;
-  const dist = d.tr_distributed ?? 0;
-  const cap  = d.pop_cap ?? 10;
+  // ── OVERVIEW ──
+  buildKV('overview-grid', [
+    ['Epoch',           n(d.epoch),              ''],
+    ['Season',          season(d),               ''],
+    ['Uptime',          uptime + ' days',        ''],
+    ['Started',         startDate,               ''],
+    ['Population',      pop + ' / ' + (d.pop_cap || '—'), pop >= (d.pop_cap||99) ? 'warn' : ''],
+    ['In Stasis',       stasisCount,             stasisCount > 0 ? 'warn' : ''],
+  ]);
 
-  // Compute circulating ATP from last history entry
-  const lastH = hist.length > 0 ? hist[hist.length - 1] : null;
-  const circ  = lastH ? lastH.atp : 0;
-  const mf    = lastH ? lastH.mf : 0;
-  const xf    = lastH ? lastH.xf : 0;
-  const stCnt = lastH ? lastH.st : 0;
+  // ── ECONOMICS ──
+  buildKV('econ-grid', [
+    ['Treasury Reserve',  n(d.tr_reserve, 2) + ' ATP',  d.tr_reserve < 1000 ? 'down' : ''],
+    ['Circulating ATP',   n(circulating, 1),             ''],
+    ['Total Collected',   n(d.tr_collected, 2),          ''],
+    ['Total Distributed', n(d.tr_distributed, 2),        ''],
+    ['Skim Rate',         pct(d.tr_skim),                ''],
+    ['Stipend',           n(d.tr_stipend, 1) + ' ATP',   ''],
+    ['Avg Decay / Epoch', n(avgDecay, 2) + ' ATP',       ''],
+  ]);
 
-  // Birth/death ratio
-  const totalB = d.total_births ?? 0;
-  const totalD = d.total_deaths ?? 0;
-  const bd = totalD > 0 ? totalB / totalD : 1.0;
+  // ── POPULATION ──
+  buildKV('pop-grid', [
+    ['Total Births',   n(totalB),                    'up'],
+    ['Total Deaths',   n(totalD),                    'down'],
+    ['B:D Ratio (all time)',  typeof bdRatio === 'number' ? bdRatio.toFixed(3) : bdRatio, ''],
+    ['B:D Ratio (last 10)',   recentBD,              ''],
+    ['Births (last 10)',      recentB,               recentB > 0 ? 'up' : ''],
+    ['Deaths (last 10)',      recentD,               recentD > 0 ? 'down' : ''],
+    ['Avg Fitness',           avgFit.toFixed(4),     ''],
+    ['Max Fitness',           maxFit.toFixed(4),     ''],
+    ['Dominant Role',         dominantRole ? dominantRole[0] + ' (' + dominantRole[1] + ')' : '—', ''],
+  ]);
 
-  // Detect new births/deaths from history
-  if (lastH && lastSeenEpoch !== null && lastH.ep > lastSeenEpoch) {
-    // Check recent history entries we haven't seen
-    for (const h of hist) {
-      if (h.ep <= lastSeenEpoch) continue;
-      if (h.b > 0) {
-        pushEvent(`+ ${h.b} birth${h.b > 1 ? 's' : ''} at epoch ${h.ep}`, 'birth');
-        flashScreen('birth');
-      }
-      if (h.d > 0) {
-        pushEvent(`- ${h.d} death${h.d > 1 ? 's' : ''} at epoch ${h.ep}`, 'death');
-        flashScreen('death');
-      }
-      if (h.st > 0) {
-        pushEvent(`~ ${h.st} in stasis at epoch ${h.ep}`, 'stasis');
-      }
-    }
-  }
-  if (lastH) lastSeenEpoch = lastH.ep;
+  // ── AGENTS TABLE ──
+  document.getElementById('agent-count').textContent = pop;
+  const sorted = [...agents].sort((a, b) => {
+    if (a.prim && !b.prim) return -1;
+    if (!a.prim && b.prim) return 1;
+    return b.rep - a.rep;
+  });
+  document.getElementById('agent-body').innerHTML = sorted.map((a, i) => {
+    const [statusText, statusCls] = agentStatus(a);
+    return `<tr>
+      <td>${a.prim ? '<span class="prim-dot"></span>' : ''}</td>
+      <td class="${roleClass(a.role)}">${a.role}</td>
+      <td class="r">${a.gen}</td>
+      <td class="r">${a.rep.toFixed(4)}</td>
+      <td class="r">${n(a.contracts)}</td>
+      <td class="r">${a.mut}</td>
+      <td class="r">${a.basal}</td>
+      <td class="${statusCls}">${statusText}</td>
+    </tr>`;
+  }).join('');
 
-  const domPct = (tres + circ) > 0 ? tres / (tres + circ) * 100 : 0;
-
-  setText('h-epoch', ep);
-  setText('h-pop', `${pop} / ${cap}`);
-  setVal('h-circ', circ.toFixed(0) + ' ATP');
-  setVal('h-treas', tres.toFixed(0) + ' ATP',
-    domPct > 88 ? 'danger' : domPct > 70 ? 'warn' : '');
-  setVal('h-bd', bd.toFixed(3),
-    bd < 0.95 ? 'danger' : bd < 1.05 ? 'warn' : 'healthy');
-  setText('h-births', totalB.toLocaleString());
-  setText('h-deaths', totalD.toLocaleString());
-  setVal('h-dom', domPct.toFixed(1) + '%',
-    domPct > 88 ? 'danger' : domPct > 70 ? 'warn' : '');
-  setVal('h-fit', mf.toFixed(4));
-  setVal('h-xfit', xf.toFixed(4));
-
-  // Vitals
-  setText('v-skim', (d.tr_skim ?? 0.05).toFixed(2));
-  setText('v-stip', (d.tr_stipend ?? 1.0).toFixed(1) + ' ATP');
-  setText('v-cap', cap);
-  if (d.started_at) {
-    const dt = new Date(d.started_at);
-    setText('v-start', dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
-  }
-
-  // Determine season
-  let season = 'Autumn';
-  if (d.eco_state) {
-    season = d.eco_state;
-  } else {
-    if (pop <= 4) season = 'Winter';
-    else if (bd < 1.0) season = 'Spring';
-    else if (bd > 1.1 && tres > 5000) season = 'Summer';
-  }
-  season = season.charAt(0).toUpperCase() + season.slice(1).toLowerCase();
-  currentSeason = season;
-
-  const sCfg = SEASON_CFG[season] ?? SEASON_CFG.Autumn;
-  document.getElementById('season-badge').textContent = sCfg.label;
-  document.getElementById('season-badge').style.borderColor =
-    season === 'Spring' ? '#1a4020' :
-    season === 'Summer' ? '#2a2040' :
-    season === 'Winter' ? '#0a2040' : '#2a1a08';
-
-  // Seasonal glass tension
-  targetTension = season === 'Winter' ? 0.9 : season === 'Autumn' ? 0.4 : 0.0;
-
-  // Seasonal shell alpha
-  shellMatInner.uniforms.rimStrength.value +=
-    (sCfg.shellAlpha - shellMatInner.uniforms.rimStrength.value) * 0.03;
-
-  // Seasonal atmosphere
-  scene.background.lerp(new THREE.Color(sCfg.bg), 0.018);
-  scene.fog.color.lerp(new THREE.Color(sCfg.fog), 0.018);
-  scene.fog.density += (sCfg.fogDensity - scene.fog.density) * 0.015;
-  controls.autoRotateSpeed = sCfg.orbitSpeed * (adversarialMode ? 1.5 : 1.0);
-  hazeDriftMul = sCfg.hazeDrift;
-
-  // Core health color
-  const h = Math.max(0, Math.min(1, (bd - 0.9) / 0.2));
-  coreMat.color.lerpColors(new THREE.Color(0x3a0808), new THREE.Color(0x0d4870), h);
-  coreMat.emissive.lerpColors(new THREE.Color(0x300505), new THREE.Color(0x0a3060), h);
-  shellMatInner.uniforms.rimColor.value.lerpColors(
-    new THREE.Color(0x6a0a0a), new THREE.Color(0x1a5080), h
-  );
-
-  // Sediment color + treasury drain
-  sedMat.color.lerpColors(
-    new THREE.Color(0x2a1400), new THREE.Color(0x0a1a2c),
-    Math.min(domPct / 100, 1.0)
-  );
-  sedMat.emissive.copy(sedMat.color).multiplyScalar(0.4);
-  const maxTreas = 20000;
-  targetSedScale = 0.4 + 0.6 * Math.min(tres / maxTreas, 1.0);
-
-  // Treasury current particles
-  cpMat.opacity += ((dist > 0 ? Math.min(0.65, dist / 3.0) : 0.12 + tres/maxTreas * 0.3) - cpMat.opacity) * 0.05;
-  cpMat.color.lerpColors(
-    new THREE.Color(0x806000), new THREE.Color(0xffc020),
-    Math.min(dist / 5.0, 1.0)
-  );
-
-  // Rebuild agents if population changed
-  if (agents.length !== agentObjs.length) {
-    clearAgents();
-    agents.forEach((a, i) => agentObjs.push(spawnAgentDroplet(a, i, agents.length)));
-  } else {
-    agents.forEach((a, i) => {
-      if (agentObjs[i]) {
-        agentObjs[i].data = a;
-        const newSize = 0.10 + (a.rep ?? 0.5) * 0.24;
-        agentObjs[i].targetSize = newSize;
-        const act = Math.min(1.0, (a.contracts ?? 0) / 6000);
-        agentObjs[i].mesh.material.emissiveIntensity = 0.45 + act * 0.35;
-      }
-    });
-  }
-
-  // Phase transition flash
-  if (Math.abs(lastBD - bd) > 0.06) flashPhaseBanner();
-  lastBD = bd;
-
-  // Census panel
-  buildCensus(agents);
-
-  // Sparklines
-  if (hist.length > 1) {
-    const pops = hist.map(h => h.pop);
-    const atps = hist.map(h => h.atp);
-    const fits = hist.map(h => h.mf);
-    const bds  = [];
-    let rb = 0, rd = 0;
-    for (let i = 0; i < hist.length; i++) {
-      rb += hist[i].b; rd += hist[i].d;
-      bds.push(rd > 0 ? rb / rd : 1.0);
-    }
-
-    const popMin = Math.min(...pops) - 1, popMax = Math.max(...pops) + 1;
-    drawSparkline('sp-pop', pops, '#4fc3f7', popMin, popMax);
-    setText('sp-pop-val', pops[pops.length - 1]);
-
-    const bdMin = Math.min(...bds, 0.85), bdMax = Math.max(...bds, 1.15);
-    drawSparkline('sp-bd', bds, bd < 0.95 ? '#c0392b' : bd < 1.05 ? '#d4a84b' : '#4caf6e', bdMin, bdMax);
-    setText('sp-bd-val', bds[bds.length - 1].toFixed(3));
-
-    const atpMin = Math.min(...atps) * 0.9, atpMax = Math.max(...atps) * 1.1;
-    drawSparkline('sp-atp', atps, '#ffd54f', atpMin, atpMax);
-    setText('sp-atp-val', atps[atps.length - 1].toFixed(0));
-
-    const fitMin = Math.min(...fits) * 0.95, fitMax = Math.max(...fits) * 1.05;
-    drawSparkline('sp-fit', fits, '#ce93d8', fitMin, fitMax);
-    setText('sp-fit-val', fits[fits.length - 1].toFixed(4));
-  }
+  // ── HISTORY TABLE ──
+  document.getElementById('hist-count').textContent = hist.length;
+  // show newest first
+  const reversedHist = [...hist].reverse();
+  document.getElementById('history-body').innerHTML = reversedHist.map(e => {
+    return `<tr>
+      <td class="r">${n(e.ep)}</td>
+      <td class="r">${e.pop}</td>
+      <td class="r">${e.cap}</td>
+      <td class="r ${e.b > 0 ? 'birth-cell' : ''}">${e.b}</td>
+      <td class="r ${e.d > 0 ? 'death-cell' : ''}">${e.d}</td>
+      <td class="r ${e.st > 0 ? 'stasis-cell' : ''}">${e.st}</td>
+      <td class="r">${n(e.atp, 1)}</td>
+      <td class="r">${e.mf.toFixed(4)}</td>
+      <td class="r">${e.xf.toFixed(4)}</td>
+      <td class="r">${e.dec.toFixed(2)}</td>
+      <td class="r">${e.tax.toFixed(2)}</td>
+    </tr>`;
+  }).join('');
 }
 
-async function fetchState() {
+// ── POLL ──
+async function poll() {
+  const dot = document.getElementById('poll-dot');
+  const txt = document.getElementById('update-text');
   try {
-    const r = await fetch(DATA_URL + '?t=' + Date.now());
-    if (r.ok) applyState(await r.json());
-  } catch (_) { /* tolerate fetch failure */ }
+    const res = await fetch(DATA_URL + '?t=' + Date.now());
+    if (!res.ok) throw new Error(res.status);
+    const d = await res.json();
+    prevData = d;
+    render(d);
+    dot.classList.add('live');
+    txt.textContent = 'updated ' + new Date().toLocaleTimeString();
+    setTimeout(() => dot.classList.remove('live'), 2000);
+  } catch (e) {
+    dot.classList.remove('live');
+    txt.textContent = 'fetch failed — retrying';
+  }
 }
 
-function flashPhaseBanner() {
-  const el = document.getElementById('phase-banner');
-  el.style.opacity = '1';
-  setTimeout(() => { el.style.opacity = '0'; }, 3500);
-}
-
-// ═══════════════════════════════════════════════════════
-//  INTERACTION
-// ═══════════════════════════════════════════════════════
-const raycaster = new THREE.Raycaster();
-const mPos      = new THREE.Vector2();
-const tooltip   = document.getElementById('tooltip');
-
-window.addEventListener('mousemove', e => {
-  mPos.x =  (e.clientX / innerWidth)  * 2 - 1;
-  mPos.y = -(e.clientY / innerHeight) * 2 + 1;
-  tooltip.style.left = (e.clientX + 16) + 'px';
-  tooltip.style.top  = (e.clientY + 12) + 'px';
-
-  raycaster.setFromCamera(mPos, camera);
-  const hits = raycaster.intersectObjects(agentObjs.map(o => o.mesh));
-  if (hits.length) {
-    const d = hits[0].object.userData.agentData;
-    if (d) {
-      const stasis = (d.contracts ?? 0) === 0 && !d.prim;
-      tooltip.innerHTML = [
-        `<b style="color:${ROLE_HEX[d.role] ?? '#8ab4c8'}">${d.role ?? '—'}</b>`,
-        `Rep: ${(d.rep ?? 0).toFixed(4)}`,
-        `Gen: ${d.gen ?? 0}`,
-        `Contracts: ${(d.contracts ?? 0).toLocaleString()}`,
-        `Mutation: ${(d.mut ?? 0.01).toFixed(3)}`,
-        `Basal: ${(d.basal ?? 1.0).toFixed(1)}`,
-        d.prim ? '<span style="color:#ffd700">&#9733; PRIMORDIAL</span>' : '',
-        stasis ? '<span style="color:#d4a84b">&#9673; LOW ACTIVITY</span>' : '',
-      ].filter(Boolean).join('<br>');
-      tooltip.style.display = 'block';
-    }
-  } else {
-    tooltip.style.display = 'none';
-  }
-});
-
-window.addEventListener('click', () => {
-  raycaster.setFromCamera(mPos, camera);
-  const hits = raycaster.intersectObjects(agentObjs.map(o => o.mesh));
-  if (hits.length) {
-    const idx = hits[0].object.userData.index;
-    isolatedIdx = isolatedIdx === idx ? null : idx;
-  } else {
-    isolatedIdx = null;
-  }
-  agentObjs.forEach((o, i) => {
-    const dim = isolatedIdx !== null && i !== isolatedIdx;
-    o.mesh.material.opacity = dim ? 0.08 : 0.88;
-    if (o.trailLine) o.trailLine.material.opacity = dim ? 0.03 : 0.16;
-  });
-});
-
-window.addEventListener('keydown', e => {
-  if (e.key !== 'a' && e.key !== 'A') return;
-  adversarialMode = !adversarialMode;
-  document.getElementById('stress-badge').style.display = adversarialMode ? 'block' : 'none';
-  shellMatOuter.uniforms.rimStrength.value = adversarialMode ? 0.30 : 0.18;
-  hzMat.color.set(adversarialMode ? 0x3a1010 : 0x1a3a5a);
-  hzMat.opacity = adversarialMode ? 0.10 : 0.055;
-  if (adversarialMode) flashPhaseBanner();
-});
-
-window.addEventListener('resize', () => {
-  camera.aspect = innerWidth / innerHeight;
-  camera.updateProjectionMatrix();
-  renderer.setSize(innerWidth, innerHeight);
-});
-
-// ═══════════════════════════════════════════════════════
-//  ANIMATION LOOP
-// ═══════════════════════════════════════════════════════
-const clock = new THREE.Clock();
-let lastFetch = -6;
-
-function animate() {
-  requestAnimationFrame(animate);
-  const t = clock.getElapsedTime();
-
-  // Refresh data every 6 seconds
-  if (t - lastFetch >= 6) { lastFetch = t; fetchState(); }
-
-  // Shader time + seasonal tension
-  currentTension += (targetTension - currentTension) * 0.02;
-  shellMatInner.uniforms.uTime.value    = t;
-  shellMatOuter.uniforms.uTime.value    = t;
-  shellMatInner.uniforms.uTension.value = currentTension;
-  shellMatOuter.uniforms.uTension.value = currentTension;
-
-  // Liquid core vertex displacement (seasonal viscosity)
-  const pArr = coreGeo.attributes.position.array;
-  const sCfg = SEASON_CFG[currentSeason] ?? SEASON_CFG.Autumn;
-  const viscosity = currentSeason === 'Spring' ? 0.7 :
-                    currentSeason === 'Summer' ? 0.5 :
-                    currentSeason === 'Winter' ? 1.5 : 1.0;
-  const freq = adversarialMode ? 4.8 : 2.9 / viscosity;
-  const amp  = adversarialMode ? 0.10 : 0.055 * (2.0 - viscosity);
-  for (let i = 0; i < pArr.length; i += 3) {
-    const ox = coreOrigPx[i], oy = coreOrigPx[i+1], oz = coreOrigPx[i+2];
-    const dd = Math.sin(ox * freq + t * 1.1 / viscosity)
-             * Math.cos(oy * freq + t * 0.8 / viscosity)
-             * Math.sin(oz * freq + t * 0.95 / viscosity) * amp;
-    pArr[i]   = ox + ox * dd;
-    pArr[i+1] = oy + oy * dd;
-    pArr[i+2] = oz + oz * dd;
-  }
-  coreGeo.attributes.position.needsUpdate = true;
-  coreGeo.computeVertexNormals();
-
-  // Core pulse
-  const basePulse = 1.0 + 0.20 * Math.sin(t * (adversarialMode ? 3.8 : 1.5 / viscosity));
-  coreLight.intensity       = 2.5 * basePulse;
-  coreMat.emissiveIntensity = sCfg.coreEmit * basePulse;
-
-  // Agent droplet orbits — organic, alive
-  const seasonOrbMul = currentSeason === 'Autumn' ? 0.75 : 1.0;
-  agentObjs.forEach((o, i) => {
-    const spd = o.orbitSpeed * controls.autoRotateSpeed * 0.02 / viscosity;
-    o.orbitPhase += spd + (adversarialMode ? Math.sin(t * 2.3 + i) * 0.003 : 0);
-
-    // Organic wobble — unique per agent
-    const wobble = o.wobbleAmp * Math.sin(t * o.noiseFreq + o.noisePhase + i * 1.3);
-    const breathWobble = 0.03 * Math.sin(t * o.breathRate + i * 2.7);
-
-    // Occasional jitter bursts
-    const jitter = Math.sin(t * 0.025 + o.jitterTimer) > 0.97
-      ? 0.15 * Math.sin(t * 7.3 + i) : 0;
-
-    const phi    = o.phi + wobble + jitter;
-    const theta  = o.orbitPhase;
-    const rr     = (o.r + 0.14 * Math.sin(t * 0.5 + i * 0.9) + breathWobble) * seasonOrbMul;
-
-    o.mesh.position.set(
-      rr * Math.sin(phi) * Math.cos(theta),
-      rr * Math.cos(phi),
-      rr * Math.sin(phi) * Math.sin(theta),
-    );
-
-    // Agent swell animation
-    if (o.targetSize != null) {
-      const currentScale = o.mesh.scale.x;
-      const target = o.targetSize / o.baseSize;
-      const breath = 1.0 + 0.04 * Math.sin(t * o.breathRate * 2.0 + i);
-      const swell = target * breath;
-      const newScale = currentScale + (swell - currentScale) * 0.04;
-      o.mesh.scale.setScalar(newScale);
-    }
-
-    // Update micro trail
-    o.trailHist.push(o.mesh.position.clone());
-    if (o.trailHist.length > TRAIL_LEN) o.trailHist.shift();
-    const ta = o.trailGeo.attributes.position.array;
-    o.trailHist.forEach((p, j) => { ta[j*3] = p.x; ta[j*3+1] = p.y; ta[j*3+2] = p.z; });
-    o.trailGeo.attributes.position.needsUpdate = true;
-
-    // Keep rings facing camera
-    o.mesh.children.forEach(c => {
-      if (c.geometry?.parameters?.innerRadius != null) c.lookAt(camera.position);
-    });
-  });
-
-  // Volumetric haze brownian drift (seasonal)
-  const ha = hzGeo.attributes.position.array;
-  const hdm = hazeDriftMul;
-  for (let i = 0; i < HAZE_N; i++) {
-    const ix = i * 3;
-    hzVel[i].x += (Math.random() - 0.5) * 0.0012 * hdm;
-    hzVel[i].y += (Math.random() - 0.5) * 0.0006 * hdm;
-    hzVel[i].z += (Math.random() - 0.5) * 0.0012 * hdm;
-
-    ha[ix]   += hzVel[i].x;
-    ha[ix+1] += hzVel[i].y;
-    ha[ix+2] += hzVel[i].z;
-
-    const dx = ha[ix], dy = ha[ix+1], dz = ha[ix+2];
-    const d2 = dx*dx + dy*dy + dz*dz;
-    if (d2 > (SPHERE_R * 0.90) ** 2) {
-      const inv = 1.0 / Math.sqrt(d2);
-      hzVel[i].x -= dx * inv * 0.006;
-      hzVel[i].y -= dy * inv * 0.006;
-      hzVel[i].z -= dz * inv * 0.006;
-    }
-    hzVel[i].x *= 0.994;
-    hzVel[i].z *= 0.994;
-    hzVel[i].y  = Math.max(-0.005, Math.min(0.016, hzVel[i].y));
-  }
-  hzGeo.attributes.position.needsUpdate = true;
-  const targetHazeOp = adversarialMode ? 0.10 : (SEASON_CFG[currentSeason]?.hazeOpacity ?? 0.055);
-  hzMat.opacity += (targetHazeOp - hzMat.opacity) * 0.02;
-
-  // Treasury current particles
-  const ca = cpGeo.attributes.position.array;
-  for (let i = 0; i < CURRENT_N; i++) {
-    const ix = i * 3;
-    ca[ix]   += cpVel[i].x;
-    ca[ix+1] += cpVel[i].y;
-    ca[ix+2] += cpVel[i].z;
-    cpVel[i].life += 0.014;
-    if (cpVel[i].life > 1 || ca[ix+1] > 0.6) {
-      const a = Math.random() * Math.PI * 2, rr = Math.random() * 1.6;
-      ca[ix]   = Math.cos(a) * rr;
-      ca[ix+1] = -3.5 + Math.random() * 0.3;
-      ca[ix+2] = Math.sin(a) * rr;
-      cpVel[i] = {
-        x: (Math.random()-0.5)*0.014, y: Math.random()*0.045+0.018,
-        z: (Math.random()-0.5)*0.014, life: 0,
-      };
-    }
-  }
-  cpGeo.attributes.position.needsUpdate = true;
-
-  // Sediment scale animation (treasury drain)
-  const curSedScale = sediment.scale.x;
-  const newSedScale = curSedScale + (targetSedScale - curSedScale) * 0.02;
-  sediment.scale.set(newSedScale, targetSedScale, newSedScale);
-  sedGlow.scale.copy(sediment.scale);
-  sedGlowMat.opacity = 0.17 + 0.06 * Math.sin(t * 0.58);
-  sedMat.emissiveIntensity = 0.3 + 0.25 * targetSedScale + 0.1 * Math.sin(t * 0.4);
-
-  controls.update();
-  renderer.render(scene, camera);
-}
-
-// ═══════════════════════════════════════════════════════
-//  BOOT
-// ═══════════════════════════════════════════════════════
-fetchState();
-animate();
+poll();
+setInterval(poll, POLL_MS);
 </script>
 </body>
 </html>
