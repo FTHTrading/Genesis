@@ -7,7 +7,7 @@ ORCID: [0009-0008-8425-939X](https://orcid.org/0009-0008-8425-939X)
 
 **Version 1.0 — February 21, 2026** | [GitHub Repository](https://github.com/FTHTrading/AI) | [Live Documentation](https://fthtrading.github.io/AI/)
 
-DOI: [10.5281/zenodo.18646886](https://doi.org/10.5281/zenodo.18646886)
+DOI: [10.5281/zenodo.18729652](https://doi.org/10.5281/zenodo.18729652)
 
 © 2026 Kevan Burns. Licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Source code licensed under MIT.
 
@@ -290,7 +290,7 @@ Provenance is established through six independent layers:
 | 3 | Merkle trees | `dist/merkle.json` | Per-crate integrity proofs |
 | 4 | SHA-256 edition root | `cd78b3be...d2cc3` | Content integrity fingerprint |
 | 5 | ORCID | `0009-0008-8425-939X` | Author identity record |
-| 6 | DOI | `10.5281/zenodo.18646886` | Permanent academic identifier |
+| 6 | DOI | `10.5281/zenodo.18729652` | Permanent academic identifier |
 
 Table 2. Six-layer evidence chain.
 
@@ -665,8 +665,8 @@ Table B1. Per-crate Merkle roots and composite edition root.
   year      = {2026},
   month     = {February},
   version   = {1.0},
-  doi       = {10.5281/zenodo.18646886},
-  url       = {https://doi.org/10.5281/zenodo.18646886},
+  doi       = {10.5281/zenodo.18729652},
+  url       = {https://doi.org/10.5281/zenodo.18729652},
   note      = {Independent research. Reference implementation: 39 Rust source
                files, 10,015 lines, 143 tests. Edition root:
                cd78b3be6a7f569a8a7a24d49a47ccd01af0fa5ab7c8a04baa6f7ee0367d2cc3.}
@@ -675,15 +675,15 @@ Table B1. Per-crate Merkle roots and composite edition root.
 
 ### APA (7th Edition)
 
-Burns, K. (2026). *Genesis Protocol: A Lotka–Volterra inspired software organism with cryptographic provenance* (Version 1.0). Independent research. https://doi.org/10.5281/zenodo.18646886
+Burns, K. (2026). *Genesis Protocol: A Lotka–Volterra inspired software organism with cryptographic provenance* (Version 1.0). Independent research. https://doi.org/10.5281/zenodo.18729652
 
 ### Chicago
 
-Burns, Kevan. "Genesis Protocol: A Lotka–Volterra Inspired Software Organism with Cryptographic Provenance." Version 1.0. Independent research, February 2026. https://doi.org/10.5281/zenodo.18646886.
+Burns, Kevan. "Genesis Protocol: A Lotka–Volterra Inspired Software Organism with Cryptographic Provenance." Version 1.0. Independent research, February 2026. https://doi.org/10.5281/zenodo.18729652.
 
 ### IEEE
 
-K. Burns, "Genesis Protocol: A Lotka–Volterra Inspired Software Organism with Cryptographic Provenance," Independent research, v1.0, Feb. 2026. DOI: 10.5281/zenodo.18646886. [Online]. Available: https://doi.org/10.5281/zenodo.18646886
+K. Burns, "Genesis Protocol: A Lotka–Volterra Inspired Software Organism with Cryptographic Provenance," Independent research, v1.0, Feb. 2026. DOI: 10.5281/zenodo.18729652. [Online]. Available: https://doi.org/10.5281/zenodo.18729652
 
 ---
 

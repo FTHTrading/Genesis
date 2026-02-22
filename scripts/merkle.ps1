@@ -266,7 +266,7 @@ $provenance = @{
         @{ layer = 3; evidence = "Merkle trees";          purpose = "Per-crate integrity proofs";     record = "dist/merkle.json" }
         @{ layer = 4; evidence = "SHA-256 edition root";  purpose = "Content integrity fingerprint";  record = $editionRoot }
         @{ layer = 5; evidence = "ORCID";                 purpose = "Author identity record";         record = "0009-0008-8425-939X" }
-        @{ layer = 6; evidence = "DOI";                   purpose = "Permanent academic identifier";  record = "10.5281/zenodo.18646886" }
+        @{ layer = 6; evidence = "DOI";                   purpose = "Permanent academic identifier";  record = "10.5281/zenodo.18729652" }
     )
     on_chain_anchoring = @{
         description = "Edition root can be anchored on Polygon via the same LiteraryAnchor contract used for 2500-donkeys"
@@ -280,7 +280,7 @@ $provenance = @{
         @{
             title    = "The 2500 Donkeys: Deterministic Literary Publishing Protocol"
             repo     = "https://github.com/FTHTrading/2500-donkeys"
-            doi      = "10.5281/zenodo.18646886"
+            doi      = "10.5281/zenodo.18729652"
             relation = "Shared author identity, provenance methodology, and on-chain infrastructure"
         }
     )

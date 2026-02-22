@@ -268,4 +268,4 @@ Both protocols share:
 *"Systems that can prove their own integrity don't need trust."*
 
 Built with Rust. Verified with SHA-256. Anchored on Polygon.  
-DOI: 10.5281/zenodo.18646886 · ORCID: 0009-0008-8425-939X
+DOI: 10.5281/zenodo.18729652 · ORCID: 0009-0008-8425-939X
