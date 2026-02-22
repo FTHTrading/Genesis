@@ -169,6 +169,7 @@ mod tests {
             epochs_per_run: 5,
             metrics: vec![Metric::FinalPopulation, Metric::Collapsed],
             base_preset: PhysicsPreset::EarthPrime,
+            base_pressure_override: None,
             base_seed: 42,
         }
     }

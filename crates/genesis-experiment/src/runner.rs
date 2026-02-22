@@ -171,6 +171,11 @@ impl ExperimentRunner {
         // Build physics from preset
         let mut physics = WorldPhysics::preset(config.base_preset);
 
+        // Apply base pressure override if specified
+        if let Some(ref override_pressure) = config.base_pressure_override {
+            physics.pressure = override_pressure.clone();
+        }
+
         // Override the sweep variable
         apply_sweep_variable(&mut physics.pressure, config.sweep.variable, param_value);
 
@@ -391,6 +396,7 @@ mod tests {
             epochs_per_run: 10,
             metrics: vec![Metric::FinalPopulation, Metric::Collapsed, Metric::SurvivalEpochs],
             base_preset: PhysicsPreset::EarthPrime,
+            base_pressure_override: None,
             base_seed: 42,
         };
         let trial = ExperimentRunner::run_trial(&config, 0, 0, 0.00002, 42);
@@ -410,6 +416,7 @@ mod tests {
             epochs_per_run: 5,
             metrics: Metric::core_set(),
             base_preset: PhysicsPreset::EarthPrime,
+            base_pressure_override: None,
             base_seed: 100,
         };
         let result = ExperimentRunner::run(&config);
@@ -433,6 +440,7 @@ mod tests {
             epochs_per_run: 3,
             metrics: vec![Metric::FinalPopulation],
             base_preset: PhysicsPreset::EarthPrime,
+            base_pressure_override: None,
             base_seed: 999,
         };
         let result = ExperimentRunner::run(&config);
@@ -475,6 +483,7 @@ mod tests {
             epochs_per_run: 500,
             metrics: vec![Metric::Collapsed, Metric::SurvivalEpochs],
             base_preset: PhysicsPreset::EarthPrime,
+            base_pressure_override: None,
             base_seed: 42,
         };
         let result = ExperimentRunner::run(&config);

@@ -12,6 +12,7 @@
 
 use serde::{Serialize, Deserialize};
 use genesis_multiverse::PhysicsPreset;
+use gateway::world::PressureConfig;
 
 /// Which pressure parameter to sweep.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -215,6 +216,11 @@ pub struct ExperimentConfig {
     pub metrics: Vec<Metric>,
     /// Base physics preset (before sweep variable is applied).
     pub base_preset: PhysicsPreset,
+    /// Optional: custom base pressure config (overrides preset's pressure).
+    /// When set, the sweep variable is applied on top of this config
+    /// instead of the preset's default pressure.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub base_pressure_override: Option<PressureConfig>,
     /// Base seed for reproducibility (trial i at step j uses seed = base_seed + j * 1000 + i).
     pub base_seed: u64,
 }
@@ -289,6 +295,7 @@ mod tests {
             epochs_per_run: 100,
             metrics: Metric::core_set(),
             base_preset: PhysicsPreset::EarthPrime,
+            base_pressure_override: None,
             base_seed: 42,
         };
         // 3 steps × 10 runs = 30 worlds
@@ -306,6 +313,7 @@ mod tests {
             epochs_per_run: 50,
             metrics: vec![Metric::FinalPopulation],
             base_preset: PhysicsPreset::EarthPrime,
+            base_pressure_override: None,
             base_seed: 1000,
         };
         let mut seeds = std::collections::HashSet::new();
@@ -328,6 +336,7 @@ mod tests {
             epochs_per_run: 1000,
             metrics: Metric::core_set(),
             base_preset: PhysicsPreset::EarthPrime,
+            base_pressure_override: None,
             base_seed: 42,
         };
         let label = config.label();

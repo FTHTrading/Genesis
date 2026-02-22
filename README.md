@@ -1,6 +1,6 @@
 ﻿# Genesis Protocol
 
-Deterministic evolutionary economics engine. 13 crates. 345 tests. Pure Rust.
+Deterministic evolutionary economics engine. 13 crates. 349 tests. Pure Rust.
 
 Digital organisms are born with cryptographic genomes, metabolize scarce resources, mutate under selective pressure, and die when they can't pay their entropy cost. Institutional mechanisms — treasury, taxation, catastrophe events, adaptive regulation — emerge as endogenous feedback loops, not exogenous parameters. Every state transition is deterministically replayable and cryptographically verifiable.
 
@@ -10,7 +10,7 @@ This is not a simulation wrapper. It is a research platform for conducting repro
 
 ## What Has Been Proven
 
-Four flagship experiments. 680 independent world simulations. 340,000 total economic epochs. Zero civilization collapses.
+Eight controlled experiments across five research domains. 1,220 independent world simulations. 610,000 total economic epochs. Zero civilization collapses.
 
 | Experiment | Worlds | Epochs | Key Finding |
 |---|---|---|---|
@@ -18,6 +18,7 @@ Four flagship experiments. 680 independent world simulations. 340,000 total econ
 | **Catastrophe Resilience** | 140 | 70,000 | 0–3% catastrophe probability per epoch → zero collapses. Deaths scale linearly (0 → 12.4). Population declines only 4.6%. |
 | **Inequality Threshold** | 160 | 80,000 | Varying wealth tax threshold from 0.20 to 0.90 produces 31.6% Gini increase. Population stability and mean fitness remain invariant. |
 | **Treasury Stability** | 180 | 90,000 | Sweeping reserve deployment threshold 0.10–0.90: aggressive deployment yields 2.1% higher fitness, <1% Gini variation. Zero collapses at any policy. |
+| **FTH Reserve Stress** (4 tiers) | 540 | 270,000 | Optimal treasury threshold shifts +0.60 (0.10→0.70) from calm to crisis. Crossover detected: deployment outperforms hoarding until shock rate exceeds 1.5%. |
 
 All results are deterministically reproducible from seed `20260222`, verified via SHA-256 result hashing, and exported as CSV datasets for independent analysis.
 
@@ -64,7 +65,7 @@ git clone https://github.com/FTHTrading/AI.git
 cd AI
 cargo build --release
 
-# Run all four flagship experiments (~27 seconds)
+# Run all eight experiments (~49 seconds)
 cargo run --release --bin run_experiments
 
 # Results appear in experiments/
@@ -72,10 +73,14 @@ cargo run --release --bin run_experiments
 #   catastrophe_resilience/ — 140 worlds, data + manifest + report
 #   inequality_threshold/   — 160 worlds, data + manifest + report
 #   treasury_stability/     — 180 worlds, data + manifest + report
+#   fth_reserve_calm/       — 135 worlds, shock=0.001
+#   fth_reserve_moderate/   — 135 worlds, shock=0.005
+#   fth_reserve_stressed/   — 135 worlds, shock=0.015
+#   fth_reserve_crisis/     — 135 worlds, shock=0.030
 
 # Verify the full test suite
 cargo test --workspace
-# Expected: 345 passed, 0 failed
+# Expected: 349 passed, 0 failed
 ```
 
 Each experiment exports:
@@ -90,10 +95,10 @@ Each experiment exports:
 | Metric | Value |
 |---|---|
 | Crates | 13 |
-| Tests | 345 passing, 0 failed, 7 ignored |
+| Tests | 349 passing, 0 failed, 7 ignored |
 | Compiler warnings | 0 |
-| Experiment worlds | 680 |
-| Total epochs simulated | 340,000 |
+| Experiment worlds | 1,220 |
+| Total epochs simulated | 610,000 |
 | Civilization collapses | 0 |
 | Deterministic seed | `20260222` |
 | Result verification | SHA-256 manifest hash per experiment |
@@ -102,15 +107,15 @@ Each experiment exports:
 
 ## Deliverables
 
-**[Genesis Experiment Pack v2](deliverables/genesis-experiment-pack-v2/)** — Portable bundle containing the executive brief, all four flagship experiment outputs (manifests, CSV datasets, reports), reproduction instructions, and SHA-256 integrity verification. Self-contained and independently verifiable. Includes the Treasury Stability domain experiment (180 worlds, 90,000 epochs).
+**[Genesis Experiment Pack v3](deliverables/genesis-experiment-pack-v3/)** — Portable bundle containing the executive brief, all eight experiment outputs (manifests, CSV datasets, reports), reproduction instructions, and SHA-256 integrity verification. Self-contained and independently verifiable. Includes the 4-tier FTH Reserve Stress Suite (540 worlds, 270,000 epochs, crossover analysis).
 
 Rebuild the pack:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File scripts/build_experiment_pack_v2.ps1
+powershell -ExecutionPolicy Bypass -File scripts/build_experiment_pack_v3.ps1
 ```
 
-[Pack v1](deliverables/genesis-experiment-pack-v1/) remains available (3 experiments, 500 worlds).
+[Pack v2](deliverables/genesis-experiment-pack-v2/) (4 experiments, 680 worlds) and [Pack v1](deliverables/genesis-experiment-pack-v1/) (3 experiments, 500 worlds) remain available.
 
 ---
 

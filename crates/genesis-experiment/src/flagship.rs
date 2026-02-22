@@ -18,6 +18,7 @@
 
 use crate::config::{ExperimentConfig, ParameterSweep, Metric, SweepVariable};
 use genesis_multiverse::PhysicsPreset;
+use gateway::world::PressureConfig;
 
 /// Factory for the three flagship experiments.
 pub struct FlagshipExperiments;
@@ -57,6 +58,7 @@ impl FlagshipExperiments {
                 Metric::TotalPressureMutations,
             ],
             base_preset: PhysicsPreset::EarthPrime,
+            base_pressure_override: None,
             base_seed: 20260222, // Date seed: Feb 22, 2026
         }
     }
@@ -94,6 +96,7 @@ impl FlagshipExperiments {
                 Metric::BirthDeathRatio,
             ],
             base_preset: PhysicsPreset::EarthPrime,
+            base_pressure_override: None,
             base_seed: 20260222,
         }
     }
@@ -134,6 +137,7 @@ impl FlagshipExperiments {
                 Metric::RoleEntropy,
             ],
             base_preset: PhysicsPreset::EarthPrime,
+            base_pressure_override: None,
             base_seed: 20260222,
         }
     }
@@ -176,6 +180,118 @@ impl FlagshipExperiments {
                 Metric::RoleEntropy,
             ],
             base_preset: PhysicsPreset::EarthPrime,
+            base_pressure_override: None,
+            base_seed: 20260222,
+        }
+    }
+
+    // ─── FTH Reserve Stress Suite ───────────────────────────────────────
+    //
+    // 4-tier shock experiment: How should reserve deployment policy
+    // change when external shock frequency increases?
+    //
+    // Each tier sets a different baseline catastrophe_base_prob
+    // (representing market shock frequency) while sweeping
+    // treasury_overflow_threshold (reserve deployment policy).
+    //
+    // Maps FTH domain concepts to Genesis parameters:
+    //   RWA-backed reserve    → treasury overflow threshold
+    //   Market shock frequency → catastrophe_base_prob
+    //   Economic stress        → entropy taxation
+    //   Wealth concentration   → Gini threshold
+    //
+    // Answers: "Should reserve deployment policy change when
+    // market conditions deteriorate?"
+
+    /// FTH Reserve Stress — Calm Market (shock = 0.001)
+    ///
+    /// Baseline: Low shock frequency, representing stable market conditions.
+    /// Sweeps treasury_overflow_threshold 0.10 → 0.90.
+    /// 9 steps × 15 runs × 500 epochs = 135 worlds, 67,500 epochs.
+    pub fn fth_reserve_calm() -> ExperimentConfig {
+        Self::fth_reserve_tier("Calm", 0.001,
+            "Under calm market conditions (shock=0.001), aggressive treasury \
+             deployment outperforms hoarding with minimal downside risk")
+    }
+
+    /// FTH Reserve Stress — Moderate Market (shock = 0.005)
+    ///
+    /// Baseline: Moderate shock frequency, representing normal volatility.
+    /// Sweeps treasury_overflow_threshold 0.10 → 0.90.
+    /// 9 steps × 15 runs × 500 epochs = 135 worlds, 67,500 epochs.
+    pub fn fth_reserve_moderate() -> ExperimentConfig {
+        Self::fth_reserve_tier("Moderate", 0.005,
+            "Under moderate shocks (shock=0.005), the optimal deployment \
+             threshold shifts toward conservative reserves")
+    }
+
+    /// FTH Reserve Stress — Stressed Market (shock = 0.015)
+    ///
+    /// Baseline: High shock frequency, representing market stress.
+    /// Sweeps treasury_overflow_threshold 0.10 → 0.90.
+    /// 9 steps × 15 runs × 500 epochs = 135 worlds, 67,500 epochs.
+    pub fn fth_reserve_stressed() -> ExperimentConfig {
+        Self::fth_reserve_tier("Stressed", 0.015,
+            "Under stressed conditions (shock=0.015), reserve hoarding begins \
+             to outperform deployment as shock recovery demands liquidity buffers")
+    }
+
+    /// FTH Reserve Stress — Crisis Market (shock = 0.030)
+    ///
+    /// Baseline: Extreme shock frequency, representing crisis conditions.
+    /// Sweeps treasury_overflow_threshold 0.10 → 0.90.
+    /// 9 steps × 15 runs × 500 epochs = 135 worlds, 67,500 epochs.
+    pub fn fth_reserve_crisis() -> ExperimentConfig {
+        Self::fth_reserve_tier("Crisis", 0.030,
+            "Under crisis conditions (shock=0.030), conservative reserve \
+             management becomes critical for survival — deployment policy \
+             must shift dramatically or civilizations collapse")
+    }
+
+    /// Returns all 4 FTH reserve stress tier experiments.
+    pub fn fth_reserve_stress_suite() -> Vec<(&'static str, ExperimentConfig)> {
+        vec![
+            ("fth_reserve_calm", Self::fth_reserve_calm()),
+            ("fth_reserve_moderate", Self::fth_reserve_moderate()),
+            ("fth_reserve_stressed", Self::fth_reserve_stressed()),
+            ("fth_reserve_crisis", Self::fth_reserve_crisis()),
+        ]
+    }
+
+    /// Internal: build a single FTH reserve stress tier experiment.
+    fn fth_reserve_tier(tier_label: &str, shock_prob: f64, hypothesis: &str) -> ExperimentConfig {
+        let mut base_pressure = PressureConfig::default();
+        base_pressure.catastrophe_base_prob = shock_prob;
+
+        ExperimentConfig {
+            name: format!("FTH Reserve Stress — {} (shock={:.3})", tier_label, shock_prob),
+            hypothesis: hypothesis.into(),
+            sweep: ParameterSweep::new(
+                SweepVariable::TreasuryOverflowThreshold,
+                0.10,
+                0.90,
+                0.10,
+            ),
+            runs_per_step: 15,
+            epochs_per_run: 500,
+            metrics: vec![
+                Metric::FinalPopulation,
+                Metric::Collapsed,
+                Metric::SurvivalEpochs,
+                Metric::TreasuryRatio,
+                Metric::GiniCoefficient,
+                Metric::MeanFitness,
+                Metric::MeanPopulation,
+                Metric::PopulationVolatility,
+                Metric::TotalBirths,
+                Metric::TotalDeaths,
+                Metric::BirthDeathRatio,
+                Metric::TotalCatastropheDeaths,
+                Metric::TotalEntropyBurned,
+                Metric::RoleEntropy,
+            ],
+            base_preset: PhysicsPreset::EarthPrime,
+            base_pressure_override: Some(base_pressure),
             base_seed: 20260222,
         }
     }
@@ -213,6 +329,38 @@ impl FlagshipExperiments {
         config
     }
 
+    pub fn fth_reserve_calm_quick() -> ExperimentConfig {
+        let mut config = Self::fth_reserve_calm();
+        config.name = "FTH Reserve Calm (Quick)".into();
+        config.runs_per_step = 3;
+        config.epochs_per_run = 50;
+        config
+    }
+
+    pub fn fth_reserve_moderate_quick() -> ExperimentConfig {
+        let mut config = Self::fth_reserve_moderate();
+        config.name = "FTH Reserve Moderate (Quick)".into();
+        config.runs_per_step = 3;
+        config.epochs_per_run = 50;
+        config
+    }
+
+    pub fn fth_reserve_stressed_quick() -> ExperimentConfig {
+        let mut config = Self::fth_reserve_stressed();
+        config.name = "FTH Reserve Stressed (Quick)".into();
+        config.runs_per_step = 3;
+        config.epochs_per_run = 50;
+        config
+    }
+
+    pub fn fth_reserve_crisis_quick() -> ExperimentConfig {
+        let mut config = Self::fth_reserve_crisis();
+        config.name = "FTH Reserve Crisis (Quick)".into();
+        config.runs_per_step = 3;
+        config.epochs_per_run = 50;
+        config
+    }
+
     /// List all flagship experiment names.
     pub fn list() -> Vec<&'static str> {
         vec![
@@ -220,6 +368,10 @@ impl FlagshipExperiments {
             "Catastrophe Resilience: Survival Under Fire",
             "Inequality Threshold: When Does Redistribution Help?",
             "Treasury Stability: Reserve Deployment Policy",
+            "FTH Reserve Stress — Calm",
+            "FTH Reserve Stress — Moderate",
+            "FTH Reserve Stress — Stressed",
+            "FTH Reserve Stress — Crisis",
         ]
     }
 }
@@ -308,10 +460,50 @@ mod tests {
     #[test]
     fn flagship_list() {
         let list = FlagshipExperiments::list();
-        assert_eq!(list.len(), 4);
+        assert_eq!(list.len(), 8);
         assert!(list[0].contains("Entropy"));
         assert!(list[1].contains("Catastrophe"));
         assert!(list[2].contains("Inequality"));
         assert!(list[3].contains("Treasury"));
+        assert!(list[4].contains("Calm"));
+        assert!(list[5].contains("Moderate"));
+        assert!(list[6].contains("Stressed"));
+        assert!(list[7].contains("Crisis"));
+    }
+
+    #[test]
+    fn fth_reserve_calm_config_valid() {
+        let config = FlagshipExperiments::fth_reserve_calm();
+        assert_eq!(config.sweep.step_count(), 9);
+        assert_eq!(config.total_worlds(), 135);
+        assert!(config.metrics.len() >= 13);
+        assert!(config.base_pressure_override.is_some());
+        let p = config.base_pressure_override.unwrap();
+        assert!((p.catastrophe_base_prob - 0.001).abs() < 1e-10);
+    }
+
+    #[test]
+    fn fth_reserve_crisis_config_valid() {
+        let config = FlagshipExperiments::fth_reserve_crisis();
+        assert_eq!(config.sweep.step_count(), 9);
+        assert_eq!(config.total_worlds(), 135);
+        let p = config.base_pressure_override.unwrap();
+        assert!((p.catastrophe_base_prob - 0.030).abs() < 1e-10);
+    }
+
+    #[test]
+    fn fth_reserve_stress_suite_valid() {
+        let suite = FlagshipExperiments::fth_reserve_stress_suite();
+        assert_eq!(suite.len(), 4);
+        let total_worlds: usize = suite.iter().map(|(_, c)| c.total_worlds()).sum();
+        assert_eq!(total_worlds, 540);
+    }
+
+    #[test]
+    fn quick_fth_reserve_calm_runs() {
+        let config = FlagshipExperiments::fth_reserve_calm_quick();
+        let result = ExperimentRunner::run(&config);
+        assert_eq!(result.steps.len(), 9);
+        assert!(result.total_worlds > 0);
     }
 }
