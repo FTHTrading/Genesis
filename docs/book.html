@@ -528,6 +528,31 @@ td .val { font-family: var(--mono); color: var(--accent-warm); font-size: 13px; 
   padding: 12px 16px 16px;
   width: 320px;
 }
+/* ── Voice info display ──────── */
+.tts-voice-info {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  color: var(--text-dim);
+  padding: 6px 0 8px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 8px;
+}
+.tts-voice-quality {
+  font-size: 14px;
+  line-height: 1;
+  transition: color 0.3s;
+}
+.tts-time-display {
+  font-size: 10px;
+  color: var(--text-dim);
+  text-align: center;
+  margin-bottom: 8px;
+  font-family: var(--mono);
+  letter-spacing: 0.05em;
+}
+
 .tts-now-reading {
   font-size: 12px;
   color: var(--text-muted);
@@ -1468,29 +1493,38 @@ td .val { font-family: var(--mono); color: var(--accent-warm); font-size: 13px; 
   <div class="tts-fab" id="ttsFab" title="Open Narration">🎧</div>
   <div class="tts-body">
     <div class="tts-header">
-      <span class="tts-header-title">🎧 Narration</span>
+      <span class="tts-header-title">🎧 Narration Engine</span>
       <div class="tts-header-actions">
         <button id="ttsMinimize" title="Minimize">—</button>
       </div>
+    </div>
+    <div class="tts-voice-info" id="ttsVoiceInfo">
+      <span class="tts-voice-quality" id="ttsVoiceQuality">●</span>
+      <span id="ttsVoiceName">Detecting voices…</span>
+      <button id="ttsVoiceCycle" title="Cycle voice" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:11px;padding:2px 4px;">⟳</button>
     </div>
     <div class="tts-now-reading" id="ttsNowReading">
       <strong>Ready</strong> — Select a chapter to begin
     </div>
     <div class="tts-controls">
-      <button class="tts-btn small" id="ttsPrev" title="Previous paragraph">⏮</button>
+      <button class="tts-btn small" id="ttsPrev" title="Previous sentence">⏮</button>
       <button class="tts-btn primary" id="ttsPlay" title="Play / Pause">▶</button>
-      <button class="tts-btn small" id="ttsNext" title="Next paragraph">⏭</button>
+      <button class="tts-btn small" id="ttsNext" title="Next sentence">⏭</button>
       <div class="tts-progress" id="ttsProgress">
         <div class="tts-progress-fill" id="ttsProgressFill"></div>
       </div>
     </div>
+    <div class="tts-time-display" id="ttsTimeDisplay">
+      <span id="ttsCurrentIdx">0</span> / <span id="ttsTotalSegs">0</span> segments
+    </div>
     <div class="tts-meta">
       <div class="tts-speed">
         <span>Speed</span>
-        <button data-speed="0.8">0.8×</button>
+        <button data-speed="0.7">0.7×</button>
+        <button data-speed="0.85">0.85×</button>
         <button data-speed="1" class="active">1×</button>
-        <button data-speed="1.2">1.2×</button>
-        <button data-speed="1.5">1.5×</button>
+        <button data-speed="1.15">1.15×</button>
+        <button data-speed="1.3">1.3×</button>
       </div>
       <div class="tts-layer-toggle">
         <button id="ttsLayerStory" class="active" title="Read narrative prose">Story</button>
@@ -1507,13 +1541,16 @@ td .val { font-family: var(--mono); color: var(--accent-warm); font-size: 13px; 
 </div>
 
 <!-- ═══════════════════════════════════════════════════════════════ -->
-<!-- TTS NARRATION ENGINE                                           -->
+<!-- HIGH-QUALITY TTS NARRATION ENGINE v2                           -->
+<!-- Natural voice selection, sentence-level chunking, prosody      -->
 <!-- ═══════════════════════════════════════════════════════════════ -->
 <script>
 (function() {
   'use strict';
 
-  // ── Feature detection ──────────────────────
+  /* ══════════════════════════════════════════════════════════════
+     Feature detection
+     ══════════════════════════════════════════════════════════════ */
   if (!('speechSynthesis' in window)) {
     const panel = document.getElementById('ttsPanel');
     if (panel) panel.style.display = 'none';
@@ -1521,56 +1558,164 @@ td .val { font-family: var(--mono); color: var(--accent-warm); font-size: 13px; 
   }
 
   const synth = window.speechSynthesis;
-  const panel = document.getElementById('ttsPanel');
-  const fab = document.getElementById('ttsFab');
-  const playBtn = document.getElementById('ttsPlay');
-  const prevBtn = document.getElementById('ttsPrev');
-  const nextBtn = document.getElementById('ttsNext');
-  const nowReading = document.getElementById('ttsNowReading');
+  const panel        = document.getElementById('ttsPanel');
+  const fab          = document.getElementById('ttsFab');
+  const playBtn      = document.getElementById('ttsPlay');
+  const prevBtn      = document.getElementById('ttsPrev');
+  const nextBtn      = document.getElementById('ttsNext');
+  const nowReading   = document.getElementById('ttsNowReading');
   const progressFill = document.getElementById('ttsProgressFill');
-  const progressBar = document.getElementById('ttsProgress');
-  const minimizeBtn = document.getElementById('ttsMinimize');
+  const progressBar  = document.getElementById('ttsProgress');
+  const minimizeBtn  = document.getElementById('ttsMinimize');
+  const voiceNameEl  = document.getElementById('ttsVoiceName');
+  const voiceQualEl  = document.getElementById('ttsVoiceQuality');
+  const voiceCycleBtn= document.getElementById('ttsVoiceCycle');
+  const currentIdxEl = document.getElementById('ttsCurrentIdx');
+  const totalSegsEl  = document.getElementById('ttsTotalSegs');
 
-  // ── State ──────────────────────────────────
-  let segments = [];
-  let currentIdx = 0;
-  let isPlaying = false;
-  let isPaused = false;
-  let speed = 1.0;
-  let layer = 'story';  // 'story' | 'science' | 'both'
+  /* ══════════════════════════════════════════════════════════════
+     State
+     ══════════════════════════════════════════════════════════════ */
+  let segments       = [];
+  let currentIdx     = 0;
+  let isPlaying      = false;
+  let isPaused       = false;
+  let speed          = 1.0;
+  let layer          = 'story';
   let currentChapter = 'ch1';
-  let bestVoice = null;
-  let highlightedEl = null;
+  let bestVoice      = null;
+  let highlightedEl  = null;
+  let englishVoices  = [];
+  let voiceIndex     = 0;
+  let pauseTimer     = null;
 
-  // ── Voice selection ────────────────────────
-  // Prefer natural/premium voices; fall back gracefully
-  function pickVoice() {
-    const voices = synth.getVoices();
-    if (!voices.length) return null;
+  /* ══════════════════════════════════════════════════════════════
+     VOICE SELECTION — Natural / Neural priority
+     ══════════════════════════════════════════════════════════════ */
 
-    // Priority order: look for natural/enhanced English voices
-    const prefs = [
-      v => /natural|neural|enhanced|premium/i.test(v.name) && /en/i.test(v.lang),
-      v => /google.*us|google.*uk|microsoft.*zira|microsoft.*david|microsoft.*mark|samantha|karen|daniel|moira/i.test(v.name),
-      v => v.lang.startsWith('en') && !v.localService,
-      v => v.lang.startsWith('en')
+  // Voice quality tiers — higher = better
+  function voiceScore(v) {
+    const n = v.name.toLowerCase();
+    const l = v.lang.toLowerCase();
+
+    // Must be English
+    if (!l.startsWith('en')) return -1;
+
+    let score = 0;
+
+    // Tier 1: Neural / Natural voices (Edge, modern Chrome)
+    if (/\bnatural\b/i.test(n))    score += 1000;
+    if (/\bneural\b/i.test(n))     score += 900;
+    if (/\bonline\b/i.test(n))     score += 800;  // "Microsoft … Online (Natural)"
+
+    // Tier 2: Premium named voices known to sound good
+    const premiumNames = [
+      'jenny','aria','guy','davis','amber','ana','andrew','brian',
+      'christopher','emma','eric','michelle','monica','roger','steffan',
+      'samantha','karen','daniel','moira','tessa','fiona','rishi',
+      'allison','ava','susan','tom','zira','david','mark','hazel'
     ];
-
-    for (const test of prefs) {
-      const match = voices.find(test);
-      if (match) return match;
+    for (const pn of premiumNames) {
+      if (n.includes(pn)) { score += 500; break; }
     }
-    return voices[0];
+
+    // Tier 3: Google high-quality
+    if (/google/i.test(n)) score += 400;
+
+    // Tier 4: Microsoft voices (generally decent)
+    if (/microsoft/i.test(n)) score += 300;
+
+    // Tier 5: Apple voices
+    if (/alex|samantha|victoria/i.test(n)) score += 200;
+
+    // Prefer non-local (cloud/remote) voices — they're usually higher quality
+    if (!v.localService) score += 150;
+
+    // Prefer en-US > en-GB > others
+    if (l === 'en-us') score += 50;
+    if (l === 'en-gb') score += 40;
+
+    // Fallback: any English voice
+    if (score === 0) score = 1;
+
+    return score;
   }
 
-  // Voices load asynchronously in Chrome
-  if (synth.getVoices().length) {
-    bestVoice = pickVoice();
-  }
-  synth.onvoiceschanged = () => { bestVoice = pickVoice(); };
+  function loadVoices() {
+    const voices = synth.getVoices();
+    if (!voices.length) return;
 
-  // ── Content extraction ─────────────────────
-  // Smart DOM parser that extracts readable segments, skipping noise
+    // Filter and sort English voices by quality
+    englishVoices = voices
+      .filter(v => v.lang.toLowerCase().startsWith('en'))
+      .map(v => ({ voice: v, score: voiceScore(v) }))
+      .filter(x => x.score > 0)
+      .sort((a, b) => b.score - a.score)
+      .map(x => x.voice);
+
+    if (englishVoices.length) {
+      voiceIndex = 0;
+      bestVoice = englishVoices[0];
+      updateVoiceDisplay();
+    }
+  }
+
+  function updateVoiceDisplay() {
+    if (!bestVoice) {
+      voiceNameEl.textContent = 'No voice available';
+      voiceQualEl.style.color = 'var(--accent-red)';
+      return;
+    }
+
+    const n = bestVoice.name;
+    const score = voiceScore(bestVoice);
+
+    // Shortened display name
+    let displayName = n.replace(/Microsoft\s+/i, 'MS ')
+                       .replace(/\s+Online\s+\(Natural\)/i, ' Neural')
+                       .replace(/Google\s+/i, 'G ')
+                       .replace(/\s*-\s*English.*$/i, '');
+    if (displayName.length > 28) displayName = displayName.substring(0, 26) + '…';
+    voiceNameEl.textContent = displayName;
+
+    // Quality indicator
+    if (score >= 800) {
+      voiceQualEl.style.color = 'var(--accent-green)';
+      voiceQualEl.title = 'Neural / Natural voice — highest quality';
+    } else if (score >= 400) {
+      voiceQualEl.style.color = 'var(--accent)';
+      voiceQualEl.title = 'High quality voice';
+    } else if (score >= 200) {
+      voiceQualEl.style.color = 'var(--accent-warm)';
+      voiceQualEl.title = 'Standard quality voice';
+    } else {
+      voiceQualEl.style.color = 'var(--accent-red)';
+      voiceQualEl.title = 'Basic voice — try Edge browser for better quality';
+    }
+  }
+
+  // Load voices (sync in Firefox, async in Chrome/Edge)
+  loadVoices();
+  synth.onvoiceschanged = loadVoices;
+
+  // Cycle through available voices
+  voiceCycleBtn.addEventListener('click', () => {
+    if (englishVoices.length < 2) return;
+    voiceIndex = (voiceIndex + 1) % englishVoices.length;
+    bestVoice = englishVoices[voiceIndex];
+    updateVoiceDisplay();
+    // If playing, restart current segment with new voice
+    if (isPlaying) {
+      synth.cancel();
+      isPaused = false;
+      speakSegment(currentIdx);
+    }
+  });
+
+  /* ══════════════════════════════════════════════════════════════
+     CONTENT EXTRACTION — Sentence-level chunking
+     ══════════════════════════════════════════════════════════════ */
+
   function extractSegments(chapterId) {
     const chapter = document.getElementById(chapterId);
     if (!chapter) return [];
@@ -1588,24 +1733,38 @@ td .val { font-family: var(--mono); color: var(--accent-warm); font-size: 13px; 
             text: 'Scene ' + sceneNum.textContent.trim(),
             el: scene,
             type: 'heading',
-            scene: si
+            pause: 800
           });
         }
 
-        scene.querySelectorAll('p, blockquote').forEach(node => {
-          const text = cleanText(node);
-          if (text && text.length > 3) {
-            segs.push({ text, el: node, type: 'narrative', scene: si });
+        // Process all narrative elements in DOM order
+        scene.querySelectorAll('p, blockquote, .epitaph').forEach(node => {
+          if (node.classList.contains('epitaph')) {
+            const text = cleanText(node);
+            if (text) {
+              segs.push({ text, el: node, type: 'epitaph', pause: 1200 });
+            }
+            return;
           }
+
+          const text = cleanText(node);
+          if (!text || text.length < 4) return;
+
+          // Split into sentences for natural delivery
+          const sentences = splitSentences(text);
+          sentences.forEach((sent, i) => {
+            if (sent.length < 3) return;
+            segs.push({
+              text: sent,
+              el: node,
+              type: node.tagName === 'BLOCKQUOTE' ? 'quote' : 'narrative',
+              pause: i === sentences.length - 1 ? 500 : 250
+            });
+          });
         });
 
-        // Read epitaphs with gravitas
-        scene.querySelectorAll('.epitaph').forEach(ep => {
-          const text = cleanText(ep);
-          if (text) {
-            segs.push({ text: text, el: ep, type: 'epitaph', scene: si });
-          }
-        });
+        // Add scene break pause
+        segs.push({ text: '', el: null, type: 'pause', pause: 1000 });
       });
     }
 
@@ -1616,11 +1775,10 @@ td .val { font-family: var(--mono); color: var(--accent-warm); font-size: 13px; 
           text: 'Scientific Appendix.',
           el: appendix,
           type: 'heading',
-          scene: -1
+          pause: 1000
         });
       }
 
-      // Walk through appendix children in order
       const walker = document.createTreeWalker(
         appendix,
         NodeFilter.SHOW_ELEMENT,
@@ -1632,7 +1790,7 @@ td .val { font-family: var(--mono); color: var(--accent-warm); font-size: 13px; 
             }
             if (tag === 'TABLE') return NodeFilter.FILTER_ACCEPT;
             if (tag === 'DIV' && node.classList.contains('eq-block')) {
-              return NodeFilter.FILTER_REJECT; // Skip equations entirely
+              return NodeFilter.FILTER_REJECT;
             }
             return NodeFilter.FILTER_SKIP;
           }
@@ -1642,83 +1800,195 @@ td .val { font-family: var(--mono); color: var(--accent-warm); font-size: 13px; 
       let node;
       while (node = walker.nextNode()) {
         if (node.tagName === 'TABLE') {
-          // Summarize tables as spoken prose
           const summary = summarizeTable(node);
           if (summary) {
-            segs.push({ text: summary, el: node, type: 'table', scene: -1 });
+            segs.push({ text: summary, el: node, type: 'table', pause: 600 });
           }
         } else if (node.closest('.eq-block')) {
-          continue; // skip anything inside equation blocks
+          continue;
+        } else if (node.tagName === 'H3' || node.tagName === 'H4') {
+          const text = cleanText(node);
+          if (text) {
+            segs.push({ text, el: node, type: 'heading', pause: 700 });
+          }
         } else {
           const text = cleanText(node);
           if (text && text.length > 3) {
-            segs.push({ text, el: node, type: 'science', scene: -1 });
+            const sentences = splitSentences(text);
+            sentences.forEach((sent, i) => {
+              if (sent.length < 3) return;
+              segs.push({
+                text: sent,
+                el: node,
+                type: node.tagName === 'BLOCKQUOTE' ? 'quote' : 'science',
+                pause: i === sentences.length - 1 ? 400 : 200
+              });
+            });
           }
         }
       }
     }
 
+    // Remove trailing empty pauses
+    while (segs.length && segs[segs.length - 1].type === 'pause') segs.pop();
+
     return segs;
   }
 
-  // ── Text cleaning ─────────────────────────
+  /* ══════════════════════════════════════════════════════════════
+     SENTENCE SPLITTING — Natural phrasing boundaries
+     ══════════════════════════════════════════════════════════════ */
+
+  function splitSentences(text) {
+    // Split on sentence-ending punctuation followed by space + capital letter
+    // Also handle em-dashes and semicolons as natural pause points for long sentences
+    const raw = text.match(/[^.!?]+[.!?]+[\s"]*/g) || [text];
+
+    const result = [];
+    for (let s of raw) {
+      s = s.trim();
+      if (!s) continue;
+
+      // If a sentence is very long (>200 chars), split at natural pauses
+      if (s.length > 200) {
+        const parts = s.split(/\s*[—;]\s*/);
+        if (parts.length > 1 && parts.every(p => p.length > 20)) {
+          result.push(...parts.map(p => p.trim()).filter(p => p));
+          continue;
+        }
+      }
+      result.push(s);
+    }
+
+    return result;
+  }
+
+  /* ══════════════════════════════════════════════════════════════
+     TEXT CLEANING — Make text sound natural when spoken
+     ══════════════════════════════════════════════════════════════ */
+
   function cleanText(el) {
-    // Clone to avoid modifying DOM
     const clone = el.cloneNode(true);
 
-    // Remove equation blocks inside the element
+    // Remove math/equation elements
     clone.querySelectorAll('.eq-block, .eq-label, .katex, .katex-display').forEach(e => e.remove());
-    // Remove scene numbers (already handled separately)
     clone.querySelectorAll('.scene-number').forEach(e => e.remove());
-    // Remove scene dividers
     clone.querySelectorAll('.scene-divider').forEach(e => e.remove());
+    clone.querySelectorAll('.layer-label').forEach(e => e.remove());
 
     let text = clone.textContent || '';
 
-    // Clean up math artifacts
+    // Remove LaTeX artifacts
     text = text.replace(/\$\$[^$]+\$\$/g, '');
-    text = text.replace(/\$[^$]+\$/g, '');
+    text = text.replace(/\$([^$]+)\$/g, (_, expr) => {
+      // Convert simple math expressions to spoken form
+      return mathToSpoken(expr);
+    });
     text = text.replace(/\\[a-zA-Z]+\{[^}]*\}/g, '');
     text = text.replace(/[\u200B-\u200D\uFEFF]/g, '');
 
-    // Normalize whitespace
-    text = text.replace(/\s+/g, ' ').trim();
+    // ── Natural language improvements ──
 
-    // Make numbers more speakable
+    // Expand abbreviations
+    text = text.replace(/\bATP\b/g, 'A T P');
+    text = text.replace(/\bDOI\b/g, 'D O I');
+    text = text.replace(/\bGen\s+(\d)/g, 'generation $1');
+    text = text.replace(/\bEp\s+(\d)/g, 'epoch $1');
+    text = text.replace(/\bEpoch\s+(\d+)/g, 'epoch $1');
+
+    // Make hex IDs pronounceable — spell them out
+    text = text.replace(/\b([0-9A-F]{4})\b/g, (_, id) => id.split('').join(' '));
+    text = text.replace(/\b([0-9A-F]{5,6})\b/g, (_, id) => id.split('').join(' '));
+
+    // Make numbers more natural
     text = text.replace(/(\d+\.\d{5,})/g, (_, n) => parseFloat(n).toFixed(2));
+    text = text.replace(/(\d+),(\d{3})/g, '$1$2'); // remove comma grouping for speech
+    text = text.replace(/\b(\d+)×\b/g, '$1 times');
+    text = text.replace(/±/g, ' plus or minus ');
+    text = text.replace(/≈/g, ' approximately ');
+    text = text.replace(/→/g, ' becomes ');
+    text = text.replace(/↑/g, ' increases ');
+    text = text.replace(/↓/g, ' decreases ');
+    text = text.replace(/⚠️?/g, ' warning, ');
+
+    // Clean special characters
+    text = text.replace(/—/g, ' — ');
+    text = text.replace(/&middot;/g, ', ');
+    text = text.replace(/\s{2,}/g, ' ');
+    text = text.replace(/☠\s*/g, '');
+
+    // Trim
+    text = text.trim();
 
     return text;
   }
 
-  // ── Table summarization ────────────────────
+  // Convert simple LaTeX math to spoken English
+  function mathToSpoken(expr) {
+    if (!expr) return '';
+    let s = expr.trim();
+
+    // Common patterns
+    s = s.replace(/\\bar\{([^}]+)\}/g, '$1 bar');
+    s = s.replace(/\\frac\{([^}]+)\}\{([^}]+)\}/g, '$1 over $2');
+    s = s.replace(/\\sqrt\{([^}]+)\}/g, 'square root of $1');
+    s = s.replace(/\\sum/g, 'sum of');
+    s = s.replace(/\\ln/g, 'natural log');
+    s = s.replace(/\\log/g, 'log');
+    s = s.replace(/\\times/g, 'times');
+    s = s.replace(/\\text\{([^}]+)\}/g, '$1');
+    s = s.replace(/\\texttt\{([^}]+)\}/g, '$1');
+    s = s.replace(/\\approx/g, 'approximately');
+    s = s.replace(/\\leq?/g, 'less than or equal to');
+    s = s.replace(/\\geq?/g, 'greater than or equal to');
+    s = s.replace(/\\lt/g, 'less than');
+    s = s.replace(/\\gt/g, 'greater than');
+    s = s.replace(/\\pm/g, 'plus or minus');
+    s = s.replace(/\\implies/g, 'implies');
+    s = s.replace(/\\quad/g, ', ');
+    s = s.replace(/\\[a-zA-Z]+/g, ''); // Remove remaining commands
+    s = s.replace(/[{}^_]/g, ' ');
+    s = s.replace(/\s{2,}/g, ' ').trim();
+
+    // If it's trivially short (like a single variable), just read it
+    if (s.length <= 2) return s;
+
+    return s;
+  }
+
+  /* ══════════════════════════════════════════════════════════════
+     TABLE SUMMARIZATION — Conversational
+     ══════════════════════════════════════════════════════════════ */
+
   function summarizeTable(table) {
     const headers = Array.from(table.querySelectorAll('th')).map(th => th.textContent.trim());
     const rows = table.querySelectorAll('tbody tr');
 
     if (!headers.length || !rows.length) return null;
 
-    // For small tables (≤5 rows), read key columns
     if (rows.length <= 5) {
-      const parts = ['Table: ' + headers.join(', ') + '.'];
+      const parts = ['The data shows: '];
       rows.forEach(row => {
         const cells = Array.from(row.querySelectorAll('td')).map(td => td.textContent.trim());
         if (cells.length >= 2) {
-          parts.push(cells[0] + ': ' + cells.slice(1).join(', '));
+          parts.push(cells[0] + ' is ' + cells.slice(1).join(', ') + '. ');
         }
       });
-      return parts.join(' ');
+      return parts.join('');
     }
 
-    // For larger tables, just read header + first/last row
     const firstRow = Array.from(rows[0].querySelectorAll('td')).map(td => td.textContent.trim());
     const lastRow = Array.from(rows[rows.length - 1].querySelectorAll('td')).map(td => td.textContent.trim());
-    return 'Table with ' + rows.length + ' rows. ' +
-      headers.join(', ') + '. ' +
-      'First: ' + firstRow.join(', ') + '. ' +
-      'Last: ' + lastRow.join(', ') + '.';
+    return 'A table with ' + rows.length + ' entries. ' +
+      'Columns: ' + headers.join(', ') + '. ' +
+      'Starting with ' + firstRow.join(', ') + ', ' +
+      'ending with ' + lastRow.join(', ') + '.';
   }
 
-  // ── Speaking ───────────────────────────────
+  /* ══════════════════════════════════════════════════════════════
+     SPEAKING — Prosody-aware utterance generation
+     ══════════════════════════════════════════════════════════════ */
+
   function speakSegment(idx) {
     if (idx < 0 || idx >= segments.length) {
       stop();
@@ -1728,46 +1998,74 @@ td .val { font-family: var(--mono); color: var(--accent-warm); font-size: 13px; 
     currentIdx = idx;
     const seg = segments[idx];
 
+    // Handle pure pause segments (scene breaks)
+    if (seg.type === 'pause') {
+      updateNowReading(seg);
+      updateProgress();
+      if (isPlaying && !isPaused) {
+        pauseTimer = setTimeout(() => speakSegment(idx + 1), seg.pause || 800);
+      }
+      return;
+    }
+
     // Update UI
     updateNowReading(seg);
     updateProgress();
     highlightElement(seg.el, seg.type);
     scrollToElement(seg.el);
 
-    // Create utterance
+    // Create utterance with prosody appropriate to content type
     const utterance = new SpeechSynthesisUtterance(seg.text);
-    utterance.rate = speed;
-    utterance.pitch = getPitch(seg.type);
-    utterance.volume = 1;
+    const prosody = getProsody(seg.type);
+    utterance.rate   = speed * prosody.rateMultiplier;
+    utterance.pitch  = prosody.pitch;
+    utterance.volume = prosody.volume;
     if (bestVoice) utterance.voice = bestVoice;
 
     utterance.onend = () => {
       if (isPlaying && !isPaused) {
-        speakSegment(idx + 1);
+        // Natural pause between segments
+        const pauseMs = Math.round((seg.pause || 300) / speed);
+        pauseTimer = setTimeout(() => speakSegment(idx + 1), pauseMs);
       }
     };
 
     utterance.onerror = (e) => {
       if (e.error !== 'interrupted' && e.error !== 'canceled') {
         console.warn('TTS error:', e.error);
-        if (isPlaying) speakSegment(idx + 1);
+        if (isPlaying) {
+          pauseTimer = setTimeout(() => speakSegment(idx + 1), 200);
+        }
       }
     };
 
     synth.speak(utterance);
   }
 
-  function getPitch(type) {
+  // Content-type prosody profiles for natural narration
+  function getProsody(type) {
     switch (type) {
-      case 'heading': return 1.05;
-      case 'epitaph': return 0.85;
-      case 'science': return 0.95;
-      case 'table': return 0.9;
-      default: return 1.0;
+      case 'heading':
+        return { rateMultiplier: 0.92, pitch: 1.08, volume: 1.0 };
+      case 'narrative':
+        return { rateMultiplier: 0.96, pitch: 1.0,  volume: 1.0 };
+      case 'quote':
+        return { rateMultiplier: 0.90, pitch: 0.95, volume: 0.95 };
+      case 'epitaph':
+        return { rateMultiplier: 0.82, pitch: 0.85, volume: 0.90 };
+      case 'science':
+        return { rateMultiplier: 0.93, pitch: 0.97, volume: 1.0 };
+      case 'table':
+        return { rateMultiplier: 0.88, pitch: 0.93, volume: 0.95 };
+      default:
+        return { rateMultiplier: 0.95, pitch: 1.0,  volume: 1.0 };
     }
   }
 
-  // ── Highlight ──────────────────────────────
+  /* ══════════════════════════════════════════════════════════════
+     HIGHLIGHTING — Per-sentence tracking
+     ══════════════════════════════════════════════════════════════ */
+
   function highlightElement(el, type) {
     if (highlightedEl) {
       highlightedEl.classList.remove('tts-reading-highlight', 'tts-reading-highlight-science');
@@ -1782,13 +2080,17 @@ td .val { font-family: var(--mono); color: var(--accent-warm); font-size: 13px; 
   function scrollToElement(el) {
     if (!el) return;
     const rect = el.getBoundingClientRect();
-    const inView = rect.top >= 60 && rect.bottom <= window.innerHeight - 100;
+    const margin = 120;
+    const inView = rect.top >= 60 && rect.bottom <= window.innerHeight - margin;
     if (!inView) {
       el.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
   }
 
-  // ── Playback controls ─────────────────────
+  /* ══════════════════════════════════════════════════════════════
+     PLAYBACK CONTROLS
+     ══════════════════════════════════════════════════════════════ */
+
   function play() {
     if (isPaused) {
       synth.resume();
@@ -1812,6 +2114,7 @@ td .val { font-family: var(--mono); color: var(--accent-warm); font-size: 13px; 
   }
 
   function pause() {
+    clearTimeout(pauseTimer);
     synth.pause();
     isPaused = true;
     isPlaying = false;
@@ -1819,6 +2122,7 @@ td .val { font-family: var(--mono); color: var(--accent-warm); font-size: 13px; 
   }
 
   function stop() {
+    clearTimeout(pauseTimer);
     synth.cancel();
     isPlaying = false;
     isPaused = false;
@@ -1828,38 +2132,55 @@ td .val { font-family: var(--mono); color: var(--accent-warm); font-size: 13px; 
   }
 
   function next() {
+    clearTimeout(pauseTimer);
     synth.cancel();
     isPaused = false;
-    if (currentIdx < segments.length - 1) {
+    // Skip forward, skipping pure pauses
+    let nextIdx = currentIdx + 1;
+    while (nextIdx < segments.length && segments[nextIdx].type === 'pause') nextIdx++;
+
+    if (nextIdx < segments.length) {
       if (isPlaying) {
-        speakSegment(currentIdx + 1);
+        speakSegment(nextIdx);
       } else {
-        currentIdx++;
+        currentIdx = nextIdx;
         updateNowReading(segments[currentIdx]);
         updateProgress();
-        highlightElement(segments[currentIdx].el, segments[currentIdx].type);
-        scrollToElement(segments[currentIdx].el);
+        if (segments[currentIdx].el) {
+          highlightElement(segments[currentIdx].el, segments[currentIdx].type);
+          scrollToElement(segments[currentIdx].el);
+        }
       }
     }
   }
 
   function prev() {
+    clearTimeout(pauseTimer);
     synth.cancel();
     isPaused = false;
-    if (currentIdx > 0) {
+    // Skip backward, skipping pure pauses
+    let prevIdx = currentIdx - 1;
+    while (prevIdx > 0 && segments[prevIdx].type === 'pause') prevIdx--;
+
+    if (prevIdx >= 0) {
       if (isPlaying) {
-        speakSegment(currentIdx - 1);
+        speakSegment(prevIdx);
       } else {
-        currentIdx--;
+        currentIdx = prevIdx;
         updateNowReading(segments[currentIdx]);
         updateProgress();
-        highlightElement(segments[currentIdx].el, segments[currentIdx].type);
-        scrollToElement(segments[currentIdx].el);
+        if (segments[currentIdx].el) {
+          highlightElement(segments[currentIdx].el, segments[currentIdx].type);
+          scrollToElement(segments[currentIdx].el);
+        }
       }
     }
   }
 
-  // ── UI updates ─────────────────────────────
+  /* ══════════════════════════════════════════════════════════════
+     UI UPDATES
+     ══════════════════════════════════════════════════════════════ */
+
   function updatePlayButton() {
     playBtn.textContent = isPlaying ? '⏸' : '▶';
     playBtn.classList.toggle('playing', isPlaying);
@@ -1867,15 +2188,28 @@ td .val { font-family: var(--mono); color: var(--accent-warm); font-size: 13px; 
 
   function updateNowReading(seg) {
     if (!seg) return;
-    const typeLabel = {
-      heading: '📍',
-      narrative: '📖',
-      epitaph: '☠️',
-      science: '🔬',
-      table: '📊'
-    }[seg.type] || '📖';
-    const preview = seg.text.length > 120 ? seg.text.substring(0, 120) + '…' : seg.text;
-    nowReading.innerHTML = '<strong>' + typeLabel + ' ' + (currentIdx + 1) + '/' + segments.length + '</strong> — ' + escapeHtml(preview);
+    const typeLabels = {
+      heading:   '📍 Heading',
+      narrative: '📖 Story',
+      quote:     '💬 Quote',
+      epitaph:   '🪦 Epitaph',
+      science:   '🔬 Science',
+      table:     '📊 Data',
+      pause:     '⏸ Scene break'
+    };
+    const label = typeLabels[seg.type] || '📖';
+    const total = segments.filter(s => s.type !== 'pause').length;
+    const cur = segments.slice(0, currentIdx + 1).filter(s => s.type !== 'pause').length;
+    currentIdxEl.textContent = cur;
+    totalSegsEl.textContent = total;
+
+    if (seg.type === 'pause') {
+      nowReading.innerHTML = '<strong>' + label + '</strong>';
+      return;
+    }
+
+    const preview = seg.text.length > 100 ? seg.text.substring(0, 100) + '…' : seg.text;
+    nowReading.innerHTML = '<strong>' + label + '</strong> — ' + escapeHtml(preview);
   }
 
   function updateProgress() {
@@ -1889,9 +2223,13 @@ td .val { font-family: var(--mono); color: var(--accent-warm); font-size: 13px; 
     return div.innerHTML;
   }
 
-  // ── Rebuild segments when chapter/layer changes ──
+  /* ══════════════════════════════════════════════════════════════
+     REBUILD — When chapter or layer changes
+     ══════════════════════════════════════════════════════════════ */
+
   function rebuild() {
     const wasPlaying = isPlaying;
+    clearTimeout(pauseTimer);
     synth.cancel();
     isPlaying = false;
     isPaused = false;
@@ -1905,20 +2243,19 @@ td .val { font-family: var(--mono); color: var(--accent-warm); font-size: 13px; 
     } else {
       nowReading.innerHTML = '<strong>Ready</strong> — No content for this selection';
       progressFill.style.width = '0%';
+      currentIdxEl.textContent = '0';
+      totalSegsEl.textContent = '0';
     }
     updatePlayButton();
   }
 
-  // ── Event bindings ─────────────────────────
+  /* ══════════════════════════════════════════════════════════════
+     EVENT BINDINGS
+     ══════════════════════════════════════════════════════════════ */
 
   // FAB toggle
-  fab.addEventListener('click', () => {
-    panel.classList.remove('collapsed');
-  });
-
-  minimizeBtn.addEventListener('click', () => {
-    panel.classList.add('collapsed');
-  });
+  fab.addEventListener('click', () => panel.classList.remove('collapsed'));
+  minimizeBtn.addEventListener('click', () => panel.classList.add('collapsed'));
 
   // Play/pause
   playBtn.addEventListener('click', () => {
@@ -1935,8 +2272,8 @@ td .val { font-family: var(--mono); color: var(--accent-warm); font-size: 13px; 
       speed = parseFloat(btn.dataset.speed);
       document.querySelectorAll('.tts-speed button').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
-      // If playing, restart current segment at new speed
       if (isPlaying) {
+        clearTimeout(pauseTimer);
         synth.cancel();
         isPaused = false;
         speakSegment(currentIdx);
@@ -1945,23 +2282,13 @@ td .val { font-family: var(--mono); color: var(--accent-warm); font-size: 13px; 
   });
 
   // Layer toggle
-  document.getElementById('ttsLayerStory').addEventListener('click', () => {
-    layer = 'story';
-    document.querySelectorAll('.tts-layer-toggle button').forEach(b => b.classList.remove('active'));
-    document.getElementById('ttsLayerStory').classList.add('active');
-    rebuild();
-  });
-  document.getElementById('ttsLayerScience').addEventListener('click', () => {
-    layer = 'science';
-    document.querySelectorAll('.tts-layer-toggle button').forEach(b => b.classList.remove('active'));
-    document.getElementById('ttsLayerScience').classList.add('active');
-    rebuild();
-  });
-  document.getElementById('ttsLayerBoth').addEventListener('click', () => {
-    layer = 'both';
-    document.querySelectorAll('.tts-layer-toggle button').forEach(b => b.classList.remove('active'));
-    document.getElementById('ttsLayerBoth').classList.add('active');
-    rebuild();
+  ['ttsLayerStory', 'ttsLayerScience', 'ttsLayerBoth'].forEach(id => {
+    document.getElementById(id).addEventListener('click', () => {
+      layer = id.replace('ttsLayer', '').toLowerCase();
+      document.querySelectorAll('.tts-layer-toggle button').forEach(b => b.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+      rebuild();
+    });
   });
 
   // Chapter select
@@ -1974,40 +2301,43 @@ td .val { font-family: var(--mono); color: var(--accent-warm); font-size: 13px; 
     });
   });
 
-  // Progress bar click to seek
+  // Progress bar seek
   progressBar.addEventListener('click', (e) => {
     const rect = progressBar.getBoundingClientRect();
     const pct = (e.clientX - rect.left) / rect.width;
-    const idx = Math.floor(pct * segments.length);
+    const idx = Math.max(0, Math.min(Math.floor(pct * segments.length), segments.length - 1));
+    clearTimeout(pauseTimer);
     synth.cancel();
     isPaused = false;
     if (isPlaying) {
-      speakSegment(Math.max(0, Math.min(idx, segments.length - 1)));
+      speakSegment(idx);
     } else {
-      currentIdx = Math.max(0, Math.min(idx, segments.length - 1));
+      currentIdx = idx;
       updateNowReading(segments[currentIdx]);
       updateProgress();
-      highlightElement(segments[currentIdx].el, segments[currentIdx].type);
-      scrollToElement(segments[currentIdx].el);
+      if (segments[currentIdx].el) {
+        highlightElement(segments[currentIdx].el, segments[currentIdx].type);
+        scrollToElement(segments[currentIdx].el);
+      }
     }
   });
 
-  // Keyboard shortcuts
+  // Keyboard shortcuts: Space = play/pause, Alt+arrows = prev/next
   document.addEventListener('keydown', (e) => {
-    // Don't intercept if user is typing in an input
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
-
     if (e.key === ' ' && e.target === document.body) {
       e.preventDefault();
       if (panel.classList.contains('collapsed')) return;
-      if (isPlaying) pause();
-      else play();
+      if (isPlaying) pause(); else play();
     }
     if (e.key === 'ArrowRight' && e.altKey) { e.preventDefault(); next(); }
-    if (e.key === 'ArrowLeft' && e.altKey) { e.preventDefault(); prev(); }
+    if (e.key === 'ArrowLeft'  && e.altKey) { e.preventDefault(); prev(); }
   });
 
-  // Chrome workaround: synth stops after ~15s, need to resume
+  /* ══════════════════════════════════════════════════════════════
+     CHROME KEEPALIVE — Prevents speech from dying at ~15s
+     ══════════════════════════════════════════════════════════════ */
+
   let keepAlive;
   function startKeepAlive() {
     clearInterval(keepAlive);
@@ -2016,7 +2346,7 @@ td .val { font-family: var(--mono); color: var(--accent-warm); font-size: 13px; 
         synth.pause();
         synth.resume();
       }
-    }, 12000);
+    }, 10000);
   }
 
   const origPlay = play;
@@ -2031,10 +2361,11 @@ td .val { font-family: var(--mono); color: var(--accent-warm); font-size: 13px; 
     origStop();
   };
 
-  // Clean up on page leave
+  // Cleanup
   window.addEventListener('beforeunload', () => {
-    synth.cancel();
+    clearTimeout(pauseTimer);
     clearInterval(keepAlive);
+    synth.cancel();
   });
 
 })();
