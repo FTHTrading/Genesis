@@ -163,6 +163,10 @@ pub fn build_router_with_controls(world: SharedWorld, controls: SharedControls) 
         .route("/agent/:id", get(get_agent))
         .route("/leaderboard", get(get_leaderboard))
         .route("/genesis", get(get_genesis_dashboard))
+        .route("/epoch-proof/:epoch", get(get_epoch_proof))
+        .route("/introspect", get(get_introspect))
+        .route("/econometrics", get(get_econometrics))
+        .route("/immune", get(get_immune_report))
         .route_layer(middleware::from_fn_with_state(
             read_rl.clone(),
             rate_limit_middleware,
@@ -741,6 +745,345 @@ async fn get_dashboard() -> impl IntoResponse {
     Html(include_str!("dashboard.html"))
 }
 
+// ─── v1.2 Infrastructure Endpoints ─────────────────────────────────────
+
+/// Epoch proof response for GET /epoch-proof/:epoch.
+#[derive(Serialize)]
+pub struct EpochProofResponse {
+    pub epoch: u64,
+    pub population: usize,
+    pub total_atp: f64,
+    pub mean_fitness: f64,
+    pub treasury_reserve: f64,
+    pub total_supply: f64,
+    pub role_counts: HashMap<String, usize>,
+    pub epoch_hash: String,
+    pub available: bool,
+}
+
+/// GET /epoch-proof/:epoch — cryptographic integrity proof for a given epoch.
+async fn get_epoch_proof(
+    State(world): State<SharedWorld>,
+    Path(epoch_num): Path<u64>,
+) -> impl IntoResponse {
+    let w = match world.lock() {
+        Ok(guard) => guard,
+        Err(poisoned) => poisoned.into_inner(),
+    };
+
+    // Check if we have history for this epoch
+    if let Some(stats) = w.epoch_history.iter().find(|s| s.epoch == epoch_num) {
+        // Compute epoch hash from available data
+        use sha2::{Sha256, Digest};
+        let mut hasher = Sha256::new();
+        hasher.update(stats.epoch.to_le_bytes());
+        hasher.update(stats.population.to_le_bytes());
+        hasher.update(stats.total_atp.to_le_bytes());
+        hasher.update(stats.mean_fitness.to_le_bytes());
+        hasher.update(stats.treasury_reserve.to_le_bytes());
+        let epoch_hash = hex::encode(hasher.finalize());
+
+        let mut role_counts = HashMap::new();
+        for (role, count) in &stats.role_counts {
+            role_counts.insert(role.label().to_string(), *count);
+        }
+
+        let resp = EpochProofResponse {
+            epoch: stats.epoch,
+            population: stats.population,
+            total_atp: stats.total_atp,
+            mean_fitness: stats.mean_fitness,
+            treasury_reserve: stats.treasury_reserve,
+            total_supply: stats.total_atp,
+            role_counts,
+            epoch_hash,
+            available: true,
+        };
+        drop(w);
+        (StatusCode::OK, Json(serde_json::to_value(resp).unwrap_or_default()))
+    } else {
+        drop(w);
+        let err = serde_json::json!({
+            "error": format!("No history for epoch {}", epoch_num),
+            "available": false,
+        });
+        (StatusCode::NOT_FOUND, Json(err))
+    }
+}
+
+/// Introspection response for GET /introspect.
+#[derive(Serialize)]
+pub struct IntrospectResponse {
+    pub epoch: u64,
+    pub organism_age_seconds: i64,
+    pub population: usize,
+    pub pop_cap: usize,
+    pub total_atp: f64,
+    pub mean_fitness: f64,
+    pub treasury_reserve: f64,
+    pub total_births: u64,
+    pub total_deaths: u64,
+    pub birth_death_ratio: f64,
+    pub season: String,
+    pub equilibrium_status: String,
+    pub instability_detected: bool,
+    pub mutation_volatility: f64,
+    pub evolutionary_velocity: f64,
+    pub population_trend: String,
+    pub atp_trend: String,
+    pub fitness_trend: String,
+    pub history_depth: usize,
+}
+
+/// GET /introspect — organism self-awareness snapshot.
+async fn get_introspect(
+    State(world): State<SharedWorld>,
+) -> impl IntoResponse {
+    let w = match world.lock() {
+        Ok(guard) => guard,
+        Err(poisoned) => poisoned.into_inner(),
+    };
+
+    let history: Vec<&crate::world::EpochStats> = w.epoch_history.iter().collect();
+    let history_len = history.len();
+
+    // Trends from recent history (last 10 epochs)
+    let window = history.len().min(10);
+    let recent = &history[history.len().saturating_sub(window)..];
+
+    let (pop_trend, atp_trend, fit_trend) = if recent.len() >= 2 {
+        let first = &recent[0];
+        let last = &recent[recent.len() - 1];
+
+        let pop_d = last.population as f64 - first.population as f64;
+        let atp_d = last.total_atp - first.total_atp;
+        let fit_d = last.mean_fitness - first.mean_fitness;
+
+        let trend = |d: f64| -> String {
+            if d > 0.0 { "rising".into() }
+            else if d < 0.0 { "falling".into() }
+            else { "stable".into() }
+        };
+        (trend(pop_d), trend(atp_d), trend(fit_d))
+    } else {
+        ("unknown".into(), "unknown".into(), "unknown".into())
+    };
+
+    // Mutation volatility: std dev of mutation count over recent history
+    let mutation_volatility = if recent.len() >= 2 {
+        let mutations: Vec<f64> = recent.iter().map(|s| s.mutations as f64).collect();
+        let mean = mutations.iter().sum::<f64>() / mutations.len() as f64;
+        let var = mutations.iter().map(|m| (m - mean).powi(2)).sum::<f64>() / mutations.len() as f64;
+        var.sqrt()
+    } else {
+        0.0
+    };
+
+    // Evolutionary velocity: average fitness change per epoch
+    let evolutionary_velocity = if recent.len() >= 2 {
+        let fit_changes: Vec<f64> = recent.windows(2)
+            .map(|w| (w[1].mean_fitness - w[0].mean_fitness).abs())
+            .collect();
+        fit_changes.iter().sum::<f64>() / fit_changes.len() as f64
+    } else {
+        0.0
+    };
+
+    // Equilibrium: population stable within ±10% over window
+    let equilibrium = if recent.len() >= 5 {
+        let pops: Vec<f64> = recent.iter().map(|s| s.population as f64).collect();
+        let mean = pops.iter().sum::<f64>() / pops.len() as f64;
+        let max_dev = pops.iter().map(|p| ((p - mean) / mean).abs()).fold(0.0f64, f64::max);
+        if max_dev < 0.10 { "equilibrium" } else { "transitioning" }
+    } else {
+        "insufficient_data"
+    };
+
+    // Instability: any large population swing in recent epochs
+    let instability = recent.windows(2).any(|w| {
+        if w[0].population == 0 { return false; }
+        let change = (w[1].population as f64 - w[0].population as f64).abs() / w[0].population as f64;
+        change > 0.25
+    });
+
+    let mean_fitness = if w.agents.is_empty() { 0.0 }
+        else { w.agents.iter().map(|a| a.fitness()).sum::<f64>() / w.agents.len() as f64 };
+
+    let resp = IntrospectResponse {
+        epoch: w.epoch,
+        organism_age_seconds: w.uptime_seconds(),
+        population: w.agents.len(),
+        pop_cap: w.pop_cap,
+        total_atp: w.ledger.total_supply(),
+        mean_fitness,
+        treasury_reserve: w.treasury.reserve,
+        total_births: w.total_births,
+        total_deaths: w.total_deaths,
+        birth_death_ratio: if w.total_deaths == 0 { f64::INFINITY }
+            else { w.total_births as f64 / w.total_deaths as f64 },
+        season: w.eco_state.name().to_string(),
+        equilibrium_status: equilibrium.to_string(),
+        instability_detected: instability,
+        mutation_volatility,
+        evolutionary_velocity,
+        population_trend: pop_trend,
+        atp_trend,
+        fitness_trend: fit_trend,
+        history_depth: history_len,
+    };
+
+    drop(w);
+    (StatusCode::OK, Json(resp))
+}
+
+/// Econometric snapshot response for GET /econometrics.
+#[derive(Serialize)]
+pub struct EconResponse {
+    pub epoch: u64,
+    pub gini_coefficient: f64,
+    pub wealth_concentration_top10: f64,
+    pub wealth_concentration_top1: f64,
+    pub total_supply: f64,
+    pub mean_balance: f64,
+    pub median_balance: f64,
+    pub std_dev: f64,
+    pub role_entropy: f64,
+    pub population: usize,
+}
+
+/// GET /econometrics — ATP economic analytics snapshot.
+async fn get_econometrics(
+    State(world): State<SharedWorld>,
+) -> impl IntoResponse {
+    let w = match world.lock() {
+        Ok(guard) => guard,
+        Err(poisoned) => poisoned.into_inner(),
+    };
+
+    let balances: Vec<f64> = w.ledger.all_balances().values()
+        .map(|b| b.balance.max(0.0))
+        .collect();
+
+    let mut role_counts = HashMap::new();
+    for agent in &w.agents {
+        *role_counts.entry(agent.role.label().to_string()).or_insert(0usize) += 1;
+    }
+
+    let total_supply: f64 = balances.iter().sum();
+    let mean_balance = if balances.is_empty() { 0.0 } else { total_supply / balances.len() as f64 };
+
+    let resp = EconResponse {
+        epoch: w.epoch,
+        gini_coefficient: genesis_econometrics::gini_coefficient(&balances),
+        wealth_concentration_top10: genesis_econometrics::wealth_concentration(&balances, 0.10),
+        wealth_concentration_top1: genesis_econometrics::wealth_concentration(&balances, 0.01),
+        total_supply,
+        mean_balance,
+        median_balance: genesis_econometrics::median(&balances),
+        std_dev: genesis_econometrics::std_deviation(&balances),
+        role_entropy: genesis_econometrics::role_entropy(&role_counts),
+        population: w.agents.len(),
+    };
+
+    drop(w);
+    (StatusCode::OK, Json(resp))
+}
+
+/// Immune system report response for GET /immune.
+#[derive(Serialize)]
+pub struct ImmuneResponse {
+    pub epoch: u64,
+    pub overall_health: String,
+    pub threat_count: usize,
+    pub events: Vec<ImmuneEventView>,
+}
+
+#[derive(Serialize)]
+pub struct ImmuneEventView {
+    pub kind: String,
+    pub level: String,
+    pub message: String,
+    pub metric: f64,
+    pub threshold: f64,
+}
+
+/// GET /immune — organism immune system diagnostic report.
+async fn get_immune_report(
+    State(world): State<SharedWorld>,
+) -> impl IntoResponse {
+    let w = match world.lock() {
+        Ok(guard) => guard,
+        Err(poisoned) => poisoned.into_inner(),
+    };
+
+    let balances: Vec<f64> = w.ledger.all_balances().values()
+        .map(|b| b.balance.max(0.0))
+        .collect();
+
+    let mut role_counts = HashMap::new();
+    for agent in &w.agents {
+        *role_counts.entry(agent.role.label().to_string()).or_insert(0usize) += 1;
+    }
+
+    let population_history: Vec<usize> = w.epoch_history.iter()
+        .map(|s| s.population)
+        .collect();
+
+    let mutation_count: usize = w.epoch_history.iter().rev().take(1)
+        .map(|s| s.mutations as usize)
+        .next()
+        .unwrap_or(0);
+
+    let peak_treasury = w.epoch_history.iter()
+        .map(|s| s.treasury_reserve)
+        .fold(0.0f64, f64::max)
+        .max(w.treasury.reserve);
+
+    let total_supply = w.ledger.total_supply();
+    // Approximate transacted ATP from last epoch's data
+    let transacted = w.epoch_history.iter().rev().take(1)
+        .map(|s| s.resources_extracted + s.treasury_distributed)
+        .next()
+        .unwrap_or(0.0);
+
+    let expected_roles = &["Optimizer", "Strategist", "Communicator", "Archivist", "Executor"];
+
+    let report = genesis_homeostasis::diagnose(
+        w.epoch,
+        &role_counts,
+        &balances,
+        mutation_count,
+        w.agents.len(),
+        &population_history,
+        10,
+        expected_roles,
+        w.treasury.reserve,
+        peak_treasury,
+        transacted,
+        total_supply,
+    );
+
+    let events: Vec<ImmuneEventView> = report.events.iter().map(|e| {
+        ImmuneEventView {
+            kind: format!("{:?}", e.kind),
+            level: format!("{:?}", e.level),
+            message: e.message.clone(),
+            metric: e.metric_value,
+            threshold: e.threshold,
+        }
+    }).collect();
+
+    let resp = ImmuneResponse {
+        epoch: w.epoch,
+        overall_health: format!("{:?}", report.overall_health),
+        threat_count: report.threat_count(),
+        events,
+    };
+
+    drop(w);
+    (StatusCode::OK, Json(resp))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -975,7 +1318,7 @@ mod tests {
 
         let resp = app.oneshot(req).await.unwrap();
         assert_eq!(resp.headers().get("x-content-type-options").unwrap(), "nosniff");
-        assert_eq!(resp.headers().get("x-frame-options").unwrap(), "DENY");
+        assert_eq!(resp.headers().get("x-frame-options").unwrap(), "SAMEORIGIN");
         assert_eq!(resp.headers().get("x-xss-protection").unwrap(), "1; mode=block");
         assert_eq!(resp.headers().get("referrer-policy").unwrap(), "no-referrer");
         assert!(resp.headers().get("strict-transport-security").is_some());

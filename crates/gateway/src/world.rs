@@ -31,6 +31,46 @@ use serde::{Serialize, Deserialize};
 
 use crate::stress::{StressConfig, StressMetrics, PhaseTransitionDetector, role_entropy};
 
+// ─── Evolutionary Pressure Configuration ────────────────────────────────
+//
+// Configurable knobs for Phase 2 pressure: soft carrying capacity,
+// entropy tax, catastrophe engine, and Gini-triggered wealth correction.
+// Defaults are "gentle" — inducing life, not collapse.
+
+/// Configurable evolutionary pressure parameters.
+/// Controls the transition from greenhouse to wilderness.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PressureConfig {
+    /// Soft carrying capacity — births slow as population approaches this.
+    pub soft_cap: usize,
+    /// Entropy tax coefficient — population-scaled ATP burn per epoch.
+    pub entropy_coeff: f64,
+    /// Base catastrophe probability per epoch (before population scaling).
+    pub catastrophe_base_prob: f64,
+    /// Additional catastrophe probability per agent.
+    pub catastrophe_pop_scale: f64,
+    /// Gini threshold above which progressive wealth tax activates.
+    pub gini_wealth_tax_threshold: f64,
+    /// Tax rate on top 10% when Gini exceeds threshold.
+    pub gini_wealth_tax_rate: f64,
+    /// Treasury overflow threshold (fraction of total supply).
+    pub treasury_overflow_threshold: f64,
+}
+
+impl Default for PressureConfig {
+    fn default() -> Self {
+        Self {
+            soft_cap: 180,
+            entropy_coeff: 0.00002,
+            catastrophe_base_prob: 0.002,
+            catastrophe_pop_scale: 0.00001,
+            gini_wealth_tax_threshold: 0.40,
+            gini_wealth_tax_rate: 0.02,
+            treasury_overflow_threshold: 0.50,
+        }
+    }
+}
+
 // ─── Ecological Constants ───────────────────────────────────────────────
 // These constants parameterize the ecological dynamics.  Some are
 // consumed directly in this module; others shadow crate-level defaults
@@ -379,6 +419,9 @@ pub struct World {
     pub stress_metrics: Option<StressMetrics>,
     /// Phase transition detector.
     pub phase_detector: PhaseTransitionDetector,
+    /// Evolutionary pressure configuration (Phase 2).
+    #[serde(default)]
+    pub pressure: PressureConfig,
 }
 
 /// Epoch summary stats returned by run_epoch.
@@ -419,6 +462,24 @@ pub struct EpochStats {
     pub eco_state: EcoState,
     /// Birth:death ratio over the rolling history window.
     pub birth_death_ratio: f64,
+    /// Gini coefficient of ATP wealth distribution (0 = equal, 1 = monopoly).
+    #[serde(default)]
+    pub gini_coefficient: f64,
+    /// Shannon entropy of role distribution (higher = more diverse).
+    #[serde(default)]
+    pub role_entropy: f64,
+    /// Treasury as fraction of total supply.
+    #[serde(default)]
+    pub treasury_ratio: f64,
+    /// Deaths per 100 epochs (rolling average).
+    #[serde(default)]
+    pub death_rate_100: f64,
+    /// ATP burned by entropy tax this epoch.
+    #[serde(default)]
+    pub entropy_tax_burned: f64,
+    /// Deaths caused by catastrophe events this epoch.
+    #[serde(default)]
+    pub catastrophe_deaths: u64,
 }
 
 /// Registration request from external callers.
@@ -514,6 +575,7 @@ impl World {
             stress_config: None,
             stress_metrics: None,
             phase_detector: PhaseTransitionDetector::new(),
+            pressure: PressureConfig::default(),
         }
     }
 
@@ -681,6 +743,8 @@ impl World {
         let mut market_rewarded: f64 = 0.0;
         let mut gated_posts: u64 = 0;
         let mut resources_extracted: f64 = 0.0;
+        let entropy_tax_burned: f64;
+        let mut catastrophe_deaths: u64 = 0;
         let treasury_distributed_before = self.treasury.total_distributed;
 
         // ═══════════════════════════════════════════════════════════════
@@ -708,6 +772,100 @@ impl World {
                         bias = format!("{:.3}", sc.catastrophe_cluster_bias),
                         "Stress: catastrophe cluster triggered"
                     );
+                }
+            }
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        // STEP 0b: Population-scaled catastrophe engine (Phase 2)
+        //
+        // Probability: base + pop × scale. When triggered, one of three
+        // effects: ATP destruction, fitness culling, or niche resource shock.
+        // Deterministic seed ensures reproducibility.
+        // ═══════════════════════════════════════════════════════════════
+        {
+            let pop = self.agents.len();
+            let cat_prob = self.pressure.catastrophe_base_prob
+                + (pop as f64 * self.pressure.catastrophe_pop_scale);
+
+            // Deterministic roll from epoch (different multiplier from environment seed)
+            let cat_seed = epoch
+                .wrapping_mul(0xBF58_476D_1CE4_E5B9_u64)
+                .wrapping_add(0x94D0_49BB_1331_11EB_u64);
+            let cat_roll = (cat_seed >> 33) as f64 / (u32::MAX as f64);
+
+            if cat_roll < cat_prob && pop > 10 {
+                let cat_type = (cat_seed >> 16) % 3;
+
+                match cat_type {
+                    0 => {
+                        // ATP destruction: reduce all balances by 5‒10%
+                        let severity = 0.05 + ((cat_seed >> 8) % 6) as f64 * 0.01;
+                        self.ledger.decay_all(severity);
+                        tracing::warn!(
+                            epoch,
+                            severity = format!("{:.1}%", severity * 100.0),
+                            "PRESSURE EVENT: ATP destruction"
+                        );
+                    }
+                    1 => {
+                        // Cull weakest 2‒5% by fitness
+                        let cull_pct = 0.02 + ((cat_seed >> 4) % 4) as f64 * 0.01;
+                        let cull_count = ((pop as f64 * cull_pct) as usize).max(1);
+
+                        let mut by_fitness: Vec<(uuid::Uuid, f64)> = self.agents.iter()
+                            .map(|a| (a.id, a.fitness()))
+                            .collect();
+                        by_fitness.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal));
+
+                        let to_cull: Vec<uuid::Uuid> = by_fitness.iter()
+                            .take(cull_count)
+                            .map(|(id, _)| *id)
+                            .collect();
+
+                        for dead_id in &to_cull {
+                            if let Ok(bal) = self.ledger.balance(dead_id) {
+                                if bal.balance > 0.0 {
+                                    let _ = self.ledger.burn(
+                                        dead_id, bal.balance,
+                                        TransactionKind::BasalMetabolism,
+                                        &format!("Epoch {} pressure cull", epoch),
+                                    );
+                                }
+                            }
+                            self.agents.retain(|a| a.id != *dead_id);
+                            self.agent_birth_epoch.remove(dead_id);
+                            let _ = self.mesh.registry.set_status(
+                                dead_id,
+                                ecosystem::AgentStatus::Dead,
+                            );
+                            deaths += 1;
+                            catastrophe_deaths += 1;
+                        }
+
+                        tracing::warn!(
+                            epoch,
+                            culled = to_cull.len(),
+                            pct = format!("{:.1}%", cull_pct * 100.0),
+                            "PRESSURE EVENT: fitness culling"
+                        );
+                    }
+                    _ => {
+                        // Role-specific shock: deplete one niche's resource pool
+                        let roles = [
+                            AgentRole::Optimizer, AgentRole::Strategist,
+                            AgentRole::Communicator, AgentRole::Archivist, AgentRole::Executor,
+                        ];
+                        let target_role = roles[(cat_seed as usize) % roles.len()];
+                        if let Some(pool) = self.environment.pools.get_mut(&target_role) {
+                            pool.level *= 0.3; // 70% resource destruction
+                        }
+                        tracing::warn!(
+                            epoch,
+                            role = ?target_role,
+                            "PRESSURE EVENT: niche resource shock"
+                        );
+                    }
                 }
             }
         }
@@ -884,7 +1042,72 @@ impl World {
         self.treasury.total_collected += wealth_taxed;
 
         // ═══════════════════════════════════════════════════════════════
-        // STEP 2c: Treasury redistribution — the counter-cyclical loop
+        // STEP 2c: Entropy tax — population-scaled ATP burn (Phase 2)
+        //
+        // Burns ATP proportionally from all agents. Larger populations
+        // incur stronger burn, preventing exponential ATP inflation.
+        // Formula: total_burn = total_atp × (population × coefficient)
+        // ═══════════════════════════════════════════════════════════════
+        {
+            let pop = self.agents.len();
+            entropy_tax_burned = self.ledger.entropy_tax_all(self.pressure.entropy_coeff, pop);
+            if entropy_tax_burned > 0.1 && epoch % 50 == 0 {
+                tracing::info!(
+                    epoch,
+                    burned = format!("{:.2}", entropy_tax_burned),
+                    pop,
+                    "Entropy tax applied"
+                );
+            }
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        // STEP 2d: Gini-triggered wealth tax — progressive correction
+        //
+        // When wealth inequality (Gini coefficient) exceeds threshold,
+        // apply extra tax on top 10% wealthiest agents → treasury.
+        // Prevents oligarchy while respecting normal wealth variance.
+        // ═══════════════════════════════════════════════════════════════
+        let epoch_gini = {
+            let bals: Vec<f64> = self.agents.iter()
+                .filter_map(|a| self.ledger.balance(&a.id).ok().map(|b| b.balance))
+                .collect();
+            genesis_econometrics::gini_coefficient(&bals)
+        };
+
+        if epoch_gini > self.pressure.gini_wealth_tax_threshold {
+            let mut agent_bals: Vec<(uuid::Uuid, f64)> = self.agents.iter()
+                .filter_map(|a| {
+                    self.ledger.balance(&a.id).ok().map(|b| (a.id, b.balance))
+                })
+                .collect();
+            agent_bals.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
+
+            let top_10_count = (agent_bals.len() / 10).max(1);
+            let top_10_ids: Vec<uuid::Uuid> = agent_bals.iter()
+                .take(top_10_count)
+                .map(|(id, _)| *id)
+                .collect();
+            let gini_taxed = self.ledger.targeted_tax(
+                &top_10_ids.iter().map(|id| *id).collect::<Vec<_>>(),
+                self.pressure.gini_wealth_tax_rate,
+            );
+            self.treasury.reserve += gini_taxed;
+            self.treasury.total_collected += gini_taxed;
+
+            if gini_taxed > 0.01 && epoch % 50 == 0 {
+                tracing::info!(
+                    epoch,
+                    gini = format!("{:.3}", epoch_gini),
+                    taxed = format!("{:.2}", gini_taxed),
+                    agents = top_10_count,
+                    "Gini wealth correction applied"
+                );
+            }
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        // STEP 2e: Treasury redistribution — the counter-cyclical loop
         //
         // 1. Stipends to underrepresented roles (diversity incentive)
         // 2. Crisis spending when population < cap/2
@@ -925,9 +1148,9 @@ impl World {
                 }
             }
 
-            // Overflow redistribution: prevent treasury from hoarding >30% of supply
+            // Overflow redistribution: prevent treasury from hoarding beyond target
             let total_supply = self.ledger.total_supply();
-            let overflow_threshold = total_supply * 0.30;
+            let overflow_threshold = total_supply * self.pressure.treasury_overflow_threshold;
             if self.treasury.reserve > overflow_threshold && pop > 0 {
                 let excess = self.treasury.reserve - overflow_threshold;
                 // Distribute half the excess — leave some buffer
@@ -1099,9 +1322,29 @@ impl World {
                     .as_ref()
                     .map(|sc| sc.replication_cost_multiplier)
                     .unwrap_or(1.0);
+
+            // ── Phase 2: Soft carrying capacity ──────────────────────
+            // Birth probability decreases smoothly as population → K.
+            // birth_factor = 1.0 - (P / K), clamped [0.0, 1.0].
+            // Below K: replication proceeds normally.
+            // Near K: births become increasingly unlikely.
+            // Above K: births stop entirely.
+            let birth_factor = (1.0 - (self.agents.len() as f64 / self.pressure.soft_cap as f64))
+                .clamp(0.0, 1.0);
+
             for parent_id in replicator_ids {
                 if births_this_epoch >= MAX_BIRTHS_PER_EPOCH {
                     break;
+                }
+                // Soft cap: deterministic probabilistic birth throttle
+                {
+                    let birth_seed = epoch
+                        .wrapping_mul(0x517C_C1B7_2722_0A95_u64)
+                        .wrapping_add(births_this_epoch as u64);
+                    let birth_roll = (birth_seed >> 33) as f64 / (u32::MAX as f64);
+                    if birth_roll > birth_factor {
+                        continue; // soft cap suppressed this birth
+                    }
                 }
                 if self.agents.len() >= self.pop_cap {
                     break;
@@ -1196,6 +1439,21 @@ impl World {
             .map(|(role, pool)| (*role, pool.level))
             .collect();
 
+        // Compute Phase 2 metrics
+        let epoch_role_entropy = role_entropy(&final_role_counts);
+        let total_supply_for_ratio = self.ledger.total_supply();
+        let treasury_ratio = if total_supply_for_ratio + self.treasury.reserve > 0.0 {
+            self.treasury.reserve / (total_supply_for_ratio + self.treasury.reserve)
+        } else {
+            0.0
+        };
+        let death_rate_100 = {
+            let window = self.epoch_history.iter().collect::<Vec<_>>();
+            let total_deaths_window: u64 = window.iter().map(|s| s.deaths).sum();
+            let epochs_in_window = window.len().max(1) as f64;
+            (total_deaths_window as f64 / epochs_in_window) * 100.0
+        };
+
         let stats = EpochStats {
             epoch,
             population: self.agents.len(),
@@ -1221,6 +1479,12 @@ impl World {
             treasury_distributed: self.treasury.total_distributed - treasury_distributed_before,
             eco_state: current_eco,
             birth_death_ratio,
+            gini_coefficient: epoch_gini,
+            role_entropy: epoch_role_entropy,
+            treasury_ratio,
+            death_rate_100,
+            entropy_tax_burned,
+            catastrophe_deaths,
         };
 
         // Keep rolling window of last 100 epochs

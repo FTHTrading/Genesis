@@ -9,9 +9,13 @@ metabolism.workspace = true
 apostle.workspace = true
 ecosystem.workspace = true
 evolution.workspace = true
+genesis-anchor = { path = "../genesis-anchor" }
+genesis-econometrics = { path = "../genesis-econometrics" }
+genesis-homeostasis = { path = "../genesis-homeostasis" }
 serde.workspace = true
 serde_json.workspace = true
 sha2.workspace = true
+hex.workspace = true
 uuid.workspace = true
 chrono.workspace = true
 rand.workspace = true

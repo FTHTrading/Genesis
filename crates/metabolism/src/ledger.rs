@@ -44,6 +44,11 @@ impl MetabolismLedger {
             .ok_or_else(|| MetabolismError::AgentNotFound(agent_id.to_string()))
     }
 
+    /// Read-only view of all balances (for analytics / econometrics).
+    pub fn all_balances(&self) -> &HashMap<AgentID, AtpBalance> {
+        &self.balances
+    }
+
     /// Mint ATP for an agent (reward for proof-of-work).
     pub fn mint(
         &mut self,
@@ -216,6 +221,58 @@ impl MetabolismLedger {
         // Tax doesn't destroy supply — it flows to treasury
         // (caller adds to treasury.reserve)
         total_taxed
+    }
+
+    /// Apply population-scaled entropy tax — burns ATP proportionally from all agents.
+    /// Formula: total_burn = coefficient × population × total_supply.
+    /// Each agent pays proportional to their balance share (capped at 10% of balance).
+    /// Returns total ATP burned (removed from circulation permanently).
+    pub fn entropy_tax_all(&mut self, coefficient: f64, population: usize) -> f64 {
+        let supply = self.total_supply();
+        if supply <= 0.0 || population == 0 {
+            return 0.0;
+        }
+        let total_to_burn = supply * (population as f64 * coefficient);
+        if total_to_burn <= 0.0 {
+            return 0.0;
+        }
+
+        let agent_ids: Vec<AgentID> = self.balances.keys().cloned().collect();
+        let mut total_burned = 0.0;
+        for id in agent_ids {
+            if let Some(balance) = self.balances.get_mut(&id) {
+                if balance.balance > 0.0 && !balance.in_stasis {
+                    let share = balance.balance / supply;
+                    let tax = (total_to_burn * share).min(balance.balance * 0.10);
+                    balance.balance -= tax;
+                    balance.lifetime_spent += tax;
+                    if balance.balance <= 0.0 {
+                        balance.in_stasis = true;
+                    }
+                    total_burned += tax;
+                }
+            }
+        }
+        self.total_atp_supply -= total_burned;
+        total_burned
+    }
+
+    /// Apply targeted tax to specific agents (e.g. top 10% for Gini correction).
+    /// Returns total taxed. Tax does NOT reduce supply — it flows to treasury.
+    pub fn targeted_tax(&mut self, agent_ids: &[AgentID], rate: f64) -> f64 {
+        let mut total = 0.0;
+        for id in agent_ids {
+            if let Some(balance) = self.balances.get_mut(id) {
+                if balance.balance > 0.0 && !balance.in_stasis {
+                    let tax = balance.balance * rate;
+                    balance.balance -= tax;
+                    balance.lifetime_spent += tax;
+                    total += tax;
+                }
+            }
+        }
+        // Not reducing total_atp_supply — caller routes this to treasury
+        total
     }
 
     /// Apply fitness penalty (extra basal cost) to specific agents.

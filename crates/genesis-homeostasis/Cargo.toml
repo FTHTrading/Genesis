@@ -1,0 +1,15 @@
+[package]
+name = "genesis-homeostasis"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+genesis-dna = { path = "../genesis-dna" }
+metabolism = { path = "../metabolism" }
+genesis-econometrics = { path = "../genesis-econometrics" }
+serde = { workspace = true }
+serde_json = { workspace = true }
+chrono = { workspace = true }
+uuid = { workspace = true }
+thiserror = { workspace = true }
+tracing = { workspace = true }

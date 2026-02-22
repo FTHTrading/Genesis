@@ -6,6 +6,11 @@ members = [
     "crates/ecosystem",
     "crates/evolution",
     "crates/gateway",
+    "crates/genesis-anchor",
+    "crates/genesis-replay",
+    "crates/genesis-federation",
+    "crates/genesis-econometrics",
+    "crates/genesis-homeostasis",
 ]
 resolver = "2"
 
@@ -21,6 +26,11 @@ apostle = { path = "crates/apostle" }
 ecosystem = { path = "crates/ecosystem" }
 evolution = { path = "crates/evolution" }
 gateway = { path = "crates/gateway" }
+genesis-anchor = { path = "crates/genesis-anchor" }
+genesis-replay = { path = "crates/genesis-replay" }
+genesis-federation = { path = "crates/genesis-federation" }
+genesis-econometrics = { path = "crates/genesis-econometrics" }
+genesis-homeostasis = { path = "crates/genesis-homeostasis" }
 
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
@@ -45,6 +55,7 @@ apostle.workspace = true
 ecosystem.workspace = true
 evolution.workspace = true
 gateway.workspace = true
+genesis-replay.workspace = true
 tokio.workspace = true
 tracing = "0.1"
 tracing-subscriber = "0.3"

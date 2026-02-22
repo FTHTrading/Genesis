@@ -16,6 +16,9 @@ const EPOCH_INTERVAL: Duration = Duration::from_secs(1);
 /// Autosave every N epochs.
 const AUTOSAVE_INTERVAL: u64 = 25;
 
+/// Archive a full world snapshot every N epochs (separate from autosave).
+const ARCHIVE_INTERVAL: u64 = 100;
+
 /// Start the background survival loop on a dedicated thread.
 /// Returns the join handle.
 pub fn start_background_loop(world: SharedWorld) -> std::thread::JoinHandle<()> {
@@ -30,7 +33,7 @@ pub fn start_background_loop_with_adapter(
 ) -> std::thread::JoinHandle<()> {
     std::thread::spawn(move || {
         loop {
-            let (snapshot, docs_json, is_extinct) = {
+            let (snapshot, docs_json, archive_json, is_extinct) = {
                 // Lock, tick, extract, release — keep lock duration minimal
                 let mut w = match world.lock() {
                     Ok(guard) => guard,
@@ -84,12 +87,25 @@ pub fn start_background_loop_with_adapter(
                     None
                 };
 
+                // Archive full world state every ARCHIVE_INTERVAL epochs
+                let archive_json: Option<(u64, String)> = if w.epoch % ARCHIVE_INTERVAL == 0 && w.epoch > 0 {
+                    match serde_json::to_string(&*w) {
+                        Ok(json) => Some((w.epoch, json)),
+                        Err(e) => {
+                            tracing::error!("Archive serialization failed: {}", e);
+                            None
+                        }
+                    }
+                } else {
+                    None
+                };
+
                 let is_extinct = w.agents.is_empty();
                 if is_extinct {
                     tracing::error!("EXTINCTION EVENT at epoch {}", w.epoch);
                 }
 
-                (snapshot, docs_json, is_extinct)
+                (snapshot, docs_json, archive_json, is_extinct)
             };
             // Lock released here
 
@@ -100,6 +116,17 @@ pub fn start_background_loop_with_adapter(
             if let Some(ref json) = docs_json {
                 if let Err(e) = std::fs::write("docs/system-state.json", json) {
                     tracing::debug!("docs snapshot write failed: {}", e);
+                }
+            }
+
+            // Write archive snapshot to archive/ directory
+            if let Some((epoch, ref json)) = archive_json {
+                let _ = std::fs::create_dir_all("archive");
+                let path = format!("archive/epoch_{:06}.json", epoch);
+                if let Err(e) = std::fs::write(&path, json) {
+                    tracing::error!("Archive write failed at epoch {}: {}", epoch, e);
+                } else {
+                    tracing::info!("Archived world state at epoch {} → {}", epoch, path);
                 }
             }
 

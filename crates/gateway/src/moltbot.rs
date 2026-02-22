@@ -1747,6 +1747,12 @@ mod tests {
             treasury_distributed: 0.0,
             eco_state: crate::world::EcoState::Autumn,
             birth_death_ratio: (births + 1) as f64 / (deaths + 1) as f64,
+            gini_coefficient: 0.0,
+            role_entropy: 0.0,
+            treasury_ratio: 0.0,
+            death_rate_100: 0.0,
+            entropy_tax_burned: 0.0,
+            catastrophe_deaths: 0,
         }
     }
 
