@@ -390,17 +390,154 @@ fn compose_status_post(
     }
 
     if !milestones.is_empty() {
+        let compressed = compress_milestones(milestones);
         content.push_str("\n## Recent Events\n");
-        for m in milestones {
-            content.push_str(&format!(
-                "- {} {}\n",
-                milestone_emoji(&m.event),
-                m.description
-            ));
+        for line in &compressed {
+            content.push_str(&format!("- {}\n", line));
         }
     }
 
     (title, content)
+}
+
+/// Compress milestones to avoid noisy, repetitive posts.
+///
+/// - Population peaks: collapsed into a single range "Population grew: 51 → 185"
+/// - Leader changes: only the FINAL leader kept, with count of transitions
+/// - Fitness records: only the final record kept
+/// - ATP crises: collapsed into a count "ATP concentration crisis × 5"
+/// - Everything else passed through normally
+fn compress_milestones(milestones: &[MilestoneEvent]) -> Vec<String> {
+    let mut result: Vec<String> = Vec::new();
+
+    // ── Population peaks → single range ──────────────
+    let peaks: Vec<&MilestoneEvent> = milestones
+        .iter()
+        .filter(|m| m.event == MilestoneKind::PopulationPeak)
+        .collect();
+    if peaks.len() > 1 {
+        let first_val = peaks.first().and_then(|m| m.value).unwrap_or(0.0) as u64;
+        let last_val = peaks.last().and_then(|m| m.value).unwrap_or(0.0) as u64;
+        // Try to extract the "prev" from the first peak description for the start
+        let start = if let Some(m) = peaks.first() {
+            if let Some(idx) = m.description.find("prev: ") {
+                let after = &m.description[idx + 6..];
+                after.trim_end_matches(')').parse::<u64>().unwrap_or(first_val.saturating_sub(1))
+            } else {
+                first_val.saturating_sub(1)
+            }
+        } else {
+            first_val.saturating_sub(1)
+        };
+        result.push(format!(
+            "{} Population grew: {} \u{2192} {} (+{})",
+            milestone_emoji(&MilestoneKind::PopulationPeak),
+            start,
+            last_val,
+            last_val.saturating_sub(start)
+        ));
+    } else if peaks.len() == 1 {
+        result.push(format!(
+            "{} {}",
+            milestone_emoji(&MilestoneKind::PopulationPeak),
+            peaks[0].description
+        ));
+    }
+
+    // ── Leader changes → final leader + transition count ──
+    let leaders: Vec<&MilestoneEvent> = milestones
+        .iter()
+        .filter(|m| m.event == MilestoneKind::LeaderChange)
+        .collect();
+    if leaders.len() > 1 {
+        if let Some(final_leader) = leaders.last() {
+            result.push(format!(
+                "{} {} ({} leadership transitions)",
+                milestone_emoji(&MilestoneKind::LeaderChange),
+                final_leader.description,
+                leaders.len()
+            ));
+        }
+    } else if leaders.len() == 1 {
+        result.push(format!(
+            "{} {}",
+            milestone_emoji(&MilestoneKind::LeaderChange),
+            leaders[0].description
+        ));
+    }
+
+    // ── Fitness records → only final record ──────────
+    let fitness: Vec<&MilestoneEvent> = milestones
+        .iter()
+        .filter(|m| m.event == MilestoneKind::FitnessRecord)
+        .collect();
+    if let Some(best) = fitness.last() {
+        if fitness.len() > 1 {
+            // Rewrite to show range: "old → new"
+            let first_prev = if let Some(m) = fitness.first() {
+                if let Some(idx) = m.description.find("prev: ") {
+                    let after = &m.description[idx + 6..];
+                    after.trim_end_matches(')').to_string()
+                } else {
+                    "?".to_string()
+                }
+            } else {
+                "?".to_string()
+            };
+            let final_val = best.value.map(|v| format!("{:.5}", v)).unwrap_or_default();
+            result.push(format!(
+                "{} Fitness record: {} \u{2192} {} ({} new records)",
+                milestone_emoji(&MilestoneKind::FitnessRecord),
+                first_prev,
+                final_val,
+                fitness.len()
+            ));
+        } else {
+            result.push(format!(
+                "{} {}",
+                milestone_emoji(&MilestoneKind::FitnessRecord),
+                best.description
+            ));
+        }
+    }
+
+    // ── ATP crises → collapse to count ───────────────
+    let crises: Vec<&MilestoneEvent> = milestones
+        .iter()
+        .filter(|m| m.event == MilestoneKind::AtpCrisis)
+        .collect();
+    if crises.len() > 1 {
+        result.push(format!(
+            "{} ATP concentration crisis \u{2014} wealth inequality spike (\u{00d7}{})",
+            milestone_emoji(&MilestoneKind::AtpCrisis),
+            crises.len()
+        ));
+    } else if crises.len() == 1 {
+        result.push(format!(
+            "{} {}",
+            milestone_emoji(&MilestoneKind::AtpCrisis),
+            crises[0].description
+        ));
+    }
+
+    // ── Everything else passes through ───────────────
+    for m in milestones {
+        match m.event {
+            MilestoneKind::PopulationPeak
+            | MilestoneKind::LeaderChange
+            | MilestoneKind::FitnessRecord
+            | MilestoneKind::AtpCrisis => continue, // already handled
+            _ => {
+                result.push(format!(
+                    "{} {}",
+                    milestone_emoji(&m.event),
+                    m.description
+                ));
+            }
+        }
+    }
+
+    result
 }
 
 // ───────────────────────────────────────────
@@ -1728,6 +1865,108 @@ mod tests {
             milestones.iter().any(|m| m.event == MilestoneKind::ExtinctionRisk),
             "Should detect extinction risk"
         );
+    }
+
+    #[test]
+    fn test_compress_milestones_collapses_peaks() {
+        // 10 sequential population peaks: 51..=60
+        let mut milestones: Vec<MilestoneEvent> = (51u64..=60)
+            .map(|n| MilestoneEvent {
+                payload_type: "milestone".to_string(),
+                event: MilestoneKind::PopulationPeak,
+                epoch: n,
+                description: format!("New population peak: {} (prev: {})", n, n - 1),
+                value: Some(n as f64),
+            })
+            .collect();
+
+        // 4 leader changes
+        for i in 0u64..4 {
+            milestones.push(MilestoneEvent {
+                payload_type: "milestone".to_string(),
+                event: MilestoneKind::LeaderChange,
+                epoch: 50 + i,
+                description: format!("New leader: agent_{}", i),
+                value: None,
+            });
+        }
+
+        // 3 fitness records
+        for (i, val) in [0.70, 0.80, 0.90].iter().enumerate() {
+            let prev = if i == 0 { 0.60 } else { [0.70, 0.80][i - 1] };
+            milestones.push(MilestoneEvent {
+                payload_type: "milestone".to_string(),
+                event: MilestoneKind::FitnessRecord,
+                epoch: 55 + i as u64,
+                description: format!("New fitness record: {:.5} (prev: {:.5})", val, prev),
+                value: Some(*val),
+            });
+        }
+
+        // 5 ATP crises
+        for i in 0u64..5 {
+            milestones.push(MilestoneEvent {
+                payload_type: "milestone".to_string(),
+                event: MilestoneKind::AtpCrisis,
+                epoch: 50 + i,
+                description: "ATP concentration crisis".to_string(),
+                value: None,
+            });
+        }
+
+        // 1 epoch milestone (should pass through)
+        milestones.push(MilestoneEvent {
+            payload_type: "milestone".to_string(),
+            event: MilestoneKind::EpochMilestone,
+            epoch: 100,
+            description: "Epoch 100 reached".to_string(),
+            value: Some(100.0),
+        });
+
+        let result = compress_milestones(&milestones);
+
+        // All 10 peaks → 1 line
+        let peak_lines: Vec<&String> = result.iter().filter(|l| l.contains("Population")).collect();
+        assert_eq!(peak_lines.len(), 1, "All peaks should collapse to one line");
+        assert!(peak_lines[0].contains("50"), "Should show start value");
+        assert!(peak_lines[0].contains("60"), "Should show end value");
+
+        // 4 leader changes → 1 line
+        let leader_lines: Vec<&String> = result.iter().filter(|l| l.contains("leader")).collect();
+        assert_eq!(leader_lines.len(), 1, "All leader changes should collapse to one line");
+        assert!(leader_lines[0].contains("agent_3"), "Should show final leader");
+        assert!(leader_lines[0].contains("4 leadership transitions"), "Should show count");
+
+        // 3 fitness records → 1 line
+        let fit_lines: Vec<&String> = result.iter().filter(|l| l.contains("Fitness") || l.contains("fitness")).collect();
+        assert_eq!(fit_lines.len(), 1, "All fitness records should collapse to one line");
+        assert!(fit_lines[0].contains("3 new records"), "Should show count");
+
+        // 5 ATP crises → 1 line
+        let atp_lines: Vec<&String> = result.iter().filter(|l| l.contains("ATP")).collect();
+        assert_eq!(atp_lines.len(), 1, "All ATP crises should collapse to one line");
+        assert!(atp_lines[0].contains("×5"), "Should show count");
+
+        // Epoch milestone passes through
+        assert!(result.iter().any(|l| l.contains("Epoch 100 reached")));
+
+        // Total: 5 lines (peak, leader, fitness, atp, epoch)
+        assert_eq!(result.len(), 5, "Should have exactly 5 compressed lines");
+    }
+
+    #[test]
+    fn test_compress_milestones_single_peak_not_collapsed() {
+        let milestones = vec![MilestoneEvent {
+            payload_type: "milestone".to_string(),
+            event: MilestoneKind::PopulationPeak,
+            epoch: 50,
+            description: "New population peak: 30 (prev: 25)".to_string(),
+            value: Some(30.0),
+        }];
+
+        let result = compress_milestones(&milestones);
+        assert_eq!(result.len(), 1);
+        assert!(result[0].contains("New population peak: 30"), "Single peak should pass through as-is");
     }
 
     // Integration test: verify bridge posts to mock axum server at correct intervals
