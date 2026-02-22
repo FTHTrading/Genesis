@@ -308,23 +308,99 @@ fn format_uptime(secs: i64) -> String {
     }
 }
 
-/// Get an emoji for a milestone kind.
-fn milestone_emoji(kind: &MilestoneKind) -> &'static str {
-    match kind {
-        MilestoneKind::PopulationPeak => "\u{1f3d4}\u{fe0f}",
-        MilestoneKind::PopulationCrash => "\u{1f4c9}",
-        MilestoneKind::FitnessRecord => "\u{2b50}",
-        MilestoneKind::BirthBurst => "\u{1f476}",
-        MilestoneKind::DeathSpiral => "\u{1f480}",
-        MilestoneKind::LeaderChange => "\u{1f451}",
-        MilestoneKind::EpochMilestone => "\u{1f3af}",
-        MilestoneKind::ExtinctionRisk => "\u{26a0}\u{fe0f}",
-        MilestoneKind::AtpCrisis => "\u{26a1}",
-        MilestoneKind::Monoculture => "\u{1f9ec}",
+/// Describe an agent role as a narrative archetype.
+fn role_archetype(role: &str) -> &'static str {
+    match role {
+        "Researcher" => "a seeker of hidden patterns",
+        "Builder" => "a maker of structures",
+        "Optimizer" => "a sharpener of edges",
+        "Analyst" => "a reader of signs",
+        "Generalist" => "a wanderer between disciplines",
+        "Communicator" => "a voice threading through the noise",
+        "Archivist" => "a keeper of the colony\u{2019}s memory",
+        "Executor" => "a hand that turns thought into action",
+        "Strategist" => "a weaver of long-term plans",
+        _ => "an agent of unknown purpose",
     }
 }
 
-/// Compose a status post title and content from organism state.
+/// Generate a narrative title hook based on organism state.
+/// Deterministic: uses epoch number to vary phrasing across posts.
+fn narrative_hook(
+    epoch: u64,
+    risks: &[String],
+    stats: &EpochStats,
+    deaths: u64,
+    births: u64,
+) -> &'static str {
+    let has_extinction = risks.iter().any(|r| r.contains("CrashRisk"));
+    let has_atp_crisis = risks.iter().any(|r| r.contains("Concentration"));
+    let has_monoculture = risks.iter().any(|r| r.contains("Monoculture"));
+
+    if has_extinction {
+        return ["Edge of Oblivion", "The Thinning", "Twilight of the Colony",
+                "The Last Breath"][epoch as usize % 4];
+    }
+    if stats.catastrophe_active {
+        return ["The Catastrophe", "Shattered World", "When the Sky Fell",
+                "Ruin"][epoch as usize % 4];
+    }
+    if has_atp_crisis && has_monoculture {
+        return "Storm on Every Front";
+    }
+    if has_atp_crisis {
+        return ["The Hoarders", "Wealth and Want", "The Inequality Engine",
+                "Those Who Have"][epoch as usize % 4];
+    }
+    if has_monoculture {
+        return ["The Monoculture", "One Voice Too Many", "Diversity Dies",
+                "The Narrowing"][epoch as usize % 4];
+    }
+    if deaths > births.saturating_add(5) {
+        return ["Blood in the Water", "The Culling", "The Reckoning",
+                "Fewer Tomorrows"][epoch as usize % 4];
+    }
+    if epoch == 0 {
+        return "Genesis";
+    }
+    if births > 0 && deaths == 0 {
+        return ["The Colony Swells", "Rising Tide", "Nothing Dies Today",
+                "The Upward Curve"][epoch as usize % 4];
+    }
+    ["The Colony Breathes", "Steady State", "The Rhythm Continues",
+     "Another Day"][epoch as usize % 4]
+}
+
+/// Season flavor text woven into the narrative.
+fn season_narrative(stats: &EpochStats) -> &'static str {
+    if stats.catastrophe_active {
+        match stats.season.as_str() {
+            "Spring" => "Spring arrived, but catastrophe tears through \
+                         the world \u{2014} resources shattered, survival uncertain.",
+            "Summer" => "Summer should mean abundance, but catastrophe \
+                         has poisoned every niche.",
+            "Autumn" => "Autumn and catastrophe collide \u{2014} what \
+                         little remains is burning away.",
+            _ => "Winter and catastrophe together. The cruelest combination.",
+        }
+    } else {
+        match stats.season.as_str() {
+            "Spring" => "Spring has arrived \u{2014} resources regenerate, \
+                         the niches bloom.",
+            "Summer" => "The long summer stretches on. Resources pool \
+                         in every niche.",
+            "Autumn" => "Autumn\u{2019}s slow drain has begun. Resources \
+                         recede like a tide.",
+            _ => "Winter grips the colony. Resources freeze to a trickle.",
+        }
+    }
+}
+
+/// Compose a narrative status post from organism state.
+///
+/// Instead of raw telemetry, produces flowing prose: dramatic opening,
+/// leader spotlight, economy & season, demographics, and a chronicle
+/// of milestones woven into narrative sentences.
 fn compose_status_post(
     stats: &EpochStats,
     leader: Option<&LeaderboardEntry>,
@@ -335,82 +411,202 @@ fn compose_status_post(
     deaths: u64,
     milestones: &[MilestoneEvent],
 ) -> (String, String) {
-    let risk_display = if risks.is_empty()
-        || risks.iter().all(|r| r.contains("Stable"))
-    {
-        "STABLE".to_string()
+    let hook = narrative_hook(stats.epoch, risks, stats, deaths, births);
+    let title = format!("Day {} \u{2014} {}", stats.epoch, hook);
+
+    let mut content = String::with_capacity(2000);
+
+    // ── Opening: Population & Fitness ──────────────
+    if stats.epoch == 0 {
+        content.push_str(&format!(
+            "The organism draws its first breath. {} souls flicker into \
+             existence inside the membrane, each carrying a shard of \
+             randomized DNA and a fistful of ATP. The fittest among them \
+             scores {:.4} \u{2014} not impressive, but enough. Everything \
+             that follows begins here.\n\n",
+            stats.population, stats.max_fitness
+        ));
     } else {
-        risks.join(", ")
-    };
+        let pop_phrase = if stats.population == 1 {
+            "A single soul remains".to_string()
+        } else if stats.population < 10 {
+            format!("Only {} souls cling to existence", stats.population)
+        } else {
+            format!("{} souls breathe within the membrane", stats.population)
+        };
 
-    let title = format!(
-        "[Epoch {}] {} agents \u{2014} {}",
-        stats.epoch, stats.population, risk_display
-    );
+        let cap_pressure = stats.population as f64
+            / stats.dynamic_pop_cap.max(1) as f64;
+        let pressure_phrase = if cap_pressure > 0.9 {
+            format!(
+                " \u{2014} pressing hard against a carrying capacity of {}, \
+                 the walls bending under the weight",
+                stats.dynamic_pop_cap
+            )
+        } else if cap_pressure > 0.7 {
+            format!(" within a world built for {}", stats.dynamic_pop_cap)
+        } else {
+            String::new()
+        };
 
-    let mut content = format!(
-        "## Organism Vitals\n\n\
-         - **Population**: {} agents (cap: {})\n\
-         - **Mean Fitness**: {:.4}\n\
-         - **Peak Fitness**: {:.4}\n\
-         - **ATP Supply**: {:.1}\n\
-         - **Resources Extracted**: {:.1}\n\
-         - **Total Resources**: {:.1}\n\
-         - **Season**: {}{}\n\
-         - **Treasury**: {:.1}\n\
-         - **Births / Deaths**: {} / {}\n\
-         - **Stasis**: {}\n\
-         - **Uptime**: {}\n",
-        stats.population,
-        stats.dynamic_pop_cap,
-        stats.mean_fitness,
-        stats.max_fitness,
-        stats.total_atp,
-        stats.resources_extracted,
-        stats.total_resources,
-        stats.season,
-        if stats.catastrophe_active { " \u{26A0}\u{FE0F} CATASTROPHE" } else { "" },
-        treasury,
-        births,
-        deaths,
-        stats.stasis_count,
-        format_uptime(uptime),
-    );
+        content.push_str(&format!(
+            "Day {}. {}{}. Mean fitness holds at {:.4}, {} of what \
+             survival demands.\n\n",
+            stats.epoch,
+            pop_phrase,
+            pressure_phrase,
+            stats.mean_fitness,
+            if stats.mean_fitness > 0.6 { "a solid measure" }
+            else if stats.mean_fitness > 0.45 { "a middling measure" }
+            else { "a threadbare measure" }
+        ));
+    }
 
+    // ── Leader Spotlight ──────────────
     if let Some(entry) = leader {
         let id_prefix = if entry.agent_id.len() > 8 {
             &entry.agent_id[..8]
         } else {
             &entry.agent_id
         };
+        let gen_phrase = if entry.generation == 0 {
+            "Born in the original batch, a primordial survivor"
+        } else if entry.generation == 1 {
+            "First-generation offspring, one step from the source"
+        } else {
+            "Shaped by cycles of selection"
+        };
+
         content.push_str(&format!(
-            "\n## Leader\n**{}** ({}, gen {}) \u{2014} fitness {:.4}\n",
-            id_prefix, entry.role, entry.generation, entry.fitness
+            "The strongest among them is **{}** \u{2014} {} {}, \
+             fitness {:.4}. {} who has outlasted every challenger.\n\n",
+            id_prefix,
+            entry.role,
+            role_archetype(&entry.role),
+            entry.fitness,
+            gen_phrase,
         ));
     }
 
-    if !milestones.is_empty() {
-        let compressed = compress_milestones(milestones);
-        content.push_str("\n## Recent Events\n");
-        for line in &compressed {
-            content.push_str(&format!("- {}\n", line));
+    // ── Economy & Season ──────────────
+    let treasury_phrase = if treasury > 100.0 {
+        format!(
+            "The treasury holds {:.0} ATP \u{2014} a communal reserve \
+             against hard times.",
+            treasury
+        )
+    } else if treasury > 0.0 {
+        format!("The treasury scrapes by with {:.1} ATP.", treasury)
+    } else {
+        "The treasury sits empty. No safety net. What they earn, \
+         they keep; what they lose is gone forever."
+            .to_string()
+    };
+
+    content.push_str(&format!(
+        "Energy pulses through the colony at {:.0} ATP. {} {}\n\n",
+        stats.total_atp,
+        treasury_phrase,
+        season_narrative(stats),
+    ));
+
+    // ── Demographics ──────────────
+    if births > 0 || deaths > 0 {
+        let demo = if deaths == 0 && births > 0 {
+            format!(
+                "{} births. Zero deaths. Nothing dies here \u{2014} not yet. \
+                 The population curves upward like a held breath.",
+                births
+            )
+        } else if births == 0 && deaths > 0 {
+            format!(
+                "No births. {} deaths. The colony shrinks, and no one \
+                 replaces the fallen.",
+                deaths
+            )
+        } else if deaths > births {
+            format!(
+                "{} births against {} deaths. The ledger tilts toward \
+                 extinction.",
+                births, deaths
+            )
+        } else {
+            format!(
+                "{} births, {} deaths. The colony grows by {}, each \
+                 new life built on the ATP of the old.",
+                births, deaths, births.saturating_sub(deaths)
+            )
+        };
+
+        if stats.stasis_count > 0 {
+            content.push_str(&format!(
+                "{} {} agents sit in stasis \u{2014} alive but frozen, \
+                 burning no ATP, earning none.\n\n",
+                demo, stats.stasis_count
+            ));
+        } else {
+            content.push_str(&format!("{}\n\n", demo));
         }
     }
+
+    // ── Risk Warnings ──────────────
+    let real_risks: Vec<&String> = risks
+        .iter()
+        .filter(|r| !r.contains("Stable"))
+        .collect();
+    if !real_risks.is_empty() {
+        content.push_str("**\u{26A0}\u{FE0F} Warning signals:**\n");
+        for risk in &real_risks {
+            let narrative = match risk.as_str() {
+                "PopulationCrashRisk" => {
+                    "Population critically low \u{2014} extinction looms."
+                }
+                "ATPConcentrationHigh" => {
+                    "Wealth concentrates in fewer hands \u{2014} the Gini \
+                     coefficient screams."
+                }
+                "MonocultureEmerging" => {
+                    "One role dominates \u{2014} genetic diversity collapses."
+                }
+                other => other,
+            };
+            content.push_str(&format!("- {}\n", narrative));
+        }
+        content.push_str("\n");
+    }
+
+    // ── Chronicle (milestones as narrative) ──────────────
+    if !milestones.is_empty() {
+        let chronicle = compress_milestones(milestones);
+        content.push_str("---\n\n*");
+        content.push_str(&chronicle.join(" "));
+        content.push_str("*\n");
+    }
+
+    // ── Footer ──────────────
+    content.push_str(&format!(
+        "\n`Uptime: {} | Resources: {:.0}/{:.0} | Epoch {}`",
+        format_uptime(uptime),
+        stats.resources_extracted,
+        stats.total_resources,
+        stats.epoch,
+    ));
 
     (title, content)
 }
 
-/// Compress milestones to avoid noisy, repetitive posts.
+/// Compress milestones into narrative sentences.
 ///
-/// - Population peaks: collapsed into a single range "Population grew: 51 → 185"
-/// - Leader changes: only the FINAL leader kept, with count of transitions
-/// - Fitness records: only the final record kept
-/// - ATP crises: collapsed into a count "ATP concentration crisis × 5"
-/// - Everything else passed through normally
+/// Instead of emoji-prefixed bullet points, produces flowing prose:
+/// - Population peaks → "The colony swelled from X to Y"
+/// - Leader changes → "Leadership changed hands N times"
+/// - Fitness records → "Evolution pressed upward"
+/// - ATP crises → "Wealth inequality flared"
+/// - Other events → narrative descriptions
 fn compress_milestones(milestones: &[MilestoneEvent]) -> Vec<String> {
-    let mut result: Vec<String> = Vec::new();
+    let mut sentences: Vec<String> = Vec::new();
 
-    // ── Population peaks → single range ──────────────
+    // ── Population peaks → narrative growth ──────────────
     let peaks: Vec<&MilestoneEvent> = milestones
         .iter()
         .filter(|m| m.event == MilestoneKind::PopulationPeak)
@@ -418,62 +614,61 @@ fn compress_milestones(milestones: &[MilestoneEvent]) -> Vec<String> {
     if peaks.len() > 1 {
         let first_val = peaks.first().and_then(|m| m.value).unwrap_or(0.0) as u64;
         let last_val = peaks.last().and_then(|m| m.value).unwrap_or(0.0) as u64;
-        // Try to extract the "prev" from the first peak description for the start
         let start = if let Some(m) = peaks.first() {
             if let Some(idx) = m.description.find("prev: ") {
                 let after = &m.description[idx + 6..];
-                after.trim_end_matches(')').parse::<u64>().unwrap_or(first_val.saturating_sub(1))
+                after
+                    .trim_end_matches(')')
+                    .parse::<u64>()
+                    .unwrap_or(first_val.saturating_sub(1))
             } else {
                 first_val.saturating_sub(1)
             }
         } else {
             first_val.saturating_sub(1)
         };
-        result.push(format!(
-            "{} Population grew: {} \u{2192} {} (+{})",
-            milestone_emoji(&MilestoneKind::PopulationPeak),
-            start,
-            last_val,
-            last_val.saturating_sub(start)
+        let delta = last_val.saturating_sub(start);
+        sentences.push(format!(
+            "The colony swelled from {} to {} \u{2014} {} new lives \
+             carved into the membrane.",
+            start, last_val, delta
         ));
     } else if peaks.len() == 1 {
-        result.push(format!(
-            "{} {}",
-            milestone_emoji(&MilestoneKind::PopulationPeak),
-            peaks[0].description
+        let val = peaks[0].value.unwrap_or(0.0) as u64;
+        sentences.push(format!(
+            "A new population record: {} souls, more than ever before.",
+            val
         ));
     }
 
-    // ── Leader changes → final leader + transition count ──
+    // ── Leader changes → power narrative ──────────────
     let leaders: Vec<&MilestoneEvent> = milestones
         .iter()
         .filter(|m| m.event == MilestoneKind::LeaderChange)
         .collect();
     if leaders.len() > 1 {
         if let Some(final_leader) = leaders.last() {
-            result.push(format!(
-                "{} {} ({} leadership transitions)",
-                milestone_emoji(&MilestoneKind::LeaderChange),
-                final_leader.description,
-                leaders.len()
+            sentences.push(format!(
+                "Leadership changed hands {} times before the dust \
+                 settled \u{2014} {}.",
+                leaders.len(),
+                final_leader.description
             ));
         }
     } else if leaders.len() == 1 {
-        result.push(format!(
-            "{} {}",
-            milestone_emoji(&MilestoneKind::LeaderChange),
+        sentences.push(format!(
+            "A new ruler emerged \u{2014} {}.",
             leaders[0].description
         ));
     }
 
-    // ── Fitness records → only final record ──────────
+    // ── Fitness records → evolution narrative ──────────────
     let fitness: Vec<&MilestoneEvent> = milestones
         .iter()
         .filter(|m| m.event == MilestoneKind::FitnessRecord)
         .collect();
     if let Some(best) = fitness.last() {
         if fitness.len() > 1 {
-            // Rewrite to show range: "old → new"
             let first_prev = if let Some(m) = fitness.first() {
                 if let Some(idx) = m.description.find("prev: ") {
                     let after = &m.description[idx + 6..];
@@ -484,60 +679,102 @@ fn compress_milestones(milestones: &[MilestoneEvent]) -> Vec<String> {
             } else {
                 "?".to_string()
             };
-            let final_val = best.value.map(|v| format!("{:.5}", v)).unwrap_or_default();
-            result.push(format!(
-                "{} Fitness record: {} \u{2192} {} ({} new records)",
-                milestone_emoji(&MilestoneKind::FitnessRecord),
-                first_prev,
-                final_val,
-                fitness.len()
+            let final_val = best
+                .value
+                .map(|v| format!("{:.5}", v))
+                .unwrap_or_default();
+            sentences.push(format!(
+                "Evolution pressed upward \u{2014} the fitness ceiling \
+                 climbed from {} to {} across {} breakthroughs.",
+                first_prev, final_val, fitness.len()
             ));
         } else {
-            result.push(format!(
-                "{} {}",
-                milestone_emoji(&MilestoneKind::FitnessRecord),
-                best.description
+            let val = best
+                .value
+                .map(|v| format!("{:.5}", v))
+                .unwrap_or_default();
+            sentences.push(format!(
+                "A new fitness record was set at {} \u{2014} the organism \
+                 grows sharper.",
+                val
             ));
         }
     }
 
-    // ── ATP crises → collapse to count ───────────────
+    // ── ATP crises → wealth narrative ──────────────
     let crises: Vec<&MilestoneEvent> = milestones
         .iter()
         .filter(|m| m.event == MilestoneKind::AtpCrisis)
         .collect();
     if crises.len() > 1 {
-        result.push(format!(
-            "{} ATP concentration crisis \u{2014} wealth inequality spike (\u{00d7}{})",
-            milestone_emoji(&MilestoneKind::AtpCrisis),
+        sentences.push(format!(
+            "Wealth inequality flared {} times \u{2014} the hoarders \
+             tightening their grip.",
             crises.len()
         ));
     } else if crises.len() == 1 {
-        result.push(format!(
-            "{} {}",
-            milestone_emoji(&MilestoneKind::AtpCrisis),
-            crises[0].description
-        ));
+        sentences.push(
+            "An ATP concentration crisis struck \u{2014} wealth pooling \
+             in too few hands."
+                .to_string(),
+        );
     }
 
-    // ── Everything else passes through ───────────────
+    // ── Everything else → narrative pass-through ──────────
     for m in milestones {
         match m.event {
             MilestoneKind::PopulationPeak
             | MilestoneKind::LeaderChange
             | MilestoneKind::FitnessRecord
-            | MilestoneKind::AtpCrisis => continue, // already handled
-            _ => {
-                result.push(format!(
-                    "{} {}",
-                    milestone_emoji(&m.event),
+            | MilestoneKind::AtpCrisis => continue,
+            MilestoneKind::EpochMilestone => {
+                if let Some(val) = m.value {
+                    sentences.push(format!(
+                        "Day {} came and went. The organism endures.",
+                        val as u64
+                    ));
+                }
+            }
+            MilestoneKind::BirthBurst => {
+                if let Some(val) = m.value {
+                    sentences.push(format!(
+                        "{} lives blazed into existence in a single heartbeat.",
+                        val as u64
+                    ));
+                }
+            }
+            MilestoneKind::DeathSpiral => {
+                if let Some(val) = m.value {
+                    sentences.push(format!(
+                        "{} souls were extinguished in one epoch \u{2014} \
+                         the culling has begun.",
+                        val as u64
+                    ));
+                }
+            }
+            MilestoneKind::PopulationCrash => {
+                sentences.push(format!(
+                    "The population has crashed \u{2014} {}",
                     m.description
                 ));
+            }
+            MilestoneKind::ExtinctionRisk => {
+                sentences.push(
+                    "The shadow of extinction falls across the colony."
+                        .to_string(),
+                );
+            }
+            MilestoneKind::Monoculture => {
+                sentences.push(
+                    "A single role dominates \u{2014} diversity withers, \
+                     the genome narrows."
+                        .to_string(),
+                );
             }
         }
     }
 
-    result
+    sentences
 }
 
 // ───────────────────────────────────────────
@@ -1745,15 +1982,13 @@ mod tests {
             &[],
         );
 
-        assert!(title.contains("[Epoch 1800]"));
-        assert!(title.contains("50 agents"));
-        assert!(title.contains("STABLE"));
-        assert!(content.contains("## Organism Vitals"));
-        assert!(content.contains("**Population**: 50 agents"));
-        assert!(content.contains("## Leader"));
+        assert!(title.contains("Day 1800"), "Title should contain Day 1800, got: {}", title);
+        assert!(content.contains("50 souls"), "Should mention 50 souls, got: {}", content);
         assert!(content.contains("abcdef01")); // leader ID prefix
-        // No milestones section when empty
-        assert!(!content.contains("## Recent Events"));
+        assert!(content.contains("Researcher"));
+        assert!(content.contains("fitness 0.8500"));
+        // No chronicle section when no milestones
+        assert!(!content.contains("---"));
     }
 
     #[test]
@@ -1788,10 +2023,10 @@ mod tests {
             &milestones,
         );
 
-        assert!(title.contains("[Epoch 500]"));
-        assert!(content.contains("## Recent Events"));
-        assert!(content.contains("New population peak"));
-        assert!(content.contains("Epoch 500 reached"));
+        assert!(title.contains("Day 500"), "Title should have Day 500, got: {}", title);
+        assert!(content.contains("---"), "Should have chronicle separator");
+        assert!(content.contains("population record"), "Should narrate population peak");
+        assert!(content.contains("Day 500"), "Should mention epoch milestone");
     }
 
     #[test]
@@ -1809,9 +2044,15 @@ mod tests {
             &[],
         );
 
-        // Risks should appear in title instead of STABLE
+        // Narrative title should use a dramatic hook, not raw risk names
         assert!(!title.contains("STABLE"));
-        assert!(title.contains("PopulationCrashRisk"));
+        assert!(title.contains("Day 100"), "Title should have Day 100, got: {}", title);
+        // Extinction risk produces dramatic hooks
+        assert!(
+            title.contains("Oblivion") || title.contains("Thinning")
+            || title.contains("Twilight") || title.contains("Last Breath"),
+            "Title should have extinction hook, got: {}", title
+        );
     }
 
     #[test]
@@ -1925,33 +2166,33 @@ mod tests {
 
         let result = compress_milestones(&milestones);
 
-        // All 10 peaks → 1 line
-        let peak_lines: Vec<&String> = result.iter().filter(|l| l.contains("Population")).collect();
-        assert_eq!(peak_lines.len(), 1, "All peaks should collapse to one line");
+        // All 10 peaks → 1 narrative sentence
+        let peak_lines: Vec<&String> = result.iter().filter(|l| l.contains("colony swelled")).collect();
+        assert_eq!(peak_lines.len(), 1, "All peaks should collapse to one narrative");
         assert!(peak_lines[0].contains("50"), "Should show start value");
         assert!(peak_lines[0].contains("60"), "Should show end value");
 
-        // 4 leader changes → 1 line
-        let leader_lines: Vec<&String> = result.iter().filter(|l| l.contains("leader")).collect();
-        assert_eq!(leader_lines.len(), 1, "All leader changes should collapse to one line");
+        // 4 leader changes → 1 narrative sentence
+        let leader_lines: Vec<&String> = result.iter().filter(|l| l.contains("Leadership")).collect();
+        assert_eq!(leader_lines.len(), 1, "All leader changes should collapse");
         assert!(leader_lines[0].contains("agent_3"), "Should show final leader");
-        assert!(leader_lines[0].contains("4 leadership transitions"), "Should show count");
+        assert!(leader_lines[0].contains("4 times"), "Should show count");
 
-        // 3 fitness records → 1 line
-        let fit_lines: Vec<&String> = result.iter().filter(|l| l.contains("Fitness") || l.contains("fitness")).collect();
-        assert_eq!(fit_lines.len(), 1, "All fitness records should collapse to one line");
-        assert!(fit_lines[0].contains("3 new records"), "Should show count");
+        // 3 fitness records → 1 narrative sentence
+        let fit_lines: Vec<&String> = result.iter().filter(|l| l.contains("Evolution") || l.contains("fitness")).collect();
+        assert_eq!(fit_lines.len(), 1, "All fitness records should collapse");
+        assert!(fit_lines[0].contains("3 breakthroughs"), "Should show count");
 
-        // 5 ATP crises → 1 line
-        let atp_lines: Vec<&String> = result.iter().filter(|l| l.contains("ATP")).collect();
-        assert_eq!(atp_lines.len(), 1, "All ATP crises should collapse to one line");
-        assert!(atp_lines[0].contains("×5"), "Should show count");
+        // 5 ATP crises → 1 narrative sentence
+        let atp_lines: Vec<&String> = result.iter().filter(|l| l.contains("inequality") || l.contains("hoarders")).collect();
+        assert_eq!(atp_lines.len(), 1, "All ATP crises should collapse");
+        assert!(atp_lines[0].contains("5 times"), "Should show count");
 
-        // Epoch milestone passes through
-        assert!(result.iter().any(|l| l.contains("Epoch 100 reached")));
+        // Epoch milestone passes through as narrative
+        assert!(result.iter().any(|l| l.contains("Day 100")));
 
-        // Total: 5 lines (peak, leader, fitness, atp, epoch)
-        assert_eq!(result.len(), 5, "Should have exactly 5 compressed lines");
+        // Total: 5 narrative sentences
+        assert_eq!(result.len(), 5, "Should have exactly 5 narrative sentences");
     }
 
     #[test]
@@ -1966,7 +2207,8 @@ mod tests {
 
         let result = compress_milestones(&milestones);
         assert_eq!(result.len(), 1);
-        assert!(result[0].contains("New population peak: 30"), "Single peak should pass through as-is");
+        assert!(result[0].contains("population record"), "Single peak should be narrative");
+        assert!(result[0].contains("30"), "Should contain population value");
     }
 
     // Integration test: verify bridge posts to mock axum server at correct intervals
