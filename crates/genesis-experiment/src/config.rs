@@ -13,6 +13,7 @@
 use serde::{Serialize, Deserialize};
 use genesis_multiverse::PhysicsPreset;
 use gateway::world::PressureConfig;
+use gateway::stress::StressConfig;
 
 /// Which pressure parameter to sweep.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -34,6 +35,12 @@ pub enum SweepVariable {
     /// `MutationEngine.base_rate` — base probability of trait mutation per cycle.
     /// Note: This modifies the world's mutation engine directly, not PressureConfig.
     MutationBaseRate,
+    /// `StressConfig.replication_cost_multiplier` — multiplier on ATP cost to reproduce.
+    /// Note: This modifies the world's stress config, not PressureConfig.
+    ReplicationCostMultiplier,
+    /// `StressConfig.basal_cost_multiplier` — multiplier on basal metabolic burn per epoch.
+    /// Note: This modifies the world's stress config, not PressureConfig.
+    BasalCostMultiplier,
 }
 
 impl SweepVariable {
@@ -48,6 +55,8 @@ impl SweepVariable {
             Self::GiniWealthTaxRate => "gini_wealth_tax_rate",
             Self::TreasuryOverflowThreshold => "treasury_overflow_threshold",
             Self::MutationBaseRate => "mutation_base_rate",
+            Self::ReplicationCostMultiplier => "replication_cost_multiplier",
+            Self::BasalCostMultiplier => "basal_cost_multiplier",
         }
     }
 
@@ -62,6 +71,8 @@ impl SweepVariable {
             Self::GiniWealthTaxRate,
             Self::TreasuryOverflowThreshold,
             Self::MutationBaseRate,
+            Self::ReplicationCostMultiplier,
+            Self::BasalCostMultiplier,
         ]
     }
 }
@@ -235,6 +246,17 @@ pub struct ExperimentConfig {
     /// before running epochs (independent of the sweep variable).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub mutation_rate_override: Option<f64>,
+    /// Optional: override whether the adaptive cortex (immune system) is enabled.
+    /// When set to `Some(false)`, `world.cortex.enabled` is forced to false,
+    /// preventing all pressure mutations (PressureConfig changes).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub cortex_enabled_override: Option<bool>,
+    /// Optional: base stress config applied before any stress-related sweep variables.
+    /// When set, `world.with_stress(config, ...)` is called before running epochs.
+    /// If the sweep variable is `ReplicationCostMultiplier` or `BasalCostMultiplier`,
+    /// the relevant field is overridden on top of this base config.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub base_stress_override: Option<StressConfig>,
     /// Base seed for reproducibility (trial i at step j uses seed = base_seed + j * 1000 + i).
     pub base_seed: u64,
 }
@@ -311,6 +333,8 @@ mod tests {
             base_preset: PhysicsPreset::EarthPrime,
             base_pressure_override: None,
             mutation_rate_override: None,
+            cortex_enabled_override: None,
+            base_stress_override: None,
             base_seed: 42,
         };
         // 3 steps × 10 runs = 30 worlds
@@ -330,6 +354,8 @@ mod tests {
             base_preset: PhysicsPreset::EarthPrime,
             base_pressure_override: None,
             mutation_rate_override: None,
+            cortex_enabled_override: None,
+            base_stress_override: None,
             base_seed: 1000,
         };
         let mut seeds = std::collections::HashSet::new();
@@ -354,6 +380,8 @@ mod tests {
             base_preset: PhysicsPreset::EarthPrime,
             base_pressure_override: None,
             mutation_rate_override: None,
+            cortex_enabled_override: None,
+            base_stress_override: None,
             base_seed: 42,
         };
         let label = config.label();
@@ -374,7 +402,7 @@ mod tests {
     #[test]
     fn all_sweep_variables_listed() {
         let all = SweepVariable::all();
-        assert_eq!(all.len(), 8);
+        assert_eq!(all.len(), 10);
         let names: std::collections::HashSet<&str> = all.iter().map(|v| v.name()).collect();
         assert_eq!(names.len(), all.len());
     }

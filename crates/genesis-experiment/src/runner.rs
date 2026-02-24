@@ -20,6 +20,7 @@ use chrono::{DateTime, Utc};
 use serde::{Serialize, Deserialize};
 
 use gateway::world::{World, EpochStats, PressureConfig};
+use gateway::stress::StressConfig;
 use genesis_multiverse::WorldPhysics;
 
 use crate::config::{ExperimentConfig, Metric, SweepVariable};
@@ -193,6 +194,35 @@ impl ExperimentRunner {
             world.mutation_engine.base_rate = rate;
         }
 
+        // Apply cortex enabled override if specified (disables immune pressure mutations)
+        if let Some(enabled) = config.cortex_enabled_override {
+            world.cortex.enabled = enabled;
+        }
+
+        // Apply stress configuration.
+        // If a base stress override is set, start from that; otherwise use defaults.
+        // If the sweep variable is a stress variable, override the relevant field.
+        {
+            let mut stress = config.base_stress_override.clone().unwrap_or_default();
+            let mut has_stress = config.base_stress_override.is_some();
+
+            match config.sweep.variable {
+                SweepVariable::ReplicationCostMultiplier => {
+                    stress.replication_cost_multiplier = param_value;
+                    has_stress = true;
+                }
+                SweepVariable::BasalCostMultiplier => {
+                    stress.basal_cost_multiplier = param_value;
+                    has_stress = true;
+                }
+                _ => {}
+            }
+
+            if has_stress {
+                world.with_stress(stress, "experiment_stress");
+            }
+        }
+
         // Run epochs, collecting stats
         let mut all_stats: Vec<EpochStats> = Vec::with_capacity(config.epochs_per_run as usize);
         let mut collapse_epoch: Option<u64> = None;
@@ -299,6 +329,8 @@ fn apply_sweep_variable(
         SweepVariable::GiniWealthTaxRate => pressure.gini_wealth_tax_rate = value,
         SweepVariable::TreasuryOverflowThreshold => pressure.treasury_overflow_threshold = value,
         SweepVariable::MutationBaseRate => {} // Applied post-world-creation in run_trial
+        SweepVariable::ReplicationCostMultiplier => {} // Applied via StressConfig in run_trial
+        SweepVariable::BasalCostMultiplier => {} // Applied via StressConfig in run_trial
     }
 }
 
@@ -412,6 +444,7 @@ mod tests {
             base_preset: PhysicsPreset::EarthPrime,
             base_pressure_override: None,
             mutation_rate_override: None,
+            cortex_enabled_override: None,
             base_seed: 42,
         };
         let trial = ExperimentRunner::run_trial(&config, 0, 0, 0.00002, 42);
@@ -433,6 +466,7 @@ mod tests {
             base_preset: PhysicsPreset::EarthPrime,
             base_pressure_override: None,
             mutation_rate_override: None,
+            cortex_enabled_override: None,
             base_seed: 100,
         };
         let result = ExperimentRunner::run(&config);
@@ -458,6 +492,7 @@ mod tests {
             base_preset: PhysicsPreset::EarthPrime,
             base_pressure_override: None,
             mutation_rate_override: None,
+            cortex_enabled_override: None,
             base_seed: 999,
         };
         let result = ExperimentRunner::run(&config);
@@ -502,6 +537,7 @@ mod tests {
             base_preset: PhysicsPreset::EarthPrime,
             base_pressure_override: None,
             mutation_rate_override: None,
+            cortex_enabled_override: None,
             base_seed: 42,
         };
         let result = ExperimentRunner::run(&config);

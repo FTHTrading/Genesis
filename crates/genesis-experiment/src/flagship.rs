@@ -1,16 +1,16 @@
-// Flagship Experiments — Pre-built research protocols
+// Flagship Experiments â€” Pre-built research protocols
 //
 // Three experiments that demonstrate what Genesis can discover:
 //
-// 1. Entropy Sweep — "Does the cost of existing determine civilization fate?"
+// 1. Entropy Sweep â€” "Does the cost of existing determine civilization fate?"
 //    Varies entropy_coeff across an order of magnitude.
 //    Measures collapse rate, inequality trajectory, survival time.
 //
-// 2. Catastrophe Resilience — "Can civilizations evolve to survive catastrophe?"
+// 2. Catastrophe Resilience â€” "Can civilizations evolve to survive catastrophe?"
 //    Varies catastrophe_base_prob from mild to extreme.
 //    Measures survival rate, population recovery, immune response.
 //
-// 3. Inequality Threshold — "At what Gini threshold does wealth tax stabilize societies?"
+// 3. Inequality Threshold â€” "At what Gini threshold does wealth tax stabilize societies?"
 //    Varies gini_wealth_tax_threshold from always-active to never-triggers.
 //    Measures Gini coefficient, population stability, treasury health.
 //
@@ -30,7 +30,7 @@ impl FlagshipExperiments {
     /// and higher inequality before collapse.
     ///
     /// Sweeps entropy_coeff from 0.00001 (gentle) to 0.0001 (harsh).
-    /// 10 steps × 20 runs × 500 epochs = 100 worlds, 50,000 total epochs.
+    /// 10 steps Ã-- 20 runs Ã-- 500 epochs = 100 worlds, 50,000 total epochs.
     pub fn entropy_sweep() -> ExperimentConfig {
         ExperimentConfig {
             name: "Entropy Sweep: Cost of Existing".into(),
@@ -60,6 +60,7 @@ impl FlagshipExperiments {
             base_preset: PhysicsPreset::EarthPrime,
             base_pressure_override: None,
             mutation_rate_override: None,
+            cortex_enabled_override: None,
             base_seed: 20260222, // Date seed: Feb 22, 2026
         }
     }
@@ -70,7 +71,7 @@ impl FlagshipExperiments {
     /// extreme rates cause extinction; zero rates cause stagnation.
     ///
     /// Sweeps catastrophe_base_prob from 0.0 (peaceful) to 0.03 (apocalyptic).
-    /// 7 steps × 20 runs × 500 epochs = 140 worlds, 70,000 total epochs.
+    /// 7 steps Ã-- 20 runs Ã-- 500 epochs = 140 worlds, 70,000 total epochs.
     pub fn catastrophe_resilience() -> ExperimentConfig {
         ExperimentConfig {
             name: "Catastrophe Resilience: Survival Under Fire".into(),
@@ -99,6 +100,7 @@ impl FlagshipExperiments {
             base_preset: PhysicsPreset::EarthPrime,
             base_pressure_override: None,
             mutation_rate_override: None,
+            cortex_enabled_override: None,
             base_seed: 20260222,
         }
     }
@@ -110,7 +112,7 @@ impl FlagshipExperiments {
     ///
     /// Sweeps gini_wealth_tax_threshold from 0.20 (aggressive redistribution)
     /// to 0.90 (laissez-faire).
-    /// 8 steps × 20 runs × 500 epochs = 160 worlds, 80,000 total epochs.
+    /// 8 steps Ã-- 20 runs Ã-- 500 epochs = 160 worlds, 80,000 total epochs.
     pub fn inequality_threshold() -> ExperimentConfig {
         ExperimentConfig {
             name: "Inequality Threshold: When Does Redistribution Help?".into(),
@@ -141,6 +143,7 @@ impl FlagshipExperiments {
             base_preset: PhysicsPreset::EarthPrime,
             base_pressure_override: None,
             mutation_rate_override: None,
+            cortex_enabled_override: None,
             base_seed: 20260222,
         }
     }
@@ -152,13 +155,13 @@ impl FlagshipExperiments {
     /// depletes reserves; too-passive hoarding (high threshold) concentrates wealth.
     ///
     /// Sweeps treasury_overflow_threshold from 0.10 (deploy early) to 0.90 (hoard).
-    /// 9 steps × 20 runs × 500 epochs = 180 worlds, 90,000 total epochs.
+    /// 9 steps Ã-- 20 runs Ã-- 500 epochs = 180 worlds, 90,000 total epochs.
     pub fn treasury_stability() -> ExperimentConfig {
         ExperimentConfig {
             name: "Treasury Stability: Reserve Deployment Policy".into(),
             hypothesis: "An intermediate treasury overflow threshold (0.30-0.50) maximizes \
-                         population stability and minimizes inequality, while extremes — \
-                         aggressive deployment or passive hoarding — degrade outcomes".into(),
+                         population stability and minimizes inequality, while extremes â€” \
+                         aggressive deployment or passive hoarding â€” degrade outcomes".into(),
             sweep: ParameterSweep::new(
                 SweepVariable::TreasuryOverflowThreshold,
                 0.10,
@@ -185,11 +188,12 @@ impl FlagshipExperiments {
             base_preset: PhysicsPreset::EarthPrime,
             base_pressure_override: None,
             mutation_rate_override: None,
+            cortex_enabled_override: None,
             base_seed: 20260222,
         }
     }
 
-    // ─── Reserve Stress Suite ────────────────────────────────────────────
+    // â”€â”€â”€ Reserve Stress Suite â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     //
     // 4-tier shock experiment: How should reserve deployment policy
     // change when external shock frequency increases?
@@ -199,56 +203,56 @@ impl FlagshipExperiments {
     // treasury_overflow_threshold (reserve deployment policy).
     //
     // Domain mapping:
-    //   Reserve deployment    → treasury overflow threshold
-    //   Shock frequency       → catastrophe_base_prob
-    //   Economic stress       → entropy taxation
-    //   Wealth concentration  → Gini threshold
+    //   Reserve deployment    â†’ treasury overflow threshold
+    //   Shock frequency       â†’ catastrophe_base_prob
+    //   Economic stress       â†’ entropy taxation
+    //   Wealth concentration  â†’ Gini threshold
     //
     // Answers: "Should reserve deployment policy change when
     // external conditions deteriorate?"
 
-    /// Reserve Stress — Calm (shock = 0.001)
+    /// Reserve Stress â€” Calm (shock = 0.001)
     ///
     /// Baseline: Low shock frequency, representing stable conditions.
-    /// Sweeps treasury_overflow_threshold 0.10 → 0.90.
-    /// 9 steps × 15 runs × 500 epochs = 135 worlds, 67,500 epochs.
+    /// Sweeps treasury_overflow_threshold 0.10 â†’ 0.90.
+    /// 9 steps Ã-- 15 runs Ã-- 500 epochs = 135 worlds, 67,500 epochs.
     pub fn reserve_calm() -> ExperimentConfig {
         Self::reserve_tier("Calm", 0.001,
             "Under calm conditions (shock=0.001), aggressive treasury \
              deployment outperforms hoarding with minimal downside risk")
     }
 
-    /// Reserve Stress — Moderate (shock = 0.005)
+    /// Reserve Stress â€” Moderate (shock = 0.005)
     ///
     /// Baseline: Moderate shock frequency, representing normal volatility.
-    /// Sweeps treasury_overflow_threshold 0.10 → 0.90.
-    /// 9 steps × 15 runs × 500 epochs = 135 worlds, 67,500 epochs.
+    /// Sweeps treasury_overflow_threshold 0.10 â†’ 0.90.
+    /// 9 steps Ã-- 15 runs Ã-- 500 epochs = 135 worlds, 67,500 epochs.
     pub fn reserve_moderate() -> ExperimentConfig {
         Self::reserve_tier("Moderate", 0.005,
             "Under moderate shocks (shock=0.005), the optimal deployment \
              threshold shifts toward conservative reserves")
     }
 
-    /// Reserve Stress — Stressed (shock = 0.015)
+    /// Reserve Stress â€” Stressed (shock = 0.015)
     ///
     /// Baseline: High shock frequency, representing environmental stress.
-    /// Sweeps treasury_overflow_threshold 0.10 → 0.90.
-    /// 9 steps × 15 runs × 500 epochs = 135 worlds, 67,500 epochs.
+    /// Sweeps treasury_overflow_threshold 0.10 â†’ 0.90.
+    /// 9 steps Ã-- 15 runs Ã-- 500 epochs = 135 worlds, 67,500 epochs.
     pub fn reserve_stressed() -> ExperimentConfig {
         Self::reserve_tier("Stressed", 0.015,
             "Under stressed conditions (shock=0.015), reserve hoarding begins \
              to outperform deployment as shock recovery demands liquidity buffers")
     }
 
-    /// Reserve Stress — Crisis (shock = 0.030)
+    /// Reserve Stress â€” Crisis (shock = 0.030)
     ///
     /// Baseline: Extreme shock frequency, representing crisis conditions.
-    /// Sweeps treasury_overflow_threshold 0.10 → 0.90.
-    /// 9 steps × 15 runs × 500 epochs = 135 worlds, 67,500 epochs.
+    /// Sweeps treasury_overflow_threshold 0.10 â†’ 0.90.
+    /// 9 steps Ã-- 15 runs Ã-- 500 epochs = 135 worlds, 67,500 epochs.
     pub fn reserve_crisis() -> ExperimentConfig {
         Self::reserve_tier("Crisis", 0.030,
             "Under crisis conditions (shock=0.030), conservative reserve \
-             management becomes critical for survival — deployment policy \
+             management becomes critical for survival â€” deployment policy \
              must shift dramatically or civilizations collapse")
     }
 
@@ -268,7 +272,7 @@ impl FlagshipExperiments {
         base_pressure.catastrophe_base_prob = shock_prob;
 
         ExperimentConfig {
-            name: format!("Reserve Stress — {} (shock={:.3})", tier_label, shock_prob),
+            name: format!("Reserve Stress â€” {} (shock={:.3})", tier_label, shock_prob),
             hypothesis: hypothesis.into(),
             sweep: ParameterSweep::new(
                 SweepVariable::TreasuryOverflowThreshold,
@@ -297,11 +301,12 @@ impl FlagshipExperiments {
             base_preset: PhysicsPreset::EarthPrime,
             base_pressure_override: Some(base_pressure),
             mutation_rate_override: None,
+            cortex_enabled_override: None,
             base_seed: 20260222,
         }
     }
 
-    // ─── Resource Depletion Crossover ───────────────────────────────────
+    // â”€â”€â”€ Resource Depletion Crossover â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     //
     // 4-tier carrying capacity experiment: How does metabolic cost
     // sensitivity change when the population's carrying capacity is
@@ -311,56 +316,56 @@ impl FlagshipExperiments {
     // while sweeping entropy_coeff (metabolic cost of existence).
     //
     // Domain mapping:
-    //   Carrying capacity  → soft_cap
-    //   Metabolic cost     → entropy_coeff
-    //   Resource scarcity  → lower soft_cap = fewer sustainable agents
+    //   Carrying capacity  â†’ soft_cap
+    //   Metabolic cost     â†’ entropy_coeff
+    //   Resource scarcity  â†’ lower soft_cap = fewer sustainable agents
     //
     // Answers: "Does the relationship between metabolic cost and
     // population health change under resource scarcity?"
 
-    /// Resource Depletion — Abundant (soft_cap = 200)
+    /// Resource Depletion â€” Abundant (soft_cap = 200)
     ///
     /// Baseline: High carrying capacity, representing resource abundance.
-    /// Sweeps entropy_coeff 0.00001 → 0.00010, step 0.00001.
-    /// 10 steps × 15 runs × 500 epochs = 150 worlds, 75,000 epochs.
+    /// Sweeps entropy_coeff 0.00001 â†’ 0.00010, step 0.00001.
+    /// 10 steps Ã-- 15 runs Ã-- 500 epochs = 150 worlds, 75,000 epochs.
     pub fn resource_depletion_abundant() -> ExperimentConfig {
         Self::resource_depletion_tier("Abundant", 200, 
             "Under abundant resources (soft_cap=200), increasing metabolic \
              cost has minimal impact on population stability")
     }
 
-    /// Resource Depletion — Normal (soft_cap = 120)
+    /// Resource Depletion â€” Normal (soft_cap = 120)
     ///
     /// Baseline: Normal carrying capacity, representing typical conditions.
-    /// Sweeps entropy_coeff 0.00001 → 0.00010, step 0.00001.
-    /// 10 steps × 15 runs × 500 epochs = 150 worlds, 75,000 epochs.
+    /// Sweeps entropy_coeff 0.00001 â†’ 0.00010, step 0.00001.
+    /// 10 steps Ã-- 15 runs Ã-- 500 epochs = 150 worlds, 75,000 epochs.
     pub fn resource_depletion_normal() -> ExperimentConfig {
         Self::resource_depletion_tier("Normal", 120,
             "Under normal capacity (soft_cap=120), metabolic cost increases \
              produce measurable but manageable population stress")
     }
 
-    /// Resource Depletion — Constrained (soft_cap = 60)
+    /// Resource Depletion â€” Constrained (soft_cap = 60)
     ///
     /// Baseline: Low carrying capacity, representing resource constraints.
-    /// Sweeps entropy_coeff 0.00001 → 0.00010, step 0.00001.
-    /// 10 steps × 15 runs × 500 epochs = 150 worlds, 75,000 epochs.
+    /// Sweeps entropy_coeff 0.00001 â†’ 0.00010, step 0.00001.
+    /// 10 steps Ã-- 15 runs Ã-- 500 epochs = 150 worlds, 75,000 epochs.
     pub fn resource_depletion_constrained() -> ExperimentConfig {
         Self::resource_depletion_tier("Constrained", 60,
             "Under constrained resources (soft_cap=60), metabolic cost \
-             becomes a critical survival factor — small increases may \
+             becomes a critical survival factor â€” small increases may \
              trigger population collapse")
     }
 
-    /// Resource Depletion — Scarce (soft_cap = 30)
+    /// Resource Depletion â€” Scarce (soft_cap = 30)
     ///
     /// Baseline: Minimal carrying capacity, representing extreme scarcity.
-    /// Sweeps entropy_coeff 0.00001 → 0.00010, step 0.00001.
-    /// 10 steps × 15 runs × 500 epochs = 150 worlds, 75,000 epochs.
+    /// Sweeps entropy_coeff 0.00001 â†’ 0.00010, step 0.00001.
+    /// 10 steps Ã-- 15 runs Ã-- 500 epochs = 150 worlds, 75,000 epochs.
     pub fn resource_depletion_scarce() -> ExperimentConfig {
         Self::resource_depletion_tier("Scarce", 30,
             "Under extreme scarcity (soft_cap=30), even moderate metabolic \
-             cost increases become existential — population collapse \
+             cost increases become existential â€” population collapse \
              thresholds shift dramatically")
     }
 
@@ -380,7 +385,7 @@ impl FlagshipExperiments {
         base_pressure.soft_cap = soft_cap;
 
         ExperimentConfig {
-            name: format!("Resource Depletion — {} (cap={})", tier_label, soft_cap),
+            name: format!("Resource Depletion â€” {} (cap={})", tier_label, soft_cap),
             hypothesis: hypothesis.into(),
             sweep: ParameterSweep::new(
                 SweepVariable::EntropyCoeff,
@@ -409,11 +414,12 @@ impl FlagshipExperiments {
             base_preset: PhysicsPreset::EarthPrime,
             base_pressure_override: Some(base_pressure),
             mutation_rate_override: None,
+            cortex_enabled_override: None,
             base_seed: 20260222,
         }
     }
 
-    // ─── Evolution Forbidden ────────────────────────────────────────────
+    // â”€â”€â”€ Evolution Forbidden â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     //
     // Control experiment: What happens when mutation is completely disabled?
     //
@@ -427,8 +433,8 @@ impl FlagshipExperiments {
     // or is the economic structure alone sufficient?
     //
     // Domain mapping:
-    //   Catastrophe frequency → catastrophe_base_prob (swept)
-    //   Adaptation            → mutation_base_rate (locked at 0.0)
+    //   Catastrophe frequency â†’ catastrophe_base_prob (swept)
+    //   Adaptation            â†’ mutation_base_rate (locked at 0.0)
     //
     // Answers: "Can a civilization survive without evolution?"
 
@@ -436,12 +442,12 @@ impl FlagshipExperiments {
     ///
     /// Identical catastrophe sweep as `catastrophe_resilience()` but with
     /// mutation_base_rate locked at 0.0. No trait mutation occurs.
-    /// 7 steps × 20 runs × 500 epochs = 140 worlds, 70,000 total epochs.
+    /// 7 steps Ã-- 20 runs Ã-- 500 epochs = 140 worlds, 70,000 total epochs.
     pub fn evolution_forbidden() -> ExperimentConfig {
         ExperimentConfig {
             name: "Evolution Forbidden: Survival Without Adaptation".into(),
             hypothesis: "Without mutation (base_rate=0.0), civilizations lose resilience \
-                         under catastrophe pressure — collapse rates increase relative to \
+                         under catastrophe pressure â€” collapse rates increase relative to \
                          the standard catastrophe resilience experiment, proving that \
                          adaptation is a necessary survival mechanism".into(),
             sweep: ParameterSweep::new(
@@ -471,8 +477,140 @@ impl FlagshipExperiments {
             base_preset: PhysicsPreset::EarthPrime,
             base_pressure_override: None,
             mutation_rate_override: Some(0.0), // THE KEY: no mutation allowed
+            cortex_enabled_override: None,
             base_seed: 20260222,
         }
+    }
+
+    // â”€â”€â”€ Resilience Matrix â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    //
+    // Week 3: 4-quadrant grid testing all combinations of two adaptation layers:
+    //   Q1: Agent ON,  Cortex ON  (baseline â€” full adaptation)
+    //   Q2: Agent OFF, Cortex ON  (immune only â€” cortex compensates)
+    //   Q3: Agent ON,  Cortex OFF (genetic only â€” traits compensate)
+    //   Q4: Agent OFF, Cortex OFF (true kill test â€” fully static)
+    //
+    // Thesis: Resilience emerges from layered adaptive redundancy.
+    // Goal: Find the first collapse.
+
+    /// Q1: Both adaptation layers active (baseline control).
+    pub fn resilience_q1_both() -> ExperimentConfig {
+        Self::resilience_quadrant(
+            "Resilience Matrix Q1: Full Adaptation",
+            "With both agent-level mutation and cortex immune adaptation active, \
+             civilizations maintain maximum resilience across all catastrophe levels â€” \
+             this is the baseline against which partial and total disablement are measured",
+            None,        // mutation_rate: default (ON)
+            None,        // cortex: default (ON)
+        )
+    }
+
+    /// Q2: Agent-level mutation OFF, cortex immune ON.
+    /// (This is evolution_forbidden but with wider sweep to 0.05.)
+    pub fn resilience_q2_immune_only() -> ExperimentConfig {
+        Self::resilience_quadrant(
+            "Resilience Matrix Q2: Immune Only",
+            "With agent-level trait mutation frozen but cortex immune adaptation active, \
+             civilizations rely solely on environmental pressure tuning â€” the cortex \
+             compensates for frozen genetics, but may fail at extreme catastrophe rates",
+            Some(0.0),   // mutation_rate: OFF
+            None,        // cortex: default (ON)
+        )
+    }
+
+    /// Q3: Agent-level mutation ON, cortex immune OFF.
+    pub fn resilience_q3_genetic_only() -> ExperimentConfig {
+        Self::resilience_quadrant(
+            "Resilience Matrix Q3: Genetic Only",
+            "With cortex immune adaptation disabled but agent-level trait mutation active, \
+             civilizations rely solely on genetic adaptation â€” without environmental \
+             pressure tuning, raw selection pressure determines survival",
+            None,        // mutation_rate: default (ON)
+            Some(false), // cortex: OFF
+        )
+    }
+
+    /// Q4: Both adaptation layers OFF â€” the true kill test.
+    pub fn resilience_q4_static() -> ExperimentConfig {
+        Self::resilience_quadrant(
+            "Resilience Matrix Q4: Fully Static",
+            "With BOTH adaptation layers disabled â€” no trait mutation, no cortex immune \
+             adaptation â€” civilizations are completely static. This is the true kill test: \
+             if collapse occurs here but not in Q1-Q3, it proves layered adaptive redundancy \
+             is the stabilizing mechanism",
+            Some(0.0),   // mutation_rate: OFF
+            Some(false), // cortex: OFF
+        )
+    }
+
+    /// Internal builder for resilience quadrant configs.
+    fn resilience_quadrant(
+        name: &str,
+        hypothesis: &str,
+        mutation_rate: Option<f64>,
+        cortex_enabled: Option<bool>,
+    ) -> ExperimentConfig {
+        ExperimentConfig {
+            name: name.into(),
+            hypothesis: hypothesis.into(),
+            sweep: ParameterSweep::new(
+                SweepVariable::CatastropheBaseProb,
+                0.0,   // peaceful
+                0.05,  // wider than Week 2's 0.03 â€” push to breaking
+                0.005, // 11 steps
+            ),
+            runs_per_step: 20,
+            epochs_per_run: 500,
+            metrics: vec![
+                Metric::FinalPopulation,
+                Metric::Collapsed,
+                Metric::SurvivalEpochs,
+                Metric::TotalCatastropheDeaths,
+                Metric::MeanPopulation,
+                Metric::PopulationVolatility,
+                Metric::TotalImmuneThreats,
+                Metric::TotalPressureMutations,
+                Metric::TotalTraitMutations,
+                Metric::MeanFitness,
+                Metric::BirthDeathRatio,
+                Metric::GiniCoefficient,
+                Metric::TotalBirths,
+                Metric::TotalDeaths,
+                Metric::TotalEntropyBurned,
+            ],
+            base_preset: PhysicsPreset::EarthPrime,
+            base_pressure_override: None,
+            mutation_rate_override: mutation_rate,
+            cortex_enabled_override: cortex_enabled,
+            base_seed: 20260223, // Week 3 seed
+        }
+    }
+
+    /// Returns all 4 quadrants as a suite.
+    pub fn resilience_matrix_suite() -> Vec<(&'static str, ExperimentConfig)> {
+        vec![
+            ("resilience_q1_both", Self::resilience_q1_both()),
+            ("resilience_q2_immune_only", Self::resilience_q2_immune_only()),
+            ("resilience_q3_genetic_only", Self::resilience_q3_genetic_only()),
+            ("resilience_q4_static", Self::resilience_q4_static()),
+        ]
+    }
+
+    /// Quick versions for testing.
+    pub fn resilience_q1_both_quick() -> ExperimentConfig {
+        let mut config = Self::resilience_q1_both();
+        config.name = "Resilience Q1 Both (Quick)".into();
+        config.runs_per_step = 3;
+        config.epochs_per_run = 50;
+        config
+    }
+
+    pub fn resilience_q4_static_quick() -> ExperimentConfig {
+        let mut config = Self::resilience_q4_static();
+        config.name = "Resilience Q4 Static (Quick)".into();
+        config.runs_per_step = 3;
+        config.epochs_per_run = 50;
+        config
     }
 
     /// Quick versions of flagships for testing (fewer runs, fewer epochs).
@@ -580,6 +718,105 @@ impl FlagshipExperiments {
         config
     }
 
+
+    // --- Multi-Axis Collapse Vector -------------------------------------
+    //
+    // The boundary search experiment. Every survival mechanism stripped
+    // simultaneously while sweeping carrying capacity downward.
+    //
+    // Axes locked hostile:
+    //   Mutation:       mutation_rate_override = 0.0 (no adaptation)
+    //   Immune system:  cortex_enabled_override = false (no self-regulation)
+    //   Redistribution: gini_wealth_tax_threshold = 1.0 (never triggers)
+    //                   gini_wealth_tax_rate = 0.0 (zero tax)
+    //   Treasury:       treasury_overflow_threshold = 1.0 (never deploys)
+    //   Catastrophe:    catastrophe_base_prob = 0.03 (maximum tested)
+    //   Entropy:        entropy_coeff = 0.0001 (10x default, harshest)
+    //
+    // Sweep: soft_cap from 30 to 180 (step 15) -- 11 capacity levels.
+    //
+    // This is not a parameter study. It is a search for the attractor
+    // boundary. If the system collapses at any capacity level, we have
+    // found the first boundary condition in Genesis Protocol. If it
+    // survives at all levels, structural immunity is proven under
+    // correlated multi-axis stress.
+    //
+    // Domain mapping:
+    //   Carrying capacity  ? soft_cap (swept)
+    //   All protections    ? disabled or maximally hostile
+    //
+    // Answers: "Does the attractor have a boundary?"
+
+    /// Multi-Axis Collapse Vector: Attractor Boundary Search
+    ///
+    /// Every survival mechanism disabled. Maximum catastrophe + entropy.
+    /// Sweeps soft_cap from 30 (extreme scarcity) to 180 (normal).
+    /// 11 steps x 20 runs x 500 epochs = 220 worlds, 110,000 total epochs.
+    pub fn multi_axis_collapse() -> ExperimentConfig {
+        let mut hostile_pressure = PressureConfig::default();
+        // Maximum catastrophe -- one shock every ~33 epochs
+        hostile_pressure.catastrophe_base_prob = 0.03;
+        // Harshest entropy -- 10x default
+        hostile_pressure.entropy_coeff = 0.0001;
+        // Disable wealth redistribution completely
+        hostile_pressure.gini_wealth_tax_threshold = 1.0; // Gini can never reach 1.0
+        hostile_pressure.gini_wealth_tax_rate = 0.0;       // Zero tax even if triggered
+        // Treasury never deploys reserves
+        hostile_pressure.treasury_overflow_threshold = 1.0;
+
+        ExperimentConfig {
+            name: "Multi-Axis Collapse Vector: Attractor Boundary Search".into(),
+            hypothesis: "Under simultaneous maximal stress -- no mutation, no immune system, \
+                         no redistribution, no treasury deployment, maximum catastrophe, \
+                         maximum entropy -- carrying capacity compression will reveal \
+                         the attractor boundary. If collapse occurs at any soft_cap level, \
+                         the first boundary condition in Genesis Protocol is established. \
+                         If the system survives at all levels, structural immunity is proven \
+                         under correlated multi-axis stress.".into(),
+            sweep: ParameterSweep::new(
+                SweepVariable::SoftCap,
+                30.0,   // extreme scarcity
+                180.0,  // normal capacity
+                15.0,   // 11 steps
+            ),
+            runs_per_step: 20,
+            epochs_per_run: 500,
+            metrics: vec![
+                Metric::FinalPopulation,
+                Metric::Collapsed,
+                Metric::SurvivalEpochs,
+                Metric::MeanPopulation,
+                Metric::PopulationVolatility,
+                Metric::MeanFitness,
+                Metric::MaxFitness,
+                Metric::GiniCoefficient,
+                Metric::TotalBirths,
+                Metric::TotalDeaths,
+                Metric::BirthDeathRatio,
+                Metric::TotalCatastropheDeaths,
+                Metric::TotalEntropyBurned,
+                Metric::TreasuryRatio,
+                Metric::RoleEntropy,
+                Metric::TotalTraitMutations,
+                Metric::TotalPressureMutations,
+                Metric::TotalImmuneThreats,
+            ],
+            base_preset: PhysicsPreset::EarthPrime,
+            base_pressure_override: Some(hostile_pressure),
+            mutation_rate_override: Some(0.0),        // No adaptation
+            cortex_enabled_override: Some(false),     // No immune self-regulation
+            base_seed: 20260222,
+        }
+    }
+
+    pub fn multi_axis_collapse_quick() -> ExperimentConfig {
+        let mut config = Self::multi_axis_collapse();
+        config.name = "Multi-Axis Collapse Vector (Quick)".into();
+        config.runs_per_step = 3;
+        config.epochs_per_run = 50;
+        config
+    }
+
     /// List all flagship experiment names.
     pub fn list() -> Vec<&'static str> {
         vec![
@@ -587,15 +824,20 @@ impl FlagshipExperiments {
             "Catastrophe Resilience: Survival Under Fire",
             "Inequality Threshold: When Does Redistribution Help?",
             "Treasury Stability: Reserve Deployment Policy",
-            "Reserve Stress — Calm",
-            "Reserve Stress — Moderate",
-            "Reserve Stress — Stressed",
-            "Reserve Stress — Crisis",
-            "Resource Depletion — Abundant",
-            "Resource Depletion — Normal",
-            "Resource Depletion — Constrained",
-            "Resource Depletion — Scarce",
+            "Reserve Stress â€” Calm",
+            "Reserve Stress â€” Moderate",
+            "Reserve Stress â€” Stressed",
+            "Reserve Stress â€” Crisis",
+            "Resource Depletion â€” Abundant",
+            "Resource Depletion â€” Normal",
+            "Resource Depletion â€” Constrained",
+            "Resource Depletion â€” Scarce",
             "Evolution Forbidden: Survival Without Adaptation",
+            "Resilience Matrix Q1: Full Adaptation",
+            "Resilience Matrix Q2: Immune Only",
+            "Resilience Matrix Q3: Genetic Only",
+            "Resilience Matrix Q4: Fully Static",
+            "Multi-Axis Collapse Vector: Attractor Boundary Search",
         ]
     }
 }
@@ -684,7 +926,7 @@ mod tests {
     #[test]
     fn flagship_list() {
         let list = FlagshipExperiments::list();
-        assert_eq!(list.len(), 13);
+        assert_eq!(list.len(), 18);
         assert!(list[0].contains("Entropy"));
         assert!(list[1].contains("Catastrophe"));
         assert!(list[2].contains("Inequality"));
@@ -698,6 +940,11 @@ mod tests {
         assert!(list[10].contains("Constrained"));
         assert!(list[11].contains("Scarce"));
         assert!(list[12].contains("Evolution Forbidden"));
+        assert!(list[13].contains("Q1"));
+        assert!(list[14].contains("Q2"));
+        assert!(list[15].contains("Q3"));
+        assert!(list[16].contains("Q4"));
+        assert!(list[17].contains("Multi-Axis"));
     }
 
     #[test]
@@ -798,4 +1045,103 @@ mod tests {
             }
         }
     }
+
+    // â”€â”€â”€ Resilience Matrix Tests â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+    #[test]
+    fn resilience_q1_config_valid() {
+        let config = FlagshipExperiments::resilience_q1_both();
+        assert_eq!(config.sweep.step_count(), 11);
+        assert_eq!(config.total_worlds(), 220);
+        assert!(config.metrics.len() >= 14);
+        assert!(config.mutation_rate_override.is_none());
+        assert!(config.cortex_enabled_override.is_none());
+    }
+
+    #[test]
+    fn resilience_q4_config_valid() {
+        let config = FlagshipExperiments::resilience_q4_static();
+        assert_eq!(config.sweep.step_count(), 11);
+        assert_eq!(config.total_worlds(), 220);
+        assert_eq!(config.mutation_rate_override, Some(0.0));
+        assert_eq!(config.cortex_enabled_override, Some(false));
+    }
+
+    #[test]
+    fn resilience_matrix_suite_valid() {
+        let suite = FlagshipExperiments::resilience_matrix_suite();
+        assert_eq!(suite.len(), 4);
+        let total_worlds: usize = suite.iter().map(|(_, c)| c.total_worlds()).sum();
+        assert_eq!(total_worlds, 880); // 4 Ã-- 220
+    }
+
+    #[test]
+    fn quick_resilience_q1_runs() {
+        let config = FlagshipExperiments::resilience_q1_both_quick();
+        let result = ExperimentRunner::run(&config);
+        assert_eq!(result.steps.len(), 11);
+        assert!(result.total_worlds > 0);
+    }
+
+    #[test]
+    fn quick_resilience_q4_static_runs() {
+        let config = FlagshipExperiments::resilience_q4_static_quick();
+        let result = ExperimentRunner::run(&config);
+        assert_eq!(result.steps.len(), 11);
+        assert!(result.total_worlds > 0);
+        // THE TRUE KILL TEST: both mutation layers must be zero
+        for step in &result.steps {
+            for trial in &step.trials {
+                if let Some(&mutations) = trial.metrics.get("total_trait_mutations") {
+                    assert_eq!(mutations, 0.0,
+                        "Q4: expected zero trait mutations");
+                }
+                if let Some(&pressure) = trial.metrics.get("total_pressure_mutations") {
+                    assert_eq!(pressure, 0.0,
+                        "Q4: expected zero pressure mutations (cortex disabled)");
+                }
+            }
+        }
+    }
+    // --- Multi-Axis Collapse Tests --------------------------------------
+
+    #[test]
+    fn multi_axis_collapse_config_valid() {
+        let config = FlagshipExperiments::multi_axis_collapse();
+        assert_eq!(config.sweep.step_count(), 11);
+        assert_eq!(config.total_worlds(), 220);
+        assert!(config.metrics.len() >= 17); // all 18 metrics
+        // Verify all hostile axes are set
+        assert_eq!(config.mutation_rate_override, Some(0.0));
+        assert_eq!(config.cortex_enabled_override, Some(false));
+        let p = config.base_pressure_override.as_ref().unwrap();
+        assert!((p.catastrophe_base_prob - 0.03).abs() < 1e-10);
+        assert!((p.entropy_coeff - 0.0001).abs() < 1e-10);
+        assert!((p.gini_wealth_tax_threshold - 1.0).abs() < 1e-10);
+        assert!((p.gini_wealth_tax_rate - 0.0).abs() < 1e-10);
+        assert!((p.treasury_overflow_threshold - 1.0).abs() < 1e-10);
+    }
+
+    #[test]
+    fn quick_multi_axis_collapse_runs() {
+        let config = FlagshipExperiments::multi_axis_collapse_quick();
+        let result = ExperimentRunner::run(&config);
+        assert_eq!(result.steps.len(), 11);
+        assert!(result.total_worlds > 0);
+        // Verify mutation was suppressed across all trials
+        for step in &result.steps {
+            for trial in &step.trials {
+                if let Some(&mutations) = trial.metrics.get("total_trait_mutations") {
+                    assert_eq!(mutations, 0.0,
+                        "Expected zero trait mutations in multi-axis collapse");
+                }
+                // Verify cortex did not fire (no pressure mutations)
+                if let Some(&pm) = trial.metrics.get("total_pressure_mutations") {
+                    assert_eq!(pm, 0.0,
+                        "Expected zero pressure mutations with cortex disabled");
+                }
+            }
+        }
+    }
+
 }

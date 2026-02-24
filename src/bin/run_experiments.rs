@@ -32,9 +32,13 @@ fn main() {
     // Resource Depletion Suite — 4 carrying capacity tiers
     let depletion_suite = FlagshipExperiments::resource_depletion_suite();
 
+    // Resilience Matrix — 4 quadrants (Week 3)
+    let resilience_suite = FlagshipExperiments::resilience_matrix_suite();
+
     let mut all_findings: Vec<(String, Vec<String>)> = Vec::new();
     let mut reserve_findings: Vec<(String, String, Vec<String>)> = Vec::new(); // (slug, name, findings)
     let mut depletion_findings: Vec<(String, String, Vec<String>)> = Vec::new();
+    let mut resilience_findings: Vec<(String, String, Vec<String>)> = Vec::new();
     let global_start = Instant::now();
 
     for (slug, config) in &experiments {
@@ -204,11 +208,74 @@ fn main() {
     println!();
     all_findings.push(("Resource Depletion — Cross-Tier Synthesis".into(), depletion_synthesis));
 
+    // ─── Resilience Matrix (Week 3) ─────────────────────────────────────
+    println!("╔══════════════════════════════════════════════════════════╗");
+    println!("║   RESILIENCE MATRIX — 4 QUADRANT ADAPTATION GRID       ║");
+    println!("║       Week 3: Finding the Breaking Point               ║");
+    println!("╚══════════════════════════════════════════════════════════╝");
+    println!();
+
+    let mut resilience_results: Vec<(&str, genesis_experiment::ExperimentResult)> = Vec::new();
+
+    for (slug, config) in &resilience_suite {
+        println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+        println!("  Experiment: {}", config.name);
+        println!("  Hypothesis: {}", config.hypothesis);
+        println!("  Worlds: {} | Epochs/world: {} | Total epochs: {}",
+            config.total_worlds(),
+            config.epochs_per_run,
+            config.total_worlds() as u64 * config.epochs_per_run,
+        );
+        let agent_status = if config.mutation_rate_override == Some(0.0) { "OFF" } else { "ON" };
+        let cortex_status = if config.cortex_enabled_override == Some(false) { "OFF" } else { "ON" };
+        println!("  Agent Mutation: {} | Cortex Immune: {}", agent_status, cortex_status);
+        println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+
+        let start = Instant::now();
+        let result = ExperimentRunner::run(config);
+        let elapsed = start.elapsed();
+
+        println!("  Completed in {:.2}s", elapsed.as_secs_f64());
+        println!("  Total epochs run: {}", result.total_epochs_run);
+        println!("  Result hash: {}", &result.result_hash);
+        println!();
+
+        // Per-quadrant findings
+        let findings = derive_resilience_quadrant_findings(slug, &result);
+        for (i, f) in findings.iter().enumerate() {
+            println!("  Finding {}: {}", i + 1, f);
+        }
+        println!();
+
+        // Generate report
+        let report = ExperimentReport::generate(&result, findings.clone());
+        let dir = format!("{}/{}", output_dir, slug);
+        report.save_to_dir_with_slug(&dir, Some(slug)).expect("Failed to save report");
+
+        println!("  Saved: {}/", dir);
+        println!();
+
+        resilience_findings.push((slug.to_string(), config.name.clone(), findings));
+        resilience_results.push((slug, result));
+    }
+
+    // ─── Resilience Matrix Cross-Quadrant Synthesis ─────────────────────
+    let resilience_synthesis = derive_resilience_cross_quadrant_synthesis(&resilience_results);
+    println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+    println!("  RESILIENCE MATRIX — CROSS-QUADRANT SYNTHESIS");
+    println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+    for (i, s) in resilience_synthesis.iter().enumerate() {
+        println!("  Synthesis {}: {}", i + 1, s);
+    }
+    println!();
+    all_findings.push(("Resilience Matrix — Cross-Quadrant Synthesis".into(), resilience_synthesis));
+
     let total_elapsed = global_start.elapsed();
 
     let total_worlds: usize = experiments.iter().map(|(_, c)| c.total_worlds()).sum::<usize>()
         + reserve_suite.iter().map(|(_, c)| c.total_worlds()).sum::<usize>()
-        + depletion_suite.iter().map(|(_, c)| c.total_worlds()).sum::<usize>();
+        + depletion_suite.iter().map(|(_, c)| c.total_worlds()).sum::<usize>()
+        + resilience_suite.iter().map(|(_, c)| c.total_worlds()).sum::<usize>();
 
     println!("╔══════════════════════════════════════════════════════════╗");
     println!("║                   ALL EXPERIMENTS COMPLETE              ║");
@@ -245,6 +312,17 @@ fn main() {
     println!("── Resource Depletion — Per-Tier Findings ──");
     println!();
     for (_, name, findings) in &depletion_findings {
+        println!("  {}", name);
+        for f in findings {
+            println!("    • {}", f);
+        }
+        println!();
+    }
+
+    // Print resilience matrix per-quadrant findings
+    println!("── Resilience Matrix — Per-Quadrant Findings ──");
+    println!();
+    for (_, name, findings) in &resilience_findings {
         println!("  {}", name);
         for f in findings {
             println!("    • {}", f);
@@ -1057,6 +1135,249 @@ fn derive_depletion_cross_tier_synthesis(
         synthesis.push(format!(
             "Fitness degradation abundant → scarce: {:.1}% (mean fitness {:.4} → {:.4})",
             degradation, abundant_avg, scarce_avg
+        ));
+    }
+
+    synthesis
+}
+
+/// Derive per-quadrant findings for a resilience matrix experiment.
+fn derive_resilience_quadrant_findings(slug: &str, result: &genesis_experiment::ExperimentResult) -> Vec<String> {
+    let mut findings = Vec::new();
+
+    let agent_status = if result.config.mutation_rate_override == Some(0.0) { "OFF" } else { "ON" };
+    let cortex_status = if result.config.cortex_enabled_override == Some(false) { "OFF" } else { "ON" };
+    let quadrant_label = match slug {
+        "resilience_q1_both" => "Q1 (Both ON)",
+        "resilience_q2_immune_only" => "Q2 (Immune Only)",
+        "resilience_q3_genetic_only" => "Q3 (Genetic Only)",
+        "resilience_q4_static" => "Q4 (Fully Static)",
+        _ => slug,
+    };
+
+    findings.push(format!(
+        "{}: Agent Mutation={}, Cortex Immune={}",
+        quadrant_label, agent_status, cortex_status
+    ));
+
+    // Collapse curve across catastrophe intensities
+    let peaceful_collapse = result.steps.first().map(|s| s.collapse_rate).unwrap_or(0.0);
+    let extreme_collapse = result.steps.last().map(|s| s.collapse_rate).unwrap_or(0.0);
+
+    // Find first non-zero collapse step
+    let first_collapse_step = result.steps.iter()
+        .find(|s| s.collapse_rate > 0.0);
+
+    if let Some(step) = first_collapse_step {
+        findings.push(format!(
+            "COLLAPSE DETECTED at catastrophe_base_prob = {:.4} (collapse rate: {:.0}%)",
+            step.parameter_value, step.collapse_rate * 100.0
+        ));
+    } else {
+        findings.push("No collapses observed across entire catastrophe range (0.0→0.05)".into());
+    }
+
+    findings.push(format!(
+        "Collapse rate: {:.0}% at peaceful (0.0) vs {:.0}% at extreme (0.05)",
+        peaceful_collapse * 100.0, extreme_collapse * 100.0
+    ));
+
+    // Survival epochs
+    let survival_first = result.steps.first().map(|s| s.mean_survival_epochs).unwrap_or(0.0);
+    let survival_last = result.steps.last().map(|s| s.mean_survival_epochs).unwrap_or(0.0);
+    findings.push(format!(
+        "Mean survival: {:.1} epochs (peaceful) vs {:.1} (extreme catastrophe)",
+        survival_first, survival_last
+    ));
+
+    // Mutation verification
+    let total_trait_mutations: f64 = result.steps.iter()
+        .flat_map(|s| s.trials.iter())
+        .filter_map(|t| t.metrics.get("total_trait_mutations"))
+        .sum();
+    let total_pressure_mutations: f64 = result.steps.iter()
+        .flat_map(|s| s.trials.iter())
+        .filter_map(|t| t.metrics.get("total_pressure_mutations"))
+        .sum();
+
+    findings.push(format!(
+        "Total trait mutations: {:.0} | Total pressure mutations: {:.0}",
+        total_trait_mutations, total_pressure_mutations
+    ));
+
+    // Mean fitness at extremes
+    let fit_first = result.steps.first()
+        .and_then(|s| s.metric_summaries.get("mean_fitness"))
+        .map(|s| s.mean);
+    let fit_last = result.steps.last()
+        .and_then(|s| s.metric_summaries.get("mean_fitness"))
+        .map(|s| s.mean);
+    if let (Some(first), Some(last)) = (fit_first, fit_last) {
+        findings.push(format!(
+            "Mean fitness: {:.4} (peaceful) vs {:.4} (extreme)",
+            first, last
+        ));
+    }
+
+    // Population at extremes
+    let pop_first = result.steps.first()
+        .and_then(|s| s.metric_summaries.get("mean_population"))
+        .map(|s| s.mean);
+    let pop_last = result.steps.last()
+        .and_then(|s| s.metric_summaries.get("mean_population"))
+        .map(|s| s.mean);
+    if let (Some(first), Some(last)) = (pop_first, pop_last) {
+        findings.push(format!(
+            "Mean population: {:.1} (peaceful) vs {:.1} (extreme)",
+            first, last
+        ));
+    }
+
+    // Catastrophe deaths at extreme
+    let cat_deaths_last = result.steps.last()
+        .and_then(|s| s.metric_summaries.get("total_catastrophe_deaths"))
+        .map(|s| s.mean);
+    if let Some(deaths) = cat_deaths_last {
+        findings.push(format!(
+            "Mean catastrophe deaths at extreme: {:.1}",
+            deaths
+        ));
+    }
+
+    findings
+}
+
+/// Cross-quadrant synthesis: compare all 4 resilience conditions.
+fn derive_resilience_cross_quadrant_synthesis(
+    results: &[(&str, genesis_experiment::ExperimentResult)],
+) -> Vec<String> {
+    let mut synthesis = Vec::new();
+
+    let quadrant_names = ["Q1 (Both ON)", "Q2 (Immune Only)", "Q3 (Genetic Only)", "Q4 (Static)"];
+
+    // Extract key metrics per quadrant at extreme catastrophe (last step)
+    let mut quadrant_data: Vec<(String, f64, f64, f64, f64, f64)> = Vec::new();
+    // (name, collapse_rate_extreme, mean_pop_extreme, mean_fitness_extreme, trait_mutations, pressure_mutations)
+
+    for (i, (_slug, result)) in results.iter().enumerate() {
+        let name = if i < quadrant_names.len() { quadrant_names[i].to_string() } else { _slug.to_string() };
+
+        let collapse_extreme = result.steps.last().map(|s| s.collapse_rate).unwrap_or(0.0);
+        let pop_extreme = result.steps.last()
+            .and_then(|s| s.metric_summaries.get("mean_population"))
+            .map(|s| s.mean).unwrap_or(0.0);
+        let fit_extreme = result.steps.last()
+            .and_then(|s| s.metric_summaries.get("mean_fitness"))
+            .map(|s| s.mean).unwrap_or(0.0);
+        let trait_muts: f64 = result.steps.iter()
+            .flat_map(|s| s.trials.iter())
+            .filter_map(|t| t.metrics.get("total_trait_mutations"))
+            .sum();
+        let pressure_muts: f64 = result.steps.iter()
+            .flat_map(|s| s.trials.iter())
+            .filter_map(|t| t.metrics.get("total_pressure_mutations"))
+            .sum();
+
+        quadrant_data.push((name, collapse_extreme, pop_extreme, fit_extreme, trait_muts, pressure_muts));
+    }
+
+    // Headline: Collapse comparison at extreme catastrophe
+    synthesis.push("── Collapse rates at extreme catastrophe (0.05) ──".into());
+    for qd in &quadrant_data {
+        synthesis.push(format!(
+            "  {}: collapse={:.0}%, pop={:.1}, fitness={:.4}",
+            qd.0, qd.1 * 100.0, qd.2, qd.3
+        ));
+    }
+
+    // Find which quadrant first shows collapse
+    let mut first_collapse_quadrant: Option<&str> = None;
+    let mut first_collapse_rate = 0.0;
+    for (slug, result) in results {
+        let any_collapse = result.steps.iter().any(|s| s.collapse_rate > 0.0);
+        if any_collapse && first_collapse_quadrant.is_none() {
+            let step = result.steps.iter().find(|s| s.collapse_rate > 0.0).unwrap();
+            first_collapse_quadrant = Some(slug);
+            first_collapse_rate = step.collapse_rate;
+        }
+    }
+
+    if let Some(slug) = first_collapse_quadrant {
+        synthesis.push(format!(
+            "FIRST COLLAPSE: {} (collapse rate: {:.0}%)",
+            slug, first_collapse_rate * 100.0
+        ));
+    } else {
+        synthesis.push("NO COLLAPSE observed in ANY quadrant — system is structurally resilient".into());
+    }
+
+    // Mutation layer verification
+    synthesis.push("── Mutation layer verification ──".into());
+    for qd in &quadrant_data {
+        synthesis.push(format!(
+            "  {}: trait_mutations={:.0}, pressure_mutations={:.0}",
+            qd.0, qd.4, qd.5
+        ));
+    }
+
+    // The key comparison: Q1 vs Q4
+    if quadrant_data.len() >= 4 {
+        let q1 = &quadrant_data[0];
+        let q4 = &quadrant_data[3];
+
+        let collapse_diff = (q4.1 - q1.1) * 100.0;
+        let pop_diff = q4.2 - q1.2;
+        let fit_diff = q4.3 - q1.3;
+
+        synthesis.push(format!(
+            "Q4 vs Q1 delta: collapse={:+.0}pp, pop={:+.1}, fitness={:+.4}",
+            collapse_diff, pop_diff, fit_diff
+        ));
+
+        if q4.1 > q1.1 + 0.01 {
+            synthesis.push(
+                "THESIS CONFIRMED: Removing all adaptation layers increases collapse \
+                 — resilience emerges from layered adaptive redundancy".into()
+            );
+        } else if (q4.1 - q1.1).abs() < 0.01 {
+            synthesis.push(
+                "THESIS CHALLENGED: Collapse rates similar between full adaptation and fully static \
+                 — structural design may dominate over adaptation as the stabilizing mechanism".into()
+            );
+        }
+
+        // Compare Q2 vs Q3: which layer matters more?
+        let q2 = &quadrant_data[1];
+        let q3 = &quadrant_data[2];
+        if q2.1 < q3.1 - 0.01 {
+            synthesis.push(format!(
+                "Cortex immune adaptation (Q2) more protective than agent mutation (Q3): \
+                 collapse {:.0}% vs {:.0}%",
+                q2.1 * 100.0, q3.1 * 100.0
+            ));
+        } else if q3.1 < q2.1 - 0.01 {
+            synthesis.push(format!(
+                "Agent mutation (Q3) more protective than cortex immune (Q2): \
+                 collapse {:.0}% vs {:.0}%",
+                q3.1 * 100.0, q2.1 * 100.0
+            ));
+        } else {
+            synthesis.push(format!(
+                "Both layers contribute equally: Q2 collapse={:.0}%, Q3 collapse={:.0}%",
+                q2.1 * 100.0, q3.1 * 100.0
+            ));
+        }
+
+        // Mean fitness comparison at extreme
+        synthesis.push(format!(
+            "Fitness at extreme: Q1={:.4}, Q2={:.4}, Q3={:.4}, Q4={:.4}",
+            q1.3, q2.3, q3.3, q4.3
+        ));
+
+        // Population comparison
+        synthesis.push(format!(
+            "Population at extreme: Q1={:.1}, Q2={:.1}, Q3={:.1}, Q4={:.1}",
+            q1.2, q2.2, q3.2, q4.2
         ));
     }
 

@@ -1,0 +1,51 @@
+{
+  "manifest_id": "GEN-EXP-09D03FEB5017",
+  "config": {
+    "name": "Resilience Matrix Q1: Full Adaptation",
+    "hypothesis": "With both agent-level mutation and cortex immune adaptation active, civilizations maintain maximum resilience across all catastrophe levels — this is the baseline against which partial and total disablement are measured",
+    "sweep": {
+      "variable": "CatastropheBaseProb",
+      "start": 0.0,
+      "end": 0.05,
+      "step": 0.005
+    },
+    "runs_per_step": 20,
+    "epochs_per_run": 500,
+    "metrics": [
+      "FinalPopulation",
+      "Collapsed",
+      "SurvivalEpochs",
+      "TotalCatastropheDeaths",
+      "MeanPopulation",
+      "PopulationVolatility",
+      "TotalImmuneThreats",
+      "TotalPressureMutations",
+      "TotalTraitMutations",
+      "MeanFitness",
+      "BirthDeathRatio",
+      "GiniCoefficient",
+      "TotalBirths",
+      "TotalDeaths",
+      "TotalEntropyBurned"
+    ],
+    "base_preset": "EarthPrime",
+    "base_seed": 20260223
+  },
+  "created_at": "2026-02-24T01:41:04.222924900Z",
+  "result_hash": "f267319bb71702afc9e5d05c3abdebf1a9aea63fbdb13f747dde8e6d5dd74b01",
+  "manifest_hash": "a0e9c0254fdedbd3f24aad5d49701c85c0fb3727607657b8c6a912fb28b5b2d9",
+  "total_worlds": 220,
+  "total_epochs": 110000,
+  "duration_ms": 7076,
+  "findings": [
+    "Q1 (Both ON): Agent Mutation=ON, Cortex Immune=ON",
+    "No collapses observed across entire catastrophe range (0.0→0.05)",
+    "Collapse rate: 0% at peaceful (0.0) vs 0% at extreme (0.05)",
+    "Mean survival: 500.0 epochs (peaceful) vs 500.0 (extreme catastrophe)",
+    "Total trait mutations: 1178852 | Total pressure mutations: 4878",
+    "Mean fitness: 0.5316 (peaceful) vs 0.5747 (extreme)",
+    "Mean population: 48.9 (peaceful) vs 45.2 (extreme)",
+    "Mean catastrophe deaths at extreme: 23.5"
+  ],
+  "protocol_version": "0.1.0"
+}

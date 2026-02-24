@@ -1,0 +1,53 @@
+{
+  "manifest_id": "GEN-EXP-77773240721B",
+  "config": {
+    "name": "Resilience Matrix Q4: Fully Static",
+    "hypothesis": "With BOTH adaptation layers disabled — no trait mutation, no cortex immune adaptation — civilizations are completely static. This is the true kill test: if collapse occurs here but not in Q1-Q3, it proves layered adaptive redundancy is the stabilizing mechanism",
+    "sweep": {
+      "variable": "CatastropheBaseProb",
+      "start": 0.0,
+      "end": 0.05,
+      "step": 0.005
+    },
+    "runs_per_step": 20,
+    "epochs_per_run": 500,
+    "metrics": [
+      "FinalPopulation",
+      "Collapsed",
+      "SurvivalEpochs",
+      "TotalCatastropheDeaths",
+      "MeanPopulation",
+      "PopulationVolatility",
+      "TotalImmuneThreats",
+      "TotalPressureMutations",
+      "TotalTraitMutations",
+      "MeanFitness",
+      "BirthDeathRatio",
+      "GiniCoefficient",
+      "TotalBirths",
+      "TotalDeaths",
+      "TotalEntropyBurned"
+    ],
+    "base_preset": "EarthPrime",
+    "mutation_rate_override": 0.0,
+    "cortex_enabled_override": false,
+    "base_seed": 20260223
+  },
+  "created_at": "2026-02-24T01:41:23.181101100Z",
+  "result_hash": "b893ef634516e2ebf8e9e6ae87573d3feccb8b999f8307ae4373a37851ffc906",
+  "manifest_hash": "0d4d511c8ed77e49b5a4f4fc5439225ca169f243c9ee8a4f23de37b8b7de3d4a",
+  "total_worlds": 220,
+  "total_epochs": 110000,
+  "duration_ms": 5931,
+  "findings": [
+    "Q4 (Fully Static): Agent Mutation=OFF, Cortex Immune=OFF",
+    "No collapses observed across entire catastrophe range (0.0→0.05)",
+    "Collapse rate: 0% at peaceful (0.0) vs 0% at extreme (0.05)",
+    "Mean survival: 500.0 epochs (peaceful) vs 500.0 (extreme catastrophe)",
+    "Total trait mutations: 0 | Total pressure mutations: 0",
+    "Mean fitness: 0.5382 (peaceful) vs 0.5727 (extreme)",
+    "Mean population: 48.7 (peaceful) vs 44.3 (extreme)",
+    "Mean catastrophe deaths at extreme: 23.0"
+  ],
+  "protocol_version": "0.1.0"
+}
