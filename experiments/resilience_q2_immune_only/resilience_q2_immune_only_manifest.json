@@ -1,5 +1,5 @@
 {
-  "manifest_id": "GEN-EXP-0697137FB584",
+  "manifest_id": "GEN-EXP-EFA5EDE1EB2D",
   "config": {
     "name": "Resilience Matrix Q2: Immune Only",
     "hypothesis": "With agent-level trait mutation frozen but cortex immune adaptation active, civilizations rely solely on environmental pressure tuning — the cortex compensates for frozen genetics, but may fail at extreme catastrophe rates",
@@ -32,20 +32,20 @@
     "mutation_rate_override": 0.0,
     "base_seed": 20260223
   },
-  "created_at": "2026-02-24T01:41:11.086074800Z",
+  "created_at": "2026-02-24T02:51:16.001844800Z",
   "result_hash": "273bb43876162d1cf086ca076fb67863280b4e68abf6a64e246e1ae8ca585641",
-  "manifest_hash": "4db55d4b2737c24e4b515d8e26bd29a963fbdd5d831c7f3776513a7aa22056e1",
+  "manifest_hash": "3cce13cb6be63069b857a35a06c85b4e2c196696d70ef66f452f1f7e2822c160",
   "total_worlds": 220,
   "total_epochs": 110000,
-  "duration_ms": 6855,
+  "duration_ms": 6117,
   "findings": [
     "Q2 (Immune Only): Agent Mutation=OFF, Cortex Immune=ON",
     "No collapses observed across entire catastrophe range (0.0→0.05)",
     "Collapse rate: 0% at peaceful (0.0) vs 0% at extreme (0.05)",
     "Mean survival: 500.0 epochs (peaceful) vs 500.0 (extreme catastrophe)",
-    "Total trait mutations: 0 | Total pressure mutations: 4342",
-    "Mean fitness: 0.5405 (peaceful) vs 0.5800 (extreme)",
-    "Mean population: 49.4 (peaceful) vs 45.3 (extreme)",
+    "Total trait mutations: 0 | Total pressure mutations: 4326",
+    "Mean fitness: 0.5318 (peaceful) vs 0.5778 (extreme)",
+    "Mean population: 48.2 (peaceful) vs 45.1 (extreme)",
     "Mean catastrophe deaths at extreme: 23.8"
   ],
   "protocol_version": "0.1.0"

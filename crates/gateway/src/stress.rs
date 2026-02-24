@@ -46,6 +46,14 @@ pub struct StressConfig {
     /// Per-epoch probability of freezing all treasury releases.
     /// 0.10 = 10% chance each epoch the seasonal release is suppressed.
     pub treasury_lock_probability: f64,
+
+    // ── Structural invariant toggles (Season 2) ─────────────────────
+    /// Enable/disable treasury cycling (redistribution back to agents).
+    /// When false, ATP flows into the treasury but never comes out:
+    /// no stipends, no crisis spending, no overflow redistribution,
+    /// no seasonal release.  This is a structural invariant violation,
+    /// not a parameter sweep — it breaks the recycling loop.
+    pub treasury_cycling_enabled: bool,
 }
 
 impl Default for StressConfig {
@@ -57,6 +65,7 @@ impl Default for StressConfig {
             catastrophe_cluster_bias: 0.0,
             mutation_volatility_multiplier: 1.0,
             treasury_lock_probability: 0.0,
+            treasury_cycling_enabled: true,
         }
     }
 }
@@ -76,6 +85,7 @@ impl StressConfig {
             catastrophe_cluster_bias: 0.5,
             mutation_volatility_multiplier: 1.2,
             treasury_lock_probability: 0.05,
+            treasury_cycling_enabled: true,
         }
     }
 
@@ -88,6 +98,7 @@ impl StressConfig {
             catastrophe_cluster_bias: 1.0,
             mutation_volatility_multiplier: 1.5,
             treasury_lock_probability: 0.10,
+            treasury_cycling_enabled: true,
         }
     }
 
@@ -100,6 +111,7 @@ impl StressConfig {
             catastrophe_cluster_bias: 2.0,
             mutation_volatility_multiplier: 2.0,
             treasury_lock_probability: 0.20,
+            treasury_cycling_enabled: true,
         }
     }
 
@@ -112,6 +124,7 @@ impl StressConfig {
             catastrophe_cluster_bias: 0.0,
             mutation_volatility_multiplier: 1.0,
             treasury_lock_probability: 0.95,
+            treasury_cycling_enabled: true,
         }
     }
 

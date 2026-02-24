@@ -20,7 +20,6 @@ use chrono::{DateTime, Utc};
 use serde::{Serialize, Deserialize};
 
 use gateway::world::{World, EpochStats, PressureConfig};
-use gateway::stress::StressConfig;
 use genesis_multiverse::WorldPhysics;
 
 use crate::config::{ExperimentConfig, Metric, SweepVariable};
@@ -226,15 +225,31 @@ impl ExperimentRunner {
         // Run epochs, collecting stats
         let mut all_stats: Vec<EpochStats> = Vec::with_capacity(config.epochs_per_run as usize);
         let mut collapse_epoch: Option<u64> = None;
+        // Season 2: functional extinction detector
+        // Population < 3 for 50 consecutive epochs = functional extinction
+        const EXTINCTION_FLOOR: usize = 3;
+        const EXTINCTION_WINDOW: u64 = 50;
+        let mut below_floor_streak: u64 = 0;
 
         for epoch_num in 0..config.epochs_per_run {
             let stats = world.run_epoch();
             all_stats.push(stats);
 
-            // Check for collapse
+            // Check for extinction (population == 0)
             if world.agents.is_empty() {
                 collapse_epoch = Some(epoch_num + 1);
                 break;
+            }
+
+            // Check for functional extinction (population < floor for N consecutive epochs)
+            if world.agents.len() < EXTINCTION_FLOOR {
+                below_floor_streak += 1;
+                if below_floor_streak >= EXTINCTION_WINDOW {
+                    collapse_epoch = Some(epoch_num + 1 - EXTINCTION_WINDOW + 1);
+                    break;
+                }
+            } else {
+                below_floor_streak = 0;
             }
         }
 
@@ -393,6 +408,12 @@ fn extract_metrics(
             }
             Metric::TotalImmuneThreats => {
                 all_stats.iter().map(|s| s.immune_threats as f64).sum()
+            }
+            Metric::MinPopulation => {
+                all_stats.iter().map(|s| s.population as f64).fold(f64::INFINITY, f64::min)
+            }
+            Metric::MaxTreasuryReserve => {
+                all_stats.iter().map(|s| s.treasury_reserve).fold(0.0_f64, f64::max)
             }
         };
         result.insert(metric.name().to_string(), value);

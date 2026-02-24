@@ -1,5 +1,5 @@
 {
-  "manifest_id": "GEN-EXP-994604AACBE2",
+  "manifest_id": "GEN-EXP-36D820370EB9",
   "config": {
     "name": "Basal Inversion: The Starvation",
     "hypothesis": "The Oxygen Attack targets reproduction. The Starvation targets existence itself. By scaling basal metabolic cost from 1x (0.15 ATP) to 10x (1.5 ATP), agents burn through ATP faster than they can earn. At some multiplier, chronic energy deficit causes population decay and eventual collapse.",
@@ -45,16 +45,16 @@
     "cortex_enabled_override": false,
     "base_seed": 20260224
   },
-  "created_at": "2026-02-24T02:10:49.134003200Z",
+  "created_at": "2026-02-24T02:16:50.335623Z",
   "result_hash": "cfbaa9bf48175a03bddcfbc6f5c89b0a89782dd69d074c6a95f411798933c171",
-  "manifest_hash": "6eef843551da3b446d0e74f4a341ae01b19ebd1640bf23a51977928c00a8d7f1",
+  "manifest_hash": "c306a66ad0fa7a62092c80e9b43898de262dcc44a5dec67e31e6e9919bf281d3",
   "total_worlds": 200,
   "total_epochs": 100000,
-  "duration_ms": 5148,
+  "duration_ms": 4862,
   "findings": [
-    "NO COLLAPSE: 0 of 200 worlds survived Starvation (basal cost 1x-10x)",
-    "Structural architecture sustains the organism under metabolic stress.",
-    "The boundary, if it exists, lies beyond the tested parameter space."
+    "NO COLLAPSE: 0 of 200 worlds survived at all basal multiplier levels",
+    "Basal inversion up to 10.0x (1.5 ATP/epoch) insufficient to break attractor",
+    "The organism adapts to chronic energy drain through population contraction"
   ],
   "protocol_version": "0.1.0"
 }

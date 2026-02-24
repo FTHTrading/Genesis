@@ -153,6 +153,10 @@ pub enum Metric {
     TotalPressureMutations,
     /// Total immune threats detected across all epochs.
     TotalImmuneThreats,
+    /// Minimum population observed across all epochs.
+    MinPopulation,
+    /// Maximum treasury reserve observed across all epochs.
+    MaxTreasuryReserve,
 }
 
 impl Metric {
@@ -177,6 +181,8 @@ impl Metric {
             Self::TotalTraitMutations => "total_trait_mutations",
             Self::TotalPressureMutations => "total_pressure_mutations",
             Self::TotalImmuneThreats => "total_immune_threats",
+            Self::MinPopulation => "min_population",
+            Self::MaxTreasuryReserve => "max_treasury_reserve",
         }
     }
 
@@ -201,6 +207,8 @@ impl Metric {
             Self::TotalTraitMutations,
             Self::TotalPressureMutations,
             Self::TotalImmuneThreats,
+            Self::MinPopulation,
+            Self::MaxTreasuryReserve,
         ]
     }
 
@@ -215,6 +223,7 @@ impl Metric {
             Self::TotalDeaths,
             Self::SurvivalEpochs,
             Self::MeanPopulation,
+            Self::MinPopulation,
         ]
     }
 }
@@ -393,7 +402,7 @@ mod tests {
     #[test]
     fn all_metrics_listed() {
         let all = Metric::all();
-        assert!(all.len() >= 17);
+        assert!(all.len() >= 19);
         // Each has a unique name
         let names: std::collections::HashSet<&str> = all.iter().map(|m| m.name()).collect();
         assert_eq!(names.len(), all.len());

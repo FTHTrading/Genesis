@@ -922,7 +922,14 @@ impl World {
         // Seasonal treasury release — BEFORE metabolism so agents have energy to survive
         // ── Stress: treasury lock ─────────────────────────────────────
         // treasury_lock_probability > 0 stochastically suppresses release.
-        let release_suppressed = self
+        // ── Structural invariant: treasury_cycling_enabled ───────────
+        // When false, ALL treasury outflows are disabled (Season 2 S1).
+        let treasury_cycling_active = self
+            .stress_config
+            .as_ref()
+            .map(|sc| sc.treasury_cycling_enabled)
+            .unwrap_or(true);
+        let release_suppressed = !treasury_cycling_active || self
             .stress_config
             .as_ref()
             .map(|sc| sc.treasury_locked(epoch))
@@ -1144,8 +1151,11 @@ impl World {
         // 2. Crisis spending when population < cap/2
         // 3. Overflow redistribution: if treasury > 30% of supply,
         //    distribute excess equally to all agents (prevents hoarding)
+        //
+        // Gated by treasury_cycling_enabled (Season 2 structural invariant S1).
+        // When disabled, ATP flows into the treasury but never comes out.
         // ═══════════════════════════════════════════════════════════════
-        {
+        if treasury_cycling_active {
             // Stipends for underrepresented roles
             let stipend_distributed = self.treasury.distribute_stipends(&role_counts, self.agents.len());
             for (role, total_for_role) in &stipend_distributed {

@@ -1079,6 +1079,166 @@ impl FlagshipExperiments {
         ]
     }
 
+    // =====================================================================
+    // SEASON 2 — STRUCTURAL INVARIANT VIOLATIONS
+    //
+    // Season 1 swept environmental and metabolic parameters.
+    // Season 2 breaks structural invariants — the architectural guarantees
+    // that define the system's physics. These are binary violations, not
+    // parameter sweeps within the design space.
+    //
+    // S1: Treasury Cycling Disabled
+    //     ATP flows into the treasury (skim, wealth tax, gini tax) but
+    //     never comes back out. No stipends, no crisis spending, no
+    //     overflow redistribution, no seasonal release.
+    //     This replicates the v1.0 failure mode under controlled conditions.
+    // =====================================================================
+
+    /// S1 Baseline: Treasury cycling disabled under normal conditions.
+    ///
+    /// Sweep carrying capacity (soft_cap) from 30 to 180 to test whether
+    /// the system can survive without redistribution at any scale.
+    /// All adaptation layers remain active — only the recycling loop is broken.
+    pub fn s1_treasury_disabled_baseline() -> ExperimentConfig {
+        let treasury_disabled = StressConfig {
+            treasury_cycling_enabled: false,
+            ..StressConfig::default()
+        };
+
+        ExperimentConfig {
+            name: "S1 Treasury Disabled: Baseline".into(),
+            hypothesis: "Treasury cycling (redistribution of collected ATP back to agents) \
+                         is a structural invariant of the Genesis Protocol. Without it, \
+                         ATP accumulates in the treasury indefinitely — a one-way drain \
+                         that starves the circulating economy. Under baseline conditions \
+                         with all adaptation layers active, this should produce population \
+                         decline and eventual collapse, replicating the v1.0 failure mode \
+                         under controlled experimental conditions.".into(),
+            sweep: ParameterSweep::new(
+                SweepVariable::SoftCap,
+                30.0,   // extreme scarcity
+                180.0,  // normal capacity
+                30.0,   // 6 steps
+            ),
+            runs_per_step: 20,
+            epochs_per_run: 500,
+            metrics: vec![
+                Metric::FinalPopulation,
+                Metric::Collapsed,
+                Metric::SurvivalEpochs,
+                Metric::MeanPopulation,
+                Metric::MinPopulation,
+                Metric::PopulationVolatility,
+                Metric::MeanFitness,
+                Metric::GiniCoefficient,
+                Metric::TotalBirths,
+                Metric::TotalDeaths,
+                Metric::BirthDeathRatio,
+                Metric::TreasuryRatio,
+                Metric::MaxTreasuryReserve,
+                Metric::TotalEntropyBurned,
+                Metric::RoleEntropy,
+            ],
+            base_preset: PhysicsPreset::EarthPrime,
+            base_pressure_override: None,
+            mutation_rate_override: None,
+            cortex_enabled_override: None,
+            base_stress_override: Some(treasury_disabled),
+            base_seed: 20260223,
+        }
+    }
+
+    pub fn s1_treasury_disabled_baseline_quick() -> ExperimentConfig {
+        let mut config = Self::s1_treasury_disabled_baseline();
+        config.name = "S1 Treasury Disabled: Baseline (Quick)".into();
+        config.runs_per_step = 3;
+        config.epochs_per_run = 100;
+        config
+    }
+
+    /// S1 Hostile: Treasury cycling disabled under full hostile conditions.
+    ///
+    /// Same hostile pressure as multi-axis collapse (max catastrophe,
+    /// max entropy, no Gini tax, no treasury overflow deployment),
+    /// plus structural treasury cycling disabled.
+    /// No mutation, no immune cortex.
+    ///
+    /// If treasury cycling is truly *necessary*, this should collapse
+    /// faster than the baseline variant.
+    pub fn s1_treasury_disabled_hostile() -> ExperimentConfig {
+        let mut hostile_pressure = PressureConfig::default();
+        hostile_pressure.catastrophe_base_prob = 0.03;
+        hostile_pressure.entropy_coeff = 0.0001;
+        hostile_pressure.gini_wealth_tax_threshold = 1.0;
+        hostile_pressure.gini_wealth_tax_rate = 0.0;
+        hostile_pressure.treasury_overflow_threshold = 1.0;
+
+        let treasury_disabled = StressConfig {
+            treasury_cycling_enabled: false,
+            ..StressConfig::default()
+        };
+
+        ExperimentConfig {
+            name: "S1 Treasury Disabled: Hostile".into(),
+            hypothesis: "Under full hostile conditions (max catastrophe, max entropy, \
+                         no redistribution, no immune cortex, no mutation) AND with \
+                         treasury cycling structurally disabled, the system cannot recycle \
+                         ATP from the treasury sink. This is the harshest possible S1 test. \
+                         If collapse occurs, the time-to-extinction and minimum population \
+                         trajectory characterize the phase transition. If survival persists, \
+                         treasury cycling may not be independently necessary — the catastrophe \
+                         and entropy taxes may be sufficient to prevent total drain.".into(),
+            sweep: ParameterSweep::new(
+                SweepVariable::SoftCap,
+                30.0,
+                180.0,
+                30.0,   // 6 steps
+            ),
+            runs_per_step: 20,
+            epochs_per_run: 500,
+            metrics: vec![
+                Metric::FinalPopulation,
+                Metric::Collapsed,
+                Metric::SurvivalEpochs,
+                Metric::MeanPopulation,
+                Metric::MinPopulation,
+                Metric::PopulationVolatility,
+                Metric::MeanFitness,
+                Metric::GiniCoefficient,
+                Metric::TotalBirths,
+                Metric::TotalDeaths,
+                Metric::BirthDeathRatio,
+                Metric::TreasuryRatio,
+                Metric::MaxTreasuryReserve,
+                Metric::TotalEntropyBurned,
+                Metric::TotalCatastropheDeaths,
+                Metric::RoleEntropy,
+            ],
+            base_preset: PhysicsPreset::EarthPrime,
+            base_pressure_override: Some(hostile_pressure),
+            mutation_rate_override: Some(0.0),
+            cortex_enabled_override: Some(false),
+            base_stress_override: Some(treasury_disabled),
+            base_seed: 20260223,
+        }
+    }
+
+    pub fn s1_treasury_disabled_hostile_quick() -> ExperimentConfig {
+        let mut config = Self::s1_treasury_disabled_hostile();
+        config.name = "S1 Treasury Disabled: Hostile (Quick)".into();
+        config.runs_per_step = 3;
+        config.epochs_per_run = 100;
+        config
+    }
+
+    /// Season 2 Invariant Violation Suite: all S1 experiments.
+    pub fn s2_invariant_suite() -> Vec<(&'static str, ExperimentConfig)> {
+        vec![
+            ("s1_treasury_disabled_baseline", Self::s1_treasury_disabled_baseline()),
+            ("s1_treasury_disabled_hostile", Self::s1_treasury_disabled_hostile()),
+        ]
+    }
+
     /// List all flagship experiment names.
     pub fn list() -> Vec<&'static str> {
         vec![
@@ -1103,6 +1263,9 @@ impl FlagshipExperiments {
             "Metabolic Inversion: The Oxygen Attack",
             "Basal Inversion: The Starvation",
             "Dual Inversion: The Final Escalation",
+            // Season 2
+            "S1 Treasury Disabled: Baseline",
+            "S1 Treasury Disabled: Hostile",
         ]
     }
 }
@@ -1191,7 +1354,7 @@ mod tests {
     #[test]
     fn flagship_list() {
         let list = FlagshipExperiments::list();
-        assert_eq!(list.len(), 21);
+        assert_eq!(list.len(), 23);
         assert!(list[0].contains("Entropy"));
         assert!(list[1].contains("Catastrophe"));
         assert!(list[2].contains("Inequality"));
@@ -1213,6 +1376,8 @@ mod tests {
         assert!(list[18].contains("Metabolic Inversion"));
         assert!(list[19].contains("Basal Inversion"));
         assert!(list[20].contains("Dual Inversion"));
+        assert!(list[21].contains("S1"));
+        assert!(list[22].contains("S1"));
     }
 
     #[test]
@@ -1494,6 +1659,67 @@ mod tests {
                         "Expected zero pressure mutations with cortex disabled");
                 }
             }
+        }
+    }
+
+    // ─── Season 2: Structural Invariant Violation Tests ──────────────
+
+    #[test]
+    fn s1_treasury_disabled_baseline_config_valid() {
+        let config = FlagshipExperiments::s1_treasury_disabled_baseline();
+        assert_eq!(config.sweep.step_count(), 6);
+        assert_eq!(config.total_worlds(), 120);
+        assert!(config.metrics.len() >= 14);
+        assert!(config.base_pressure_override.is_none());
+        let stress = config.base_stress_override.as_ref().unwrap();
+        assert!(!stress.treasury_cycling_enabled);
+    }
+
+    #[test]
+    fn s1_treasury_disabled_hostile_config_valid() {
+        let config = FlagshipExperiments::s1_treasury_disabled_hostile();
+        assert_eq!(config.sweep.step_count(), 6);
+        assert_eq!(config.total_worlds(), 120);
+        assert_eq!(config.mutation_rate_override, Some(0.0));
+        assert_eq!(config.cortex_enabled_override, Some(false));
+        let stress = config.base_stress_override.as_ref().unwrap();
+        assert!(!stress.treasury_cycling_enabled);
+        let p = config.base_pressure_override.as_ref().unwrap();
+        assert!((p.catastrophe_base_prob - 0.03).abs() < 1e-10);
+    }
+
+    #[test]
+    fn quick_s1_treasury_disabled_baseline_runs() {
+        let config = FlagshipExperiments::s1_treasury_disabled_baseline_quick();
+        let result = ExperimentRunner::run(&config);
+        assert_eq!(result.steps.len(), 6);
+        assert!(result.total_worlds > 0);
+        // Verify min_population metric is collected
+        for step in &result.steps {
+            for trial in &step.trials {
+                assert!(trial.metrics.contains_key("min_population"),
+                    "Expected min_population metric in Season 2 experiment");
+                assert!(trial.metrics.contains_key("max_treasury_reserve"),
+                    "Expected max_treasury_reserve metric in Season 2 experiment");
+            }
+        }
+    }
+
+    #[test]
+    fn quick_s1_treasury_disabled_hostile_runs() {
+        let config = FlagshipExperiments::s1_treasury_disabled_hostile_quick();
+        let result = ExperimentRunner::run(&config);
+        assert_eq!(result.steps.len(), 6);
+        assert!(result.total_worlds > 0);
+    }
+
+    #[test]
+    fn s2_invariant_suite_valid() {
+        let suite = FlagshipExperiments::s2_invariant_suite();
+        assert_eq!(suite.len(), 2);
+        for (name, config) in &suite {
+            assert!(!name.is_empty());
+            assert!(config.total_worlds() > 0);
         }
     }
 

@@ -503,6 +503,71 @@ The experimental evidence for stability is empirical. Formal proof would require
 
 The observation that even maximum stress produces a stable population of ~17.6 agents strongly suggests the existence of a global attractor, but proving this mathematically remains open.
 
+### 8.6 Collapse Boundary Detection (Season 2)
+
+Season 1 established that the system is stable across all tested environmental and metabolic stressor configurations. However, stability regions are only half a scientific object. A full characterization requires the **boundary surface** — the conditions under which the system transitions from persistence to extinction.
+
+#### 8.6.1 Formal Collapse Definition
+
+We define collapse precisely as either of:
+
+1. **Extinction**: $P(t) = 0$ — population reaches zero at any epoch $t$.
+2. **Functional extinction**: $P(t) < P_{\text{floor}}$ for $N_{\text{consec}}$ consecutive epochs — population falls below a survival floor and fails to recover within a defined window.
+
+The survival floor $P_{\text{floor}} = 3$ agents and the recovery window $N_{\text{consec}} = 50$ epochs are chosen conservatively: a population of fewer than 3 agents cannot sustain demographic replacement (minimum one parent per birth, births capped at 3/epoch), and 50 epochs provides ample time for treasury-assisted recovery if recovery is structurally possible.
+
+#### 8.6.2 Structural Invariant Taxonomy
+
+Season 1 experiments varied **environmental parameters** (catastrophe probability, entropy coefficient, carrying capacity) and **metabolic costs** (replication cost, basal cost). These are continuous stressors within the system's design space.
+
+Season 2 introduces **structural invariant violations** — binary toggles that break fundamental architectural guarantees:
+
+| # | Invariant | Description | Violation Mode |
+|---|-----------|-------------|----------------|
+| S1 | **Treasury Cycling** | ATP flows out of treasury back to agents via stipends, crisis spending, overflow redistribution, and seasonal release | Disable all outflows; treasury becomes a sink |
+| S2 | **ATP Decay** | 2% per-epoch balance erosion prevents indefinite accumulation | Set decay rate to zero |
+| S3 | **Stasis Death** | Agents in stasis for 8 consecutive epochs are terminated | Remove stasis termination; allow indefinite zero-balance linger |
+| S4 | **Carrying Capacity Coupling** | Birth rate suppressed as population approaches soft cap | Remove population cap; allow unconstrained reproduction |
+| S5 | **Replication ATP Gate** | Reproduction requires ATP $\geq$ 25 and fitness $\geq$ 0.35 | Remove ATP requirement; allow zero-cost reproduction |
+| S6 | **Balance Non-Negativity** | Agent ATP balance is clamped at zero (no debt) | Allow negative balances; introduce debt cascades |
+
+These are not parameter sweeps within the existing design space — they are violations of the system's **structural physics**. The hypothesis is that at least one of these violations produces collapse-to-extinction, establishing the **minimal invariant set** required for persistence.
+
+#### 8.6.3 Phase Boundary Hunting Protocol
+
+For each structural invariant:
+
+1. **Binary toggle** — disable the invariant under baseline conditions
+2. **Stress overlay** — disable the invariant under hostile conditions (Season 1 multi-axis configuration)
+3. **Severity sweep** — if collapse occurs, vary the violation magnitude to locate the exact phase boundary
+4. **Boundary characterization** — measure time-to-extinction, instability growth rate, and oscillation amplitude near the boundary
+
+The goal is to produce an **Extinction Phase Diagram**: a map of which invariant violations, alone or in combination, are sufficient for collapse.
+
+#### 8.6.4 S1 Results: Treasury Cycling Is Not Necessary
+
+The first structural invariant tested was S1 — treasury cycling (redistribution of accumulated ATP from the treasury back to agents). Two experiments were conducted:
+
+**S1 Baseline** (120 worlds, 500 epochs, 6 carrying capacity tiers, treasury cycling fully disabled):
+- Collapse rate: **0/120 (0.0%)** across all carrying capacity tiers
+- Population floor: global minimum = 20 agents (never dropped below initial population)
+- Treasury accumulation: reached 2,047 ATP (a massive one-way drain)
+- Mean population: 43.1 agents (vs. ~48 with cycling enabled)
+
+**S1 Hostile** (120 worlds, 500 epochs, maximum catastrophe rate, maximum entropy, no mutation, no cortex, treasury cycling disabled):
+- Collapse rate: **0/120 (0.0%)** across all carrying capacity tiers
+- Population floor: global minimum = 20 agents
+- Treasury accumulation: reached 378 ATP (lower due to hostile conditions burning ATP faster)
+- Mean population: 41.8 agents
+
+**Interpretation**: Treasury cycling is **not** a necessary structural invariant. Even when the treasury becomes a pure sink — collecting ATP via skim, wealth tax, and Gini tax but never releasing any — the circulating economy sustains itself through direct resource harvesting (agents extract ATP from niche pools each epoch) and reproductive grants (50 ATP primordial, 8 ATP child). The 5% treasury skim is insufficient to starve the economy because 95% of harvested ATP remains with agents.
+
+This result also reinterprets the v1.0 failure mode: the original system's collapse was not caused by treasury hoarding alone, but likely by a combination of factors not present in the v2.0 architecture.
+
+The population penalty from disabled cycling is modest: approximately 10% lower mean population (43 vs. 48) with higher inequality (ATP concentrates without redistribution). The system degrades gracefully rather than catastrophically.
+
+**Next target**: S2 (ATP decay removal) — if removing the 2% per-epoch balance erosion allows unlimited accumulation, the resulting wealth concentration may produce demographic collapse through a different mechanism.
+
 ---
 
 ## 9. Conclusion
@@ -586,7 +651,9 @@ Zoph, B., & Le, Q. V. (2017). Neural architecture search with reinforcement lear
 | Metabolic Inversion | 180 | 0 | 19.7 | 46.2 | Metabolic |
 | Basal Inversion | 200 | 0 | 29.0 | 45.9 | Metabolic |
 | Dual Inversion | 200 | 0 | 17.6 | 24.1 | Metabolic |
-| **Total** | **~3,420** | **0** | **17.6** | **54.3** | |
+| S1 Treasury Disabled (Baseline) | 120 | 0 | 20.0 | 46.1 | Structural |
+| S1 Treasury Disabled (Hostile) | 120 | 0 | 20.0 | 44.4 | Structural |
+| **Total** | **~3,660** | **0** | **17.6** | **54.3** | |
 
 ## Appendix B: Epoch Loop Pseudocode (v1.1)
 

@@ -1,5 +1,5 @@
 {
-  "manifest_id": "GEN-EXP-A7D8C082A25C",
+  "manifest_id": "GEN-EXP-45D906E74CBA",
   "config": {
     "name": "Reserve Stress — Stressed (shock=0.015)",
     "hypothesis": "Under stressed conditions (shock=0.015), reserve hoarding begins to outperform deployment as shock recovery demands liquidity buffers",
@@ -39,19 +39,19 @@
     },
     "base_seed": 20260222
   },
-  "created_at": "2026-02-24T01:40:34.171836800Z",
+  "created_at": "2026-02-24T02:50:41.356133500Z",
   "result_hash": "e3d1f0cf4a2edcf4cebf06422b202e582329c55c8832d09da8dbfdb4035c3305",
-  "manifest_hash": "ad62ee52ff6f6c5a377747989156d925814907b998988fc84331e7d85ab189eb",
+  "manifest_hash": "c8d69fef469b6c6756628d955c3a2a365a8764b11363753bd82ca375fe145bc8",
   "total_worlds": 135,
   "total_epochs": 67500,
-  "duration_ms": 4250,
+  "duration_ms": 4333,
   "findings": [
-    "Optimal treasury threshold by fitness: 0.80 (mean fitness: 0.5644) at shock=0.015",
-    "Peak population stability at threshold = 0.90 (mean pop: 48.3)",
+    "Optimal treasury threshold by fitness: 0.60 (mean fitness: 0.5565) at shock=0.015",
+    "Peak population stability at threshold = 0.20 (mean pop: 48.1)",
     "Treasury ratio: 0.0008 at deployment (0.10) vs 0.0008 at hoarding (0.90)",
     "No collapses observed across entire threshold range",
     "Mean catastrophe deaths: 5.8 at deployment vs 5.9 at hoarding",
-    "Population volatility: 6.83 at deployment vs 6.35 at hoarding"
+    "Population volatility: 6.57 at deployment vs 6.82 at hoarding"
   ],
   "protocol_version": "0.1.0"
 }

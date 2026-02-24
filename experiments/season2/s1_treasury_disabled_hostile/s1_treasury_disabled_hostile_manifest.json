@@ -1,0 +1,78 @@
+{
+  "manifest_id": "GEN-EXP-5DA1E2A20FC5",
+  "config": {
+    "name": "S1 Treasury Disabled: Hostile",
+    "hypothesis": "Under full hostile conditions (max catastrophe, max entropy, no redistribution, no immune cortex, no mutation) AND with treasury cycling structurally disabled, the system cannot recycle ATP from the treasury sink. This is the harshest possible S1 test. If collapse occurs, the time-to-extinction and minimum population trajectory characterize the phase transition. If survival persists, treasury cycling may not be independently necessary — the catastrophe and entropy taxes may be sufficient to prevent total drain.",
+    "sweep": {
+      "variable": "SoftCap",
+      "start": 30.0,
+      "end": 180.0,
+      "step": 30.0
+    },
+    "runs_per_step": 20,
+    "epochs_per_run": 500,
+    "metrics": [
+      "FinalPopulation",
+      "Collapsed",
+      "SurvivalEpochs",
+      "MeanPopulation",
+      "MinPopulation",
+      "PopulationVolatility",
+      "MeanFitness",
+      "GiniCoefficient",
+      "TotalBirths",
+      "TotalDeaths",
+      "BirthDeathRatio",
+      "TreasuryRatio",
+      "MaxTreasuryReserve",
+      "TotalEntropyBurned",
+      "TotalCatastropheDeaths",
+      "RoleEntropy"
+    ],
+    "base_preset": "EarthPrime",
+    "base_pressure_override": {
+      "soft_cap": 180,
+      "entropy_coeff": 0.0001,
+      "catastrophe_base_prob": 0.03,
+      "catastrophe_pop_scale": 0.00001,
+      "gini_wealth_tax_threshold": 1.0,
+      "gini_wealth_tax_rate": 0.0,
+      "treasury_overflow_threshold": 1.0
+    },
+    "mutation_rate_override": 0.0,
+    "cortex_enabled_override": false,
+    "base_stress_override": {
+      "skim_rate_multiplier": 1.0,
+      "replication_cost_multiplier": 1.0,
+      "basal_cost_multiplier": 1.0,
+      "catastrophe_cluster_bias": 0.0,
+      "mutation_volatility_multiplier": 1.0,
+      "treasury_lock_probability": 0.0,
+      "treasury_cycling_enabled": false
+    },
+    "base_seed": 20260223
+  },
+  "created_at": "2026-02-24T02:53:31.583093900Z",
+  "result_hash": "63ebb92a30f2485d0ebfbebc7b5967dc6445e650d390f966ac3d47cfe0d87452",
+  "manifest_hash": "77f6eb0be19b6232e26941186d61fb3f6d72a13fcca6d67849f8eb910f555a14",
+  "total_worlds": 120,
+  "total_epochs": 60000,
+  "duration_ms": 2941,
+  "findings": [
+    "Collapse rate: 0/120 trials (0.0%)",
+    "NO COLLAPSES — treasury cycling removal did NOT cause extinction",
+    "Population floor: global_min=20, mean_min=20.0",
+    "Treasury accumulation: global_max=378.2, mean_max=217.5 ATP",
+    "Mean population: 41.8 (min trial: 29.4)",
+    "Mean fitness: 0.5773",
+    "── Per-step collapse rates ──",
+    "  cap=30: collapse=0.0%, mean_survival=500, pop=29.8",
+    "  cap=60: collapse=0.0%, mean_survival=500, pop=44.2",
+    "  cap=90: collapse=0.0%, mean_survival=500, pop=44.0",
+    "  cap=120: collapse=0.0%, mean_survival=500, pop=44.3",
+    "  cap=150: collapse=0.0%, mean_survival=500, pop=44.3",
+    "  cap=180: collapse=0.0%, mean_survival=500, pop=44.4",
+    "VERDICT: Treasury cycling is NOT necessary for survival at this configuration — system self-stabilizes without redistribution"
+  ],
+  "protocol_version": "0.1.0"
+}

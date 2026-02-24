@@ -1,0 +1,66 @@
+{
+  "manifest_id": "GEN-EXP-DE6EFCAC5254",
+  "config": {
+    "name": "S1 Treasury Disabled: Baseline",
+    "hypothesis": "Treasury cycling (redistribution of collected ATP back to agents) is a structural invariant of the Genesis Protocol. Without it, ATP accumulates in the treasury indefinitely — a one-way drain that starves the circulating economy. Under baseline conditions with all adaptation layers active, this should produce population decline and eventual collapse, replicating the v1.0 failure mode under controlled experimental conditions.",
+    "sweep": {
+      "variable": "SoftCap",
+      "start": 30.0,
+      "end": 180.0,
+      "step": 30.0
+    },
+    "runs_per_step": 20,
+    "epochs_per_run": 500,
+    "metrics": [
+      "FinalPopulation",
+      "Collapsed",
+      "SurvivalEpochs",
+      "MeanPopulation",
+      "MinPopulation",
+      "PopulationVolatility",
+      "MeanFitness",
+      "GiniCoefficient",
+      "TotalBirths",
+      "TotalDeaths",
+      "BirthDeathRatio",
+      "TreasuryRatio",
+      "MaxTreasuryReserve",
+      "TotalEntropyBurned",
+      "RoleEntropy"
+    ],
+    "base_preset": "EarthPrime",
+    "base_stress_override": {
+      "skim_rate_multiplier": 1.0,
+      "replication_cost_multiplier": 1.0,
+      "basal_cost_multiplier": 1.0,
+      "catastrophe_cluster_bias": 0.0,
+      "mutation_volatility_multiplier": 1.0,
+      "treasury_lock_probability": 0.0,
+      "treasury_cycling_enabled": false
+    },
+    "base_seed": 20260223
+  },
+  "created_at": "2026-02-24T02:53:28.637988400Z",
+  "result_hash": "7607edd166455a313dda056423f70e6b87b09bed06779e178a7ed440cf4d1096",
+  "manifest_hash": "c21c745d6d36922cee03d75b4bc6a46048eb11e1a9b81eb821592e701bde418f",
+  "total_worlds": 120,
+  "total_epochs": 60000,
+  "duration_ms": 3267,
+  "findings": [
+    "Collapse rate: 0/120 trials (0.0%)",
+    "NO COLLAPSES — treasury cycling removal did NOT cause extinction",
+    "Population floor: global_min=20, mean_min=20.0",
+    "Treasury accumulation: global_max=2047.3, mean_max=1451.1 ATP",
+    "Mean population: 43.1 (min trial: 29.4)",
+    "Mean fitness: 0.5485",
+    "── Per-step collapse rates ──",
+    "  cap=30: collapse=0.0%, mean_survival=500, pop=30.1",
+    "  cap=60: collapse=0.0%, mean_survival=500, pop=44.9",
+    "  cap=90: collapse=0.0%, mean_survival=500, pop=46.0",
+    "  cap=120: collapse=0.0%, mean_survival=500, pop=45.5",
+    "  cap=150: collapse=0.0%, mean_survival=500, pop=46.1",
+    "  cap=180: collapse=0.0%, mean_survival=500, pop=45.9",
+    "VERDICT: Treasury cycling is NOT necessary for survival at this configuration — system self-stabilizes without redistribution"
+  ],
+  "protocol_version": "0.1.0"
+}

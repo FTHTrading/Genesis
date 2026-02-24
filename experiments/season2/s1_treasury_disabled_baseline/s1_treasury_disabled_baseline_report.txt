@@ -1,0 +1,49 @@
+╔══════════════════════════════════════════════════════════╗
+║  Genesis Experiment: S1 Treasury Disabled: Baseline      ║
+╚══════════════════════════════════════════════════════════╝
+
+Hypothesis: Treasury cycling (redistribution of collected ATP back to agents) is a structural invariant of the Genesis Protocol. Without it, ATP accumulates in the treasury indefinitely — a one-way drain that starves the circulating economy. Under baseline conditions with all adaptation layers active, this should produce population decline and eventual collapse, replicating the v1.0 failure mode under controlled experimental conditions.
+
+── Protocol ──
+  Variable:      soft_cap
+  Range:         30.000000 → 180.000000 (step 30.000000)
+  Runs/step:     20
+  Epochs/run:    500
+  Base preset:   EarthPrime
+  Base seed:     20260223
+  Total worlds:  120
+  Total epochs:  60000
+  Duration:      3267ms
+
+── Results ──
+
+param_value  collapse_%   final_population     collapsed            survival_epochs      mean_population      min_population       population_volatility mean_fitness         gini_coefficient     total_births         total_deaths         birth_death_ratio    treasury_ratio       max_treasury_reserve total_entropy_burned role_entropy        
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+30.000000    0.0          30.60    ± 1.10     0.00     ± 0.00     500.00   ± 0.00     30.12    ± 0.35     20.00    ± 0.00     1.98     ± 0.08     0.53     ± 0.03     0.57     ± 0.03     28.30    ± 4.35     17.70    ± 4.26     1.01     ± 0.55     0.83     ± 0.01     1892.75  ± 90.63    50.14    ± 2.87     2.28     ± 0.04    
+60.000000    0.0          48.10    ± 1.92     0.00     ± 0.00     500.00   ± 0.00     44.86    ± 1.97     20.00    ± 0.00     6.08     ± 0.53     0.55     ± 0.02     0.65     ± 0.03     85.65    ± 9.82     57.55    ± 9.59     1.09     ± 0.21     0.80     ± 0.01     1403.51  ± 105.19   61.24    ± 5.25     2.30     ± 0.01    
+90.000000    0.0          49.85    ± 2.23     0.00     ± 0.00     500.00   ± 0.00     46.05    ± 1.48     20.00    ± 0.00     6.36     ± 0.59     0.55     ± 0.02     0.65     ± 0.03     87.75    ± 6.26     57.90    ± 5.90     1.11     ± 0.24     0.80     ± 0.01     1343.08  ± 74.88    67.16    ± 5.75     2.30     ± 0.01    
+120.000000   0.0          49.20    ± 2.26     0.00     ± 0.00     500.00   ± 0.00     45.55    ± 1.85     20.00    ± 0.00     6.51     ± 0.59     0.55     ± 0.02     0.65     ± 0.03     90.05    ± 8.90     60.85    ± 8.80     1.06     ± 0.18     0.80     ± 0.02     1352.08  ± 118.49   64.63    ± 6.95     2.30     ± 0.01    
+150.000000   0.0          49.55    ± 1.76     0.00     ± 0.00     500.00   ± 0.00     46.09    ± 1.36     20.00    ± 0.00     6.50     ± 0.49     0.55     ± 0.02     0.66     ± 0.03     89.60    ± 5.73     60.05    ± 6.24     1.08     ± 0.17     0.80     ± 0.01     1354.42  ± 85.44    66.13    ± 6.16     2.30     ± 0.02    
+180.000000   0.0          49.90    ± 2.20     0.00     ± 0.00     500.00   ± 0.00     45.89    ± 1.53     20.00    ± 0.00     6.57     ± 0.69     0.55     ± 0.01     0.66     ± 0.03     87.95    ± 6.80     58.05    ± 6.92     1.13     ± 0.21     0.80     ± 0.01     1360.86  ± 84.15    65.78    ± 6.00     2.30     ± 0.02    
+
+── Findings ──
+
+  1. Collapse rate: 0/120 trials (0.0%)
+  2. NO COLLAPSES — treasury cycling removal did NOT cause extinction
+  3. Population floor: global_min=20, mean_min=20.0
+  4. Treasury accumulation: global_max=2047.3, mean_max=1451.1 ATP
+  5. Mean population: 43.1 (min trial: 29.4)
+  6. Mean fitness: 0.5485
+  7. ── Per-step collapse rates ──
+  8.   cap=30: collapse=0.0%, mean_survival=500, pop=30.1
+  9.   cap=60: collapse=0.0%, mean_survival=500, pop=44.9
+  10.   cap=90: collapse=0.0%, mean_survival=500, pop=46.0
+  11.   cap=120: collapse=0.0%, mean_survival=500, pop=45.5
+  12.   cap=150: collapse=0.0%, mean_survival=500, pop=46.1
+  13.   cap=180: collapse=0.0%, mean_survival=500, pop=45.9
+  14. VERDICT: Treasury cycling is NOT necessary for survival at this configuration — system self-stabilizes without redistribution
+
+── Verification ──
+
+  Result hash:   7607edd166455a313dda056423f70e6b87b09bed06779e178a7ed440cf4d1096
+
