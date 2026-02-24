@@ -1,0 +1,183 @@
+{
+	"folders": [
+		{
+			"name": "Genesis Protocol — Root",
+			"path": "."
+		},
+		{
+			"name": "Gateway (World + Stress + Moltbot)",
+			"path": "crates/gateway/src"
+		},
+		{
+			"name": "Experiments (Runner + Flagship + Report)",
+			"path": "crates/genesis-experiment/src"
+		},
+		{
+			"name": "Evolution (Mutation + Selection)",
+			"path": "crates/evolution/src"
+		},
+		{
+			"name": "Metabolism",
+			"path": "crates/metabolism/src"
+		},
+		{
+			"name": "Ecosystem",
+			"path": "crates/ecosystem/src"
+		},
+		{
+			"name": "DNA",
+			"path": "crates/genesis-dna/src"
+		},
+		{
+			"name": "Econometrics",
+			"path": "crates/genesis-econometrics/src"
+		},
+		{
+			"name": "Homeostasis",
+			"path": "crates/genesis-homeostasis/src"
+		},
+		{
+			"name": "Federation",
+			"path": "crates/genesis-federation/src"
+		},
+		{
+			"name": "Multiverse",
+			"path": "crates/genesis-multiverse/src"
+		},
+		{
+			"name": "Replay",
+			"path": "crates/genesis-replay/src"
+		},
+		{
+			"name": "Anchor (Zenodo)",
+			"path": "crates/genesis-anchor/src"
+		},
+		{
+			"name": "Apostle",
+			"path": "crates/apostle/src"
+		},
+		{
+			"name": "Whitepaper + Docs",
+			"path": "docs"
+		},
+		{
+			"name": "Moltbook",
+			"path": "moltbook"
+		},
+		{
+			"name": "Experiment Results",
+			"path": "experiments"
+		},
+		{
+			"name": "Scripts",
+			"path": "scripts"
+		}
+	],
+	"settings": {
+		"rust-analyzer.cargo.features": "all",
+		"rust-analyzer.check.command": "clippy",
+		"rust-analyzer.linkedProjects": [
+			"Cargo.toml"
+		],
+		"editor.formatOnSave": true,
+		"editor.rulers": [100],
+		"files.associations": {
+			"*.md": "markdown"
+		},
+		"search.exclude": {
+			"**/target": true,
+			"**/dist": true,
+			"**/*.tar.gz": true
+		},
+		"files.exclude": {
+			"**/.git": true,
+			"**/target": true
+		},
+		"editor.defaultFormatter": "rust-lang.rust-analyzer",
+		"[rust]": {
+			"editor.defaultFormatter": "rust-lang.rust-analyzer",
+			"editor.formatOnSave": true
+		},
+		"[markdown]": {
+			"editor.wordWrap": "on"
+		},
+		"terminal.integrated.cwd": "${workspaceFolder:Genesis Protocol — Root}"
+	},
+	"extensions": {
+		"recommendations": [
+			"rust-lang.rust-analyzer",
+			"serayuzgur.crates",
+			"tamasfe.even-better-toml",
+			"yzhang.markdown-all-in-one",
+			"github.copilot",
+			"github.copilot-chat"
+		]
+	},
+	"launch": {
+		"version": "0.2.0",
+		"configurations": [
+			{
+				"type": "lldb",
+				"request": "launch",
+				"name": "Run All Experiments",
+				"cargo": {
+					"args": ["build", "--release", "--bin", "run_experiments"],
+					"filter": {
+						"name": "run_experiments",
+						"kind": "bin"
+					}
+				},
+				"cwd": "${workspaceFolder:Genesis Protocol — Root}"
+			},
+			{
+				"type": "lldb",
+				"request": "launch",
+				"name": "Run Tests",
+				"cargo": {
+					"args": ["test", "--release", "--workspace", "--no-run"],
+					"filter": {
+						"kind": "test"
+					}
+				},
+				"cwd": "${workspaceFolder:Genesis Protocol — Root}"
+			}
+		]
+	},
+	"tasks": {
+		"version": "2.0.0",
+		"tasks": [
+			{
+				"label": "Build Release",
+				"type": "cargo",
+				"command": "build",
+				"args": ["--release"],
+				"group": "build",
+				"problemMatcher": ["$rustc"]
+			},
+			{
+				"label": "Run All Experiments",
+				"type": "cargo",
+				"command": "run",
+				"args": ["--release", "--bin", "run_experiments"],
+				"group": "test",
+				"problemMatcher": ["$rustc"]
+			},
+			{
+				"label": "Test All",
+				"type": "cargo",
+				"command": "test",
+				"args": ["--release", "--workspace"],
+				"group": "test",
+				"problemMatcher": ["$rustc"]
+			},
+			{
+				"label": "Clippy Check",
+				"type": "cargo",
+				"command": "clippy",
+				"args": ["--workspace"],
+				"group": "test",
+				"problemMatcher": ["$rustc"]
+			}
+		]
+	}
+}
