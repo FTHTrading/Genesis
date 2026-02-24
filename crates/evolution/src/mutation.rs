@@ -64,6 +64,10 @@ impl MutationEngine {
         traits: &mut TraitVector,
         pressure: f64,
     ) -> u32 {
+        // base_rate == 0.0 means evolution is explicitly forbidden
+        if self.base_rate == 0.0 {
+            return 0;
+        }
         let mut rng = rand::thread_rng();
         let effective_rate = self.base_rate + (pressure * 0.1); // pressure boosts mutation
         let mut mutations = 0;

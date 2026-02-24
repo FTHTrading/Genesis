@@ -31,6 +31,9 @@ pub enum SweepVariable {
     GiniWealthTaxRate,
     /// `PressureConfig.treasury_overflow_threshold` — treasury redistribution trigger.
     TreasuryOverflowThreshold,
+    /// `MutationEngine.base_rate` — base probability of trait mutation per cycle.
+    /// Note: This modifies the world's mutation engine directly, not PressureConfig.
+    MutationBaseRate,
 }
 
 impl SweepVariable {
@@ -44,6 +47,7 @@ impl SweepVariable {
             Self::GiniWealthTaxThreshold => "gini_wealth_tax_threshold",
             Self::GiniWealthTaxRate => "gini_wealth_tax_rate",
             Self::TreasuryOverflowThreshold => "treasury_overflow_threshold",
+            Self::MutationBaseRate => "mutation_base_rate",
         }
     }
 
@@ -57,6 +61,7 @@ impl SweepVariable {
             Self::GiniWealthTaxThreshold,
             Self::GiniWealthTaxRate,
             Self::TreasuryOverflowThreshold,
+            Self::MutationBaseRate,
         ]
     }
 }
@@ -131,6 +136,8 @@ pub enum Metric {
     MeanPopulation,
     /// Population standard deviation across epochs.
     PopulationVolatility,
+    /// Total agent trait mutations across all epochs (from MutationEngine).
+    TotalTraitMutations,
     /// Number of pressure mutations applied across all epochs.
     TotalPressureMutations,
     /// Total immune threats detected across all epochs.
@@ -156,6 +163,7 @@ impl Metric {
             Self::SurvivalEpochs => "survival_epochs",
             Self::MeanPopulation => "mean_population",
             Self::PopulationVolatility => "population_volatility",
+            Self::TotalTraitMutations => "total_trait_mutations",
             Self::TotalPressureMutations => "total_pressure_mutations",
             Self::TotalImmuneThreats => "total_immune_threats",
         }
@@ -179,6 +187,7 @@ impl Metric {
             Self::SurvivalEpochs,
             Self::MeanPopulation,
             Self::PopulationVolatility,
+            Self::TotalTraitMutations,
             Self::TotalPressureMutations,
             Self::TotalImmuneThreats,
         ]
@@ -221,6 +230,11 @@ pub struct ExperimentConfig {
     /// instead of the preset's default pressure.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub base_pressure_override: Option<PressureConfig>,
+    /// Optional: override the world's mutation engine base rate.
+    /// When set, `world.mutation_engine.base_rate` is forced to this value
+    /// before running epochs (independent of the sweep variable).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub mutation_rate_override: Option<f64>,
     /// Base seed for reproducibility (trial i at step j uses seed = base_seed + j * 1000 + i).
     pub base_seed: u64,
 }
@@ -296,6 +310,7 @@ mod tests {
             metrics: Metric::core_set(),
             base_preset: PhysicsPreset::EarthPrime,
             base_pressure_override: None,
+            mutation_rate_override: None,
             base_seed: 42,
         };
         // 3 steps × 10 runs = 30 worlds
@@ -314,6 +329,7 @@ mod tests {
             metrics: vec![Metric::FinalPopulation],
             base_preset: PhysicsPreset::EarthPrime,
             base_pressure_override: None,
+            mutation_rate_override: None,
             base_seed: 1000,
         };
         let mut seeds = std::collections::HashSet::new();
@@ -337,6 +353,7 @@ mod tests {
             metrics: Metric::core_set(),
             base_preset: PhysicsPreset::EarthPrime,
             base_pressure_override: None,
+            mutation_rate_override: None,
             base_seed: 42,
         };
         let label = config.label();
@@ -357,7 +374,7 @@ mod tests {
     #[test]
     fn all_sweep_variables_listed() {
         let all = SweepVariable::all();
-        assert_eq!(all.len(), 7);
+        assert_eq!(all.len(), 8);
         let names: std::collections::HashSet<&str> = all.iter().map(|v| v.name()).collect();
         assert_eq!(names.len(), all.len());
     }

@@ -170,6 +170,7 @@ mod tests {
             metrics: vec![Metric::FinalPopulation, Metric::Collapsed],
             base_preset: PhysicsPreset::EarthPrime,
             base_pressure_override: None,
+            mutation_rate_override: None,
             base_seed: 42,
         }
     }

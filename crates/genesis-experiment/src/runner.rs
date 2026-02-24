@@ -183,6 +183,16 @@ impl ExperimentRunner {
         let mut world = World::new();
         physics.apply_to(&mut world);
 
+        // Special handling: MutationBaseRate modifies the world's mutation engine directly
+        if config.sweep.variable == SweepVariable::MutationBaseRate {
+            world.mutation_engine.base_rate = param_value;
+        }
+
+        // Apply mutation rate override if specified (independent of sweep variable)
+        if let Some(rate) = config.mutation_rate_override {
+            world.mutation_engine.base_rate = rate;
+        }
+
         // Run epochs, collecting stats
         let mut all_stats: Vec<EpochStats> = Vec::with_capacity(config.epochs_per_run as usize);
         let mut collapse_epoch: Option<u64> = None;
@@ -288,6 +298,7 @@ fn apply_sweep_variable(
         SweepVariable::GiniWealthTaxThreshold => pressure.gini_wealth_tax_threshold = value,
         SweepVariable::GiniWealthTaxRate => pressure.gini_wealth_tax_rate = value,
         SweepVariable::TreasuryOverflowThreshold => pressure.treasury_overflow_threshold = value,
+        SweepVariable::MutationBaseRate => {} // Applied post-world-creation in run_trial
     }
 }
 
@@ -341,6 +352,9 @@ fn extract_metrics(
                     .sum::<f64>()
                     / total_epochs;
                 variance.sqrt()
+            }
+            Metric::TotalTraitMutations => {
+                all_stats.iter().map(|s| s.mutations as f64).sum()
             }
             Metric::TotalPressureMutations => {
                 all_stats.iter().map(|s| s.pressure_mutations as f64).sum()
@@ -397,6 +411,7 @@ mod tests {
             metrics: vec![Metric::FinalPopulation, Metric::Collapsed, Metric::SurvivalEpochs],
             base_preset: PhysicsPreset::EarthPrime,
             base_pressure_override: None,
+            mutation_rate_override: None,
             base_seed: 42,
         };
         let trial = ExperimentRunner::run_trial(&config, 0, 0, 0.00002, 42);
@@ -417,6 +432,7 @@ mod tests {
             metrics: Metric::core_set(),
             base_preset: PhysicsPreset::EarthPrime,
             base_pressure_override: None,
+            mutation_rate_override: None,
             base_seed: 100,
         };
         let result = ExperimentRunner::run(&config);
@@ -441,6 +457,7 @@ mod tests {
             metrics: vec![Metric::FinalPopulation],
             base_preset: PhysicsPreset::EarthPrime,
             base_pressure_override: None,
+            mutation_rate_override: None,
             base_seed: 999,
         };
         let result = ExperimentRunner::run(&config);
@@ -484,6 +501,7 @@ mod tests {
             metrics: vec![Metric::Collapsed, Metric::SurvivalEpochs],
             base_preset: PhysicsPreset::EarthPrime,
             base_pressure_override: None,
+            mutation_rate_override: None,
             base_seed: 42,
         };
         let result = ExperimentRunner::run(&config);
