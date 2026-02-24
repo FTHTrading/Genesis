@@ -415,6 +415,42 @@ fn extract_metrics(
             Metric::MaxTreasuryReserve => {
                 all_stats.iter().map(|s| s.treasury_reserve).fold(0.0_f64, f64::max)
             }
+            // ── Season 2: inequality metrics ─────────────────────────
+            Metric::AtpVariance => last.atp_variance,
+            Metric::WealthConcentrationIndex => last.wealth_concentration_top10,
+            Metric::MedianMeanAtpDivergence => {
+                if last.mean_atp > 0.0 {
+                    (last.mean_atp - last.median_atp) / last.mean_atp
+                } else {
+                    0.0
+                }
+            }
+            Metric::MeanGiniCoefficient => {
+                all_stats.iter().map(|s| s.gini_coefficient).sum::<f64>() / total_epochs
+            }
+            Metric::MaxGiniCoefficient => {
+                all_stats.iter().map(|s| s.gini_coefficient).fold(0.0_f64, f64::max)
+            }
+            Metric::ReproductiveInequalityIndex => {
+                let total_births_top: f64 = all_stats.iter()
+                    .map(|s| s.births_top_quartile as f64).sum();
+                let total_births_all: f64 = all_stats.iter()
+                    .map(|s| s.births as f64).sum();
+                if total_births_all > 0.0 { total_births_top / total_births_all } else { 0.0 }
+            }
+            Metric::SurvivalInequalityIndex => {
+                let total_deaths_bottom: f64 = all_stats.iter()
+                    .map(|s| s.deaths_bottom_quartile as f64).sum();
+                let total_deaths_all: f64 = all_stats.iter()
+                    .map(|s| s.deaths as f64).sum();
+                if total_deaths_all > 0.0 { total_deaths_bottom / total_deaths_all } else { 0.0 }
+            }
+            Metric::TopDecilePersistence => {
+                let high_conc_epochs = all_stats.iter()
+                    .filter(|s| s.wealth_concentration_top10 > 0.5)
+                    .count() as f64;
+                high_conc_epochs / total_epochs
+            }
         };
         result.insert(metric.name().to_string(), value);
     }

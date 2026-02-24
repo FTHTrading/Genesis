@@ -506,6 +506,32 @@ pub struct EpochStats {
     /// Number of pressure mutations applied this epoch.
     #[serde(default)]
     pub pressure_mutations: usize,
+
+    // ── Season 2 inequality instrumentation ──────────────────────────
+    /// Variance of ATP balances across agents.
+    #[serde(default)]
+    pub atp_variance: f64,
+    /// Median ATP balance.
+    #[serde(default)]
+    pub median_atp: f64,
+    /// Mean ATP balance per agent.
+    #[serde(default)]
+    pub mean_atp: f64,
+    /// Fraction of total ATP held by top 10% of agents.
+    #[serde(default)]
+    pub wealth_concentration_top10: f64,
+    /// Number of births this epoch from agents in top 25% ATP.
+    #[serde(default)]
+    pub births_top_quartile: u64,
+    /// Number of births this epoch from agents in bottom 25% ATP.
+    #[serde(default)]
+    pub births_bottom_quartile: u64,
+    /// Number of deaths this epoch from agents in top 25% ATP.
+    #[serde(default)]
+    pub deaths_top_quartile: u64,
+    /// Number of deaths this epoch from agents in bottom 25% ATP.
+    #[serde(default)]
+    pub deaths_bottom_quartile: u64,
 }
 
 /// Registration request from external callers.
@@ -1068,8 +1094,15 @@ impl World {
         // ═══════════════════════════════════════════════════════════════
         // STEP 2a: ATP decay — 2% balance erosion per epoch
         // Prevents infinite accumulation; models entropy/maintenance.
+        // S2 invariant: gated by stress_config.atp_decay_enabled
         // ═══════════════════════════════════════════════════════════════
-        self.ledger.decay_all(0.02);
+        let atp_decay_active = self.stress_config
+            .as_ref()
+            .map(|sc| sc.atp_decay_enabled)
+            .unwrap_or(true);
+        if atp_decay_active {
+            self.ledger.decay_all(0.02);
+        }
 
         // ═══════════════════════════════════════════════════════════════
         // STEP 2b: Wealth tax — 1% on balances above 100 ATP
@@ -1346,6 +1379,28 @@ impl World {
             .clamp(10, 500);
         self.pop_cap = dynamic_pop_cap;
 
+        // ── Season 2: compute ATP quartile boundaries for birth/death tracking ──
+        let mut sorted_balances: Vec<f64> = population.iter().map(|(_, bal, _)| *bal).collect();
+        sorted_balances.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
+        let q25_threshold = if sorted_balances.len() >= 4 {
+            sorted_balances[sorted_balances.len() / 4]
+        } else {
+            0.0
+        };
+        let q75_threshold = if sorted_balances.len() >= 4 {
+            sorted_balances[sorted_balances.len() * 3 / 4]
+        } else {
+            f64::MAX
+        };
+        // Map agent ID → balance for quartile lookups during birth/death
+        let balance_map: std::collections::HashMap<uuid::Uuid, f64> = population.iter()
+            .map(|(dna, bal, _)| (dna.id, *bal))
+            .collect();
+        let mut births_top_quartile: u64 = 0;
+        let mut births_bottom_quartile: u64 = 0;
+        let mut deaths_top_quartile: u64 = 0;
+        let mut deaths_bottom_quartile: u64 = 0;
+
         if let Ok(outcome) = self.selection_engine.select(&population) {
             mean_fitness = outcome.mean_fitness;
             max_fitness = outcome.max_fitness;
@@ -1434,6 +1489,11 @@ impl World {
                             self.agents.push(child);
                             births += 1;
                             births_this_epoch += 1;
+                            // S2: track parent's quartile for reproductive inequality
+                            if let Some(&parent_bal) = balance_map.get(&parent_id) {
+                                if parent_bal >= q75_threshold { births_top_quartile += 1; }
+                                if parent_bal <= q25_threshold { births_bottom_quartile += 1; }
+                            }
                         }
                     }
                 }
@@ -1442,6 +1502,11 @@ impl World {
             // ─── Deaths ───
             for dead_id in &outcome.terminated {
                 let dead_id = *dead_id;
+                // S2: track deceased agent's quartile for survival inequality
+                if let Some(&dead_bal) = balance_map.get(&dead_id) {
+                    if dead_bal >= q75_threshold { deaths_top_quartile += 1; }
+                    if dead_bal <= q25_threshold { deaths_bottom_quartile += 1; }
+                }
                 self.agents.retain(|a| a.id != dead_id);
                 self.agent_birth_epoch.remove(&dead_id);
                 if let Ok(bal) = self.ledger.balance(&dead_id) {
@@ -1495,6 +1560,26 @@ impl World {
             (total_deaths_window as f64 / epochs_in_window) * 100.0
         };
 
+        // ── Season 2: inequality metrics from final-epoch agent balances ──
+        let post_epoch_balances: Vec<f64> = self.agents.iter()
+            .filter_map(|a| self.ledger.balance(&a.id).ok().map(|b| b.balance))
+            .collect();
+        let atp_variance = if post_epoch_balances.len() >= 2 {
+            let mean = post_epoch_balances.iter().sum::<f64>() / post_epoch_balances.len() as f64;
+            post_epoch_balances.iter().map(|b| (b - mean).powi(2)).sum::<f64>()
+                / post_epoch_balances.len() as f64
+        } else {
+            0.0
+        };
+        let median_atp = genesis_econometrics::median(&post_epoch_balances);
+        let mean_atp = if post_epoch_balances.is_empty() {
+            0.0
+        } else {
+            post_epoch_balances.iter().sum::<f64>() / post_epoch_balances.len() as f64
+        };
+        let wealth_concentration_top10 =
+            genesis_econometrics::wealth_concentration(&post_epoch_balances, 0.10);
+
         let stats = EpochStats {
             epoch,
             population: self.agents.len(),
@@ -1529,6 +1614,15 @@ impl World {
             immune_threats: 0,  // filled after cortex step
             immune_health: 0,
             pressure_mutations: 0,
+            // Season 2 inequality instrumentation
+            atp_variance,
+            median_atp,
+            mean_atp,
+            wealth_concentration_top10,
+            births_top_quartile,
+            births_bottom_quartile,
+            deaths_top_quartile,
+            deaths_bottom_quartile,
         };
 
         // Keep rolling window of last 100 epochs

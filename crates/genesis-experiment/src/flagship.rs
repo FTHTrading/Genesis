@@ -1231,11 +1231,169 @@ impl FlagshipExperiments {
         config
     }
 
-    /// Season 2 Invariant Violation Suite: all S1 experiments.
+    // =====================================================================
+    // Season 2, S2: ATP Decay Disabled
+    // =====================================================================
+
+    /// S2 Baseline: ATP decay disabled under normal conditions.
+    ///
+    /// The 2% per-epoch ATP decay prevents infinite wealth accumulation.
+    /// Without it, agent balances become immortal — wealth never erodes.
+    /// Predicted cascade: wealth concentration → reproductive monopoly
+    /// → demographic stagnation → eventual population collapse.
+    pub fn s2_atp_decay_disabled_baseline() -> ExperimentConfig {
+        let decay_disabled = StressConfig {
+            atp_decay_enabled: false,
+            ..StressConfig::default()
+        };
+
+        ExperimentConfig {
+            name: "S2 ATP Decay Disabled: Baseline".into(),
+            hypothesis: "ATP decay (2% per epoch) is a structural invariant that prevents \
+                         infinite wealth accumulation. Without it, wealthy agents retain \
+                         their balances indefinitely — creating permanent dynasties that \
+                         monopolize reproduction (25 ATP cost) while poorer agents cannot \
+                         afford to replicate. Under baseline conditions with all other \
+                         adaptation layers active, this could produce demographic stagnation \
+                         (falling births as wealth locks in) or runaway inequality \
+                         (Gini → 1.0). If the wealth tax (1% on >100 ATP) and Gini tax \
+                         compensate, the system may survive — but inequality metrics \
+                         should diverge from baseline.".into(),
+            sweep: ParameterSweep::new(
+                SweepVariable::SoftCap,
+                30.0,   // extreme scarcity
+                180.0,  // normal capacity
+                30.0,   // 6 steps
+            ),
+            runs_per_step: 20,
+            epochs_per_run: 500,
+            metrics: vec![
+                Metric::FinalPopulation,
+                Metric::Collapsed,
+                Metric::SurvivalEpochs,
+                Metric::MeanPopulation,
+                Metric::MinPopulation,
+                Metric::MeanFitness,
+                Metric::GiniCoefficient,
+                Metric::TotalBirths,
+                Metric::TotalDeaths,
+                Metric::TreasuryRatio,
+                Metric::MaxTreasuryReserve,
+                Metric::BirthDeathRatio,
+                // S2 inequality instrumentation
+                Metric::AtpVariance,
+                Metric::WealthConcentrationIndex,
+                Metric::MedianMeanAtpDivergence,
+                Metric::MeanGiniCoefficient,
+                Metric::MaxGiniCoefficient,
+                Metric::ReproductiveInequalityIndex,
+                Metric::SurvivalInequalityIndex,
+                Metric::TopDecilePersistence,
+            ],
+            base_preset: PhysicsPreset::EarthPrime,
+            base_pressure_override: None,
+            mutation_rate_override: None,
+            cortex_enabled_override: None,
+            base_stress_override: Some(decay_disabled),
+            base_seed: 42,
+        }
+    }
+
+    /// S2 Baseline quick variant (2 steps × 5 runs × 100 epochs).
+    pub fn s2_atp_decay_disabled_baseline_quick() -> ExperimentConfig {
+        let mut config = Self::s2_atp_decay_disabled_baseline();
+        config.name = "S2 ATP Decay Disabled: Baseline [QUICK]".into();
+        config.sweep = ParameterSweep::new(SweepVariable::SoftCap, 60.0, 120.0, 60.0);
+        config.runs_per_step = 5;
+        config.epochs_per_run = 100;
+        config
+    }
+
+    /// S2 Hostile: ATP decay disabled under full adversarial conditions.
+    ///
+    /// All protective mechanisms stripped: high catastrophe, high entropy,
+    /// no wealth tax, no immune cortex, no mutation. With ATP decay also
+    /// disabled, there is no erosion force on accumulated wealth.
+    pub fn s2_atp_decay_disabled_hostile() -> ExperimentConfig {
+        let mut hostile_pressure = PressureConfig::default();
+        hostile_pressure.catastrophe_base_prob = 0.03;
+        hostile_pressure.entropy_coeff = 0.0001;
+        hostile_pressure.gini_wealth_tax_threshold = 1.0;  // effectively disabled
+        hostile_pressure.gini_wealth_tax_rate = 0.0;
+        hostile_pressure.treasury_overflow_threshold = 1.0;
+
+        let decay_disabled = StressConfig {
+            atp_decay_enabled: false,
+            ..StressConfig::default()
+        };
+
+        ExperimentConfig {
+            name: "S2 ATP Decay Disabled: Hostile".into(),
+            hypothesis: "Under full hostile conditions (max catastrophe, max entropy, \
+                         no Gini tax, no immune cortex, no mutation) AND with ATP decay \
+                         structurally disabled, wealth becomes immortal in an already \
+                         hostile environment. Without any erosion mechanisms, the oldest \
+                         surviving agents accumulate unchecked wealth while new agents \
+                         cannot afford to replicate. This is the harshest S2 test. \
+                         Expected: rapid wealth concentration → reproductive collapse \
+                         → population extinction.".into(),
+            sweep: ParameterSweep::new(
+                SweepVariable::SoftCap,
+                30.0,
+                180.0,
+                30.0,   // 6 steps
+            ),
+            runs_per_step: 20,
+            epochs_per_run: 500,
+            metrics: vec![
+                Metric::FinalPopulation,
+                Metric::Collapsed,
+                Metric::SurvivalEpochs,
+                Metric::MeanPopulation,
+                Metric::MinPopulation,
+                Metric::MeanFitness,
+                Metric::GiniCoefficient,
+                Metric::TotalBirths,
+                Metric::TotalDeaths,
+                Metric::TreasuryRatio,
+                Metric::MaxTreasuryReserve,
+                Metric::BirthDeathRatio,
+                // S2 inequality instrumentation
+                Metric::AtpVariance,
+                Metric::WealthConcentrationIndex,
+                Metric::MedianMeanAtpDivergence,
+                Metric::MeanGiniCoefficient,
+                Metric::MaxGiniCoefficient,
+                Metric::ReproductiveInequalityIndex,
+                Metric::SurvivalInequalityIndex,
+                Metric::TopDecilePersistence,
+            ],
+            base_preset: PhysicsPreset::EarthPrime,
+            base_pressure_override: Some(hostile_pressure),
+            mutation_rate_override: Some(0.0),
+            cortex_enabled_override: Some(false),
+            base_stress_override: Some(decay_disabled),
+            base_seed: 42,
+        }
+    }
+
+    /// S2 Hostile quick variant (2 steps × 5 runs × 100 epochs).
+    pub fn s2_atp_decay_disabled_hostile_quick() -> ExperimentConfig {
+        let mut config = Self::s2_atp_decay_disabled_hostile();
+        config.name = "S2 ATP Decay Disabled: Hostile [QUICK]".into();
+        config.sweep = ParameterSweep::new(SweepVariable::SoftCap, 60.0, 120.0, 60.0);
+        config.runs_per_step = 5;
+        config.epochs_per_run = 100;
+        config
+    }
+
+    /// Season 2 Invariant Violation Suite: all S1 + S2 experiments.
     pub fn s2_invariant_suite() -> Vec<(&'static str, ExperimentConfig)> {
         vec![
             ("s1_treasury_disabled_baseline", Self::s1_treasury_disabled_baseline()),
             ("s1_treasury_disabled_hostile", Self::s1_treasury_disabled_hostile()),
+            ("s2_atp_decay_disabled_baseline", Self::s2_atp_decay_disabled_baseline()),
+            ("s2_atp_decay_disabled_hostile", Self::s2_atp_decay_disabled_hostile()),
         ]
     }
 
@@ -1266,6 +1424,8 @@ impl FlagshipExperiments {
             // Season 2
             "S1 Treasury Disabled: Baseline",
             "S1 Treasury Disabled: Hostile",
+            "S2 ATP Decay Disabled: Baseline",
+            "S2 ATP Decay Disabled: Hostile",
         ]
     }
 }
@@ -1354,7 +1514,7 @@ mod tests {
     #[test]
     fn flagship_list() {
         let list = FlagshipExperiments::list();
-        assert_eq!(list.len(), 23);
+        assert_eq!(list.len(), 25);
         assert!(list[0].contains("Entropy"));
         assert!(list[1].contains("Catastrophe"));
         assert!(list[2].contains("Inequality"));
@@ -1716,11 +1876,65 @@ mod tests {
     #[test]
     fn s2_invariant_suite_valid() {
         let suite = FlagshipExperiments::s2_invariant_suite();
-        assert_eq!(suite.len(), 2);
+        assert_eq!(suite.len(), 4);
         for (name, config) in &suite {
             assert!(!name.is_empty());
             assert!(config.total_worlds() > 0);
         }
+    }
+
+    #[test]
+    fn s2_atp_decay_disabled_baseline_config_valid() {
+        let config = FlagshipExperiments::s2_atp_decay_disabled_baseline();
+        assert_eq!(config.sweep.step_count(), 6);
+        assert_eq!(config.total_worlds(), 120);
+        assert!(config.metrics.len() >= 18);
+        assert!(config.base_pressure_override.is_none());
+        let stress = config.base_stress_override.as_ref().unwrap();
+        assert!(!stress.atp_decay_enabled);
+        assert!(stress.treasury_cycling_enabled); // treasury still active
+    }
+
+    #[test]
+    fn s2_atp_decay_disabled_hostile_config_valid() {
+        let config = FlagshipExperiments::s2_atp_decay_disabled_hostile();
+        assert_eq!(config.sweep.step_count(), 6);
+        assert_eq!(config.total_worlds(), 120);
+        assert_eq!(config.mutation_rate_override, Some(0.0));
+        assert_eq!(config.cortex_enabled_override, Some(false));
+        let stress = config.base_stress_override.as_ref().unwrap();
+        assert!(!stress.atp_decay_enabled);
+        let p = config.base_pressure_override.as_ref().unwrap();
+        assert!((p.catastrophe_base_prob - 0.03).abs() < 1e-10);
+    }
+
+    #[test]
+    fn quick_s2_atp_decay_disabled_baseline_runs() {
+        let config = FlagshipExperiments::s2_atp_decay_disabled_baseline_quick();
+        let result = ExperimentRunner::run(&config);
+        assert_eq!(result.steps.len(), 2);
+        assert!(result.total_worlds > 0);
+        // Verify inequality metrics are collected
+        for step in &result.steps {
+            for trial in &step.trials {
+                assert!(trial.metrics.contains_key("wealth_concentration_index"),
+                    "Expected wealth_concentration_index metric in S2 experiment");
+                assert!(trial.metrics.contains_key("median_mean_atp_divergence"),
+                    "Expected median_mean_atp_divergence metric in S2 experiment");
+                assert!(trial.metrics.contains_key("mean_gini_coefficient"),
+                    "Expected mean_gini_coefficient metric in S2 experiment");
+                assert!(trial.metrics.contains_key("reproductive_inequality_index"),
+                    "Expected reproductive_inequality_index metric in S2 experiment");
+            }
+        }
+    }
+
+    #[test]
+    fn quick_s2_atp_decay_disabled_hostile_runs() {
+        let config = FlagshipExperiments::s2_atp_decay_disabled_hostile_quick();
+        let result = ExperimentRunner::run(&config);
+        assert_eq!(result.steps.len(), 2);
+        assert!(result.total_worlds > 0);
     }
 
 }

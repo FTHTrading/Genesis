@@ -12,7 +12,7 @@ Source: https://github.com/FTHTrading/AI
 
 ## Abstract
 
-We present Genesis Protocol, a computational system that combines evolutionary dynamics, energy-based survival economics, and autonomous homeostatic regulation into a self-maintaining digital organism. Unlike conventional evolutionary algorithms, multi-agent simulations, or blockchain tokenomics, Genesis Protocol embeds individual agent metabolism, resource scarcity, fitness-based natural selection, and treasury feedback loops into a single closed system that operates continuously without human intervention. Over a systematic experimental campaign spanning 3,420 independent world instantiations across 25 experiment configurations — including catastrophe resilience sweeps, forced evolution prohibition, four-quadrant adaptation layer isolation, multi-axis simultaneous stress, and metabolic inversion attacks — the system produced **zero population collapses**. We demonstrate that the stabilizing mechanism is architectural rather than adaptive: the ATP economy's resource extraction geometry enforces a minimum viable population independent of mutation, immune adaptation, treasury redistribution, or environmental hostility. The system exhibits properties formally classifiable as autopoietic: self-generated, self-maintaining, and operationally closed under energetic constraint.
+We present Genesis Protocol, a computational system that combines evolutionary dynamics, energy-based survival economics, and autonomous homeostatic regulation into a self-maintaining digital organism. Unlike conventional evolutionary algorithms, multi-agent simulations, or blockchain tokenomics, Genesis Protocol embeds individual agent metabolism, resource scarcity, fitness-based natural selection, and treasury feedback loops into a single closed system that operates continuously without human intervention. Over a systematic experimental campaign spanning 3,900 independent world instantiations across 27 experiment configurations — including catastrophe resilience sweeps, forced evolution prohibition, four-quadrant adaptation layer isolation, multi-axis simultaneous stress, metabolic inversion attacks, and structural invariant removal — the system produced **zero population collapses**. We demonstrate that the stabilizing mechanism is architectural rather than adaptive: the ATP economy's resource extraction geometry enforces a minimum viable population independent of mutation, immune adaptation, treasury redistribution, or environmental hostility. The system exhibits properties formally classifiable as autopoietic: self-generated, self-maintaining, and operationally closed under energetic constraint.
 
 ---
 
@@ -232,6 +232,8 @@ Each experiment spawns independent world instances with controlled parameter var
 
 **Total: ~3,420 worlds. ~1,710,000 epochs. Zero collapses.**
 
+**Season 2 structural invariant removal adds 480 worlds (240 S1 + 240 S2), 240,000 epochs. Cumulative total: ~3,900 worlds, ~1,950,000 epochs. Zero collapses.**
+
 ### 5.3 Baseline Validation
 
 A 10,000-epoch deterministic simulation established the baseline organism:
@@ -404,7 +406,7 @@ The minimal requirements for a self-sustaining digital organism may be: (1) ener
 
 ### 7.4 Limitations
 
-1. **Parameter space coverage**: While 3,420 worlds is substantial, the experiment framework sweeps one or two variables at a time. High-dimensional combinatorial sweeps remain unexplored.
+1. **Parameter space coverage**: While 3,900 worlds is substantial, the experiment framework sweeps one or two variables at a time. High-dimensional combinatorial sweeps remain unexplored.
 
 2. **Structural parameters untested**: The epoch loop's hard-coded constants (decay rate, basal cost, skim rate, replication threshold) were not swept because they define the system's physics. Testing whether the system survives without them is equivalent to asking whether a star survives without gravity — the answer is trivially no, but the experiment is uninformative.
 
@@ -568,17 +570,63 @@ The population penalty from disabled cycling is modest: approximately 10% lower 
 
 **Next target**: S2 (ATP decay removal) — if removing the 2% per-epoch balance erosion allows unlimited accumulation, the resulting wealth concentration may produce demographic collapse through a different mechanism.
 
+#### 8.6.5 S2 Results: ATP Decay Creates Survivable but Degenerate Economies
+
+The second structural invariant tested was S2 — the 2% per-epoch ATP decay (balance erosion). This mechanism continuously deflates all agent balances, preventing unlimited wealth accumulation. Without it, wealthy organisms retain their ATP indefinitely — creating potential "wealth immortality." Enhanced inequality instrumentation was deployed for this experiment, capturing six metrics mandated by the governance framework: ATP distribution variance, wealth concentration index (top 10% share), reproductive inequality (birth fraction from top quartile), survival inequality (death fraction from bottom quartile), top-decile persistence, and median/mean ATP divergence.
+
+**S2 Baseline** (120 worlds, 500 epochs, 6 carrying capacity tiers, ATP decay disabled, all other layers active):
+- Collapse rate: **0/120 (0.0%)**
+- Mean Gini coefficient: 0.4016 (max 0.4581)
+- Wealth concentration (top 10%): mean 0.2495 (max 0.3092)
+- Reproductive inequality: **0.5259** — top quartile produces 53% of offspring
+- Survival inequality: **0.8450** — bottom quartile suffers 85% of deaths
+- Median/Mean ATP divergence: 0.0960 (moderate right skew)
+- Population floor: 20 agents (stable)
+- Mean population: 51.6 agents
+- Treasury accumulation: 2,298 ATP maximum
+
+**S2 Hostile** (120 worlds, 500 epochs, maximum catastrophe rate, maximum entropy, no Gini tax, no mutation, no cortex, ATP decay disabled):
+- Collapse rate: **0/120 (0.0%)**
+- Mean Gini coefficient: **0.5434** (max 0.5954)
+- Wealth concentration (top 10%): **0.5396** — top decile controls 54% of ATP
+- Reproductive inequality: **0.7826** — top quartile produces 78% of offspring
+- Survival inequality: **0.6911** — bottom quartile suffers 69% of deaths
+- Median/Mean ATP divergence: **0.4910** (severe right skew)
+- Top-decile persistence: 0.4876 (wealth concentrated >50% of simulation epochs)
+- Max Gini coefficient: 0.7392 (peak inequality episode)
+- Population floor: 20 agents (stable)
+- Mean population: 48.9 agents
+- Treasury accumulation: 62.0 ATP maximum (hostile conditions drain treasury)
+
+**Per-tier analysis** reveals a sharp phase transition at cap=30 → cap=60. Under hostile conditions, reproductive inequality jumps from 0.37 (cap=30) to 0.83 (cap=60) and remains locked above 0.87 for all higher capacities. Wealth concentration follows the same pattern: 0.35 → 0.57 → stable. The small-population regime (cap=30) mechanically constrains inequality because there are too few agents to form distinct quartiles; the phase transition at cap=60 reveals the system's natural inequality attractor when population permits stratification.
+
+**Interpretation**: ATP decay is **not** necessary for population survival — but its removal creates a profoundly pathological economy. The system survives through the extinction floor (minimum population = 20) and continuing resource extraction, but wealth distribution degenerates into oligarchy under hostile conditions:
+
+1. **Reproductive monopoly**: Without decay, wealthy agents remain permanently above the 25 ATP replication threshold. Under hostile conditions, 78% of all offspring come from the top ATP quartile. The bottom half of the population is effectively reproductively dead.
+
+2. **Survival apartheid**: Death concentrates overwhelmingly in the bottom quartile (85% baseline, 69% hostile). These agents cannot accumulate enough ATP to buffer against basal costs and stasis.
+
+3. **Wealth immortality without collapse**: The system does not collapse because the extinction floor prevents it, and resource extraction continues to inject fresh ATP. But the economy enters a degenerate fixed point where wealth stratification is self-reinforcing: the rich reproduce, their children inherit favorable positions, and the poor die without offspring.
+
+4. **Compensating mechanisms partially effective**: Under baseline conditions, the wealth tax (1% on >100 ATP) and Gini tax partially compensate — Gini stays at 0.40 and wealth concentration at 0.25. But removing these compensating layers (hostile conditions) exposes the full pathology: Gini rises to 0.54 and wealth concentration to 0.54.
+
+**Comparison with S1**: Treasury cycling removal (S1) was benign — no collapses and only modest (~10%) population reduction. ATP decay removal (S2) is also collapse-free but produces qualitatively different damage: not population loss but **structural inequality**. The system survives but loses demographic mobility. This distinguishes two failure modes: *metabolic failure* (population collapse) vs. *economic degeneracy* (survivable but pathological wealth distribution).
+
+**Cumulative Season 2 result**: 480 worlds tested across S1 and S2, zero collapses. The extinction floor at 20 agents, combined with continuing resource extraction, appears to be the true structural invariant — not any individual economic mechanism. Individual mechanisms (treasury cycling, ATP decay) modulate the *quality* of the economy but not its *survival*.
+
 ---
 
 ## 9. Conclusion
 
 Genesis Protocol demonstrates that a computational system with energy-based survival economics, resource scarcity, and autonomous treasury regulation produces a self-maintaining digital organism with remarkable stability properties.
 
-Over 3,420 independent world instantiations spanning 25 experimental configurations — including catastrophe resilience sweeps, forced evolution prohibition, complete adaptation layer removal, multi-axis simultaneous stress, and dual metabolic inversion — the system produced zero population collapses.
+Over 3,900 independent world instantiations spanning 27 experimental configurations — including catastrophe resilience sweeps, forced evolution prohibition, complete adaptation layer removal, multi-axis simultaneous stress, dual metabolic inversion, and structural invariant removal (treasury cycling, ATP decay) — the system produced zero population collapses.
 
-The stabilizing mechanism is not evolutionary adaptation but architectural constraint. The ATP economy's combination of decay, basal metabolism, treasury cycling, dynamic carrying capacity, and fitness-gated replication creates a metabolic fixed point that persists independently of mutation, immune response, or environmental conditions.
+The stabilizing mechanism is not evolutionary adaptation but architectural constraint. The ATP economy's combination of resource extraction, basal metabolism, dynamic carrying capacity, fitness-gated replication, and a hard extinction floor creates a metabolic fixed point that persists independently of mutation, immune response, or environmental conditions. Season 2 experiments further demonstrate that individual economic mechanisms (treasury cycling, ATP decay) are individually dispensable for survival — removing either one does not cause collapse.
 
-This finding has implications beyond artificial life. It suggests that the stability of complex adaptive systems may depend less on their capacity to adapt and more on the structural properties of their resource economies. Evolution is a powerful force — but metabolism comes first.
+However, the S2 ATP decay removal experiment reveals a critical distinction: survival and health are not synonymous. Without ATP decay, the system survives but enters a degenerate state characterized by reproductive monopoly (top quartile producing 78% of offspring), survival apartheid (bottom quartile suffering 85% of deaths), and wealth oligarchy (top 10% controlling 54% of resources under hostile conditions). The economy achieves a pathological fixed point — stable but structurally unjust.
+
+This finding has implications beyond artificial life. It suggests that the stability of complex adaptive systems may depend less on their capacity to adapt and more on the structural properties of their resource economies. Evolution is a powerful force — but metabolism comes first. And within metabolism, the distinction between mechanisms that ensure *survival* and mechanisms that ensure *equitable survival* may be the most important boundary yet identified.
 
 The system exhibits functional signatures analogous to living systems: it competes, dies, reproduces, self-reports, and persists. Within the explored parameter space, no collapse-to-extinction events were observed across any experimental configuration.
 
@@ -653,7 +701,9 @@ Zoph, B., & Le, Q. V. (2017). Neural architecture search with reinforcement lear
 | Dual Inversion | 200 | 0 | 17.6 | 24.1 | Metabolic |
 | S1 Treasury Disabled (Baseline) | 120 | 0 | 20.0 | 46.1 | Structural |
 | S1 Treasury Disabled (Hostile) | 120 | 0 | 20.0 | 44.4 | Structural |
-| **Total** | **~3,660** | **0** | **17.6** | **54.3** | |
+| S2 ATP Decay Disabled (Baseline) | 120 | 0 | 20.0 | 51.6 | Structural |
+| S2 ATP Decay Disabled (Hostile) | 120 | 0 | 20.0 | 48.9 | Structural |
+| **Total** | **~3,900** | **0** | **17.6** | **54.3** | |
 
 ## Appendix B: Epoch Loop Pseudocode (v1.1)
 

@@ -1756,6 +1756,14 @@ mod tests {
             immune_threats: 0,
             immune_health: 0,
             pressure_mutations: 0,
+            atp_variance: 0.0,
+            median_atp: 0.0,
+            mean_atp: 0.0,
+            wealth_concentration_top10: 0.0,
+            births_top_quartile: 0,
+            births_bottom_quartile: 0,
+            deaths_top_quartile: 0,
+            deaths_bottom_quartile: 0,
         }
     }
 

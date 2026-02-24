@@ -157,6 +157,25 @@ pub enum Metric {
     MinPopulation,
     /// Maximum treasury reserve observed across all epochs.
     MaxTreasuryReserve,
+
+    // ── Season 2: inequality instrumentation ─────────────────────────
+    /// ATP distribution variance at final epoch.
+    AtpVariance,
+    /// Fraction of total ATP held by top 10% of agents at final epoch.
+    WealthConcentrationIndex,
+    /// Divergence between median and mean ATP: (mean − median) / mean.
+    /// Higher values indicate right-skewed wealth (few rich, many poor).
+    MedianMeanAtpDivergence,
+    /// Mean Gini coefficient across all epochs (time-averaged inequality).
+    MeanGiniCoefficient,
+    /// Maximum Gini coefficient observed across all epochs (peak inequality).
+    MaxGiniCoefficient,
+    /// Reproductive inequality index: fraction of births from top-quartile parents.
+    ReproductiveInequalityIndex,
+    /// Survival inequality index: fraction of deaths from bottom-quartile agents.
+    SurvivalInequalityIndex,
+    /// Top-decile persistence: fraction of epochs where top-10% wealth concentration > 0.5.
+    TopDecilePersistence,
 }
 
 impl Metric {
@@ -183,6 +202,14 @@ impl Metric {
             Self::TotalImmuneThreats => "total_immune_threats",
             Self::MinPopulation => "min_population",
             Self::MaxTreasuryReserve => "max_treasury_reserve",
+            Self::AtpVariance => "atp_variance",
+            Self::WealthConcentrationIndex => "wealth_concentration_index",
+            Self::MedianMeanAtpDivergence => "median_mean_atp_divergence",
+            Self::MeanGiniCoefficient => "mean_gini_coefficient",
+            Self::MaxGiniCoefficient => "max_gini_coefficient",
+            Self::ReproductiveInequalityIndex => "reproductive_inequality_index",
+            Self::SurvivalInequalityIndex => "survival_inequality_index",
+            Self::TopDecilePersistence => "top_decile_persistence",
         }
     }
 
@@ -209,6 +236,14 @@ impl Metric {
             Self::TotalImmuneThreats,
             Self::MinPopulation,
             Self::MaxTreasuryReserve,
+            Self::AtpVariance,
+            Self::WealthConcentrationIndex,
+            Self::MedianMeanAtpDivergence,
+            Self::MeanGiniCoefficient,
+            Self::MaxGiniCoefficient,
+            Self::ReproductiveInequalityIndex,
+            Self::SurvivalInequalityIndex,
+            Self::TopDecilePersistence,
         ]
     }
 
@@ -224,6 +259,9 @@ impl Metric {
             Self::SurvivalEpochs,
             Self::MeanPopulation,
             Self::MinPopulation,
+            Self::WealthConcentrationIndex,
+            Self::MedianMeanAtpDivergence,
+            Self::MeanGiniCoefficient,
         ]
     }
 }

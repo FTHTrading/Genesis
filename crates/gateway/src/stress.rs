@@ -54,6 +54,12 @@ pub struct StressConfig {
     /// no seasonal release.  This is a structural invariant violation,
     /// not a parameter sweep — it breaks the recycling loop.
     pub treasury_cycling_enabled: bool,
+
+    /// Enable/disable the 2% per-epoch ATP decay (S2 invariant).
+    /// When false, agent balances never decay — wealth becomes immortal.
+    /// Predicted effect: wealth concentration → demographic stagnation
+    /// → reproductive starvation cascade.
+    pub atp_decay_enabled: bool,
 }
 
 impl Default for StressConfig {
@@ -66,6 +72,7 @@ impl Default for StressConfig {
             mutation_volatility_multiplier: 1.0,
             treasury_lock_probability: 0.0,
             treasury_cycling_enabled: true,
+            atp_decay_enabled: true,
         }
     }
 }
@@ -86,6 +93,7 @@ impl StressConfig {
             mutation_volatility_multiplier: 1.2,
             treasury_lock_probability: 0.05,
             treasury_cycling_enabled: true,
+            atp_decay_enabled: true,
         }
     }
 
@@ -99,6 +107,7 @@ impl StressConfig {
             mutation_volatility_multiplier: 1.5,
             treasury_lock_probability: 0.10,
             treasury_cycling_enabled: true,
+            atp_decay_enabled: true,
         }
     }
 
@@ -112,6 +121,7 @@ impl StressConfig {
             mutation_volatility_multiplier: 2.0,
             treasury_lock_probability: 0.20,
             treasury_cycling_enabled: true,
+            atp_decay_enabled: true,
         }
     }
 
@@ -125,6 +135,7 @@ impl StressConfig {
             mutation_volatility_multiplier: 1.0,
             treasury_lock_probability: 0.95,
             treasury_cycling_enabled: true,
+            atp_decay_enabled: true,
         }
     }
 
