@@ -8,7 +8,7 @@ February 2026
 
 ## Abstract
 
-This paper describes a deterministic multi-agent macroeconomic simulation system and reports results from 38 experiments comprising 5,680 world-runs across 2,840,000 computed epochs. Each simulation instantiates a population of agents with genetically determined traits, a metabolic energy economy with taxation and redistribution, logistic resource pools, stochastic catastrophe processes, and a homeostatic parameter controller. Collapse is defined as population reaching zero, or population remaining below a configurable floor ($P_{\text{floor}}$) for a sustained window; the default definition uses $P_{\text{floor}} = 3$ and a 50-epoch window. All simulations are seeded deterministically using SHA-256 hash chains and Knuth MMIX linear congruential generators, producing bit-identical results across runs on the same architecture. Season 1 (25 experiments, 4,180 worlds) swept 10 economic parameters under standard and adversarial conditions. Season 2 (13 experiments, 1,500 worlds) systematically disabled structural invariants including treasury redistribution, ATP decay, resource regeneration, and reproduction grants, individually and in combination. Under the default collapse definition, no collapses were observed in any experiment. Under stricter definitions ($P_{\text{floor}} = 10$), collapse rates exceeded 97%. Under maximal structural violation (zero resource regeneration, death draining resource pools, all safety mechanisms disabled, 10× reproduction cost), populations contracted to a mean of 12.8 agents but did not collapse under the default definition, instead exhibiting pathological inequality (reproductive inequality index 0.95, survival inequality index 0.87, wealth concentration index 0.42). Sensitivity analyses confirm that ±20% perturbation of fitness function weights produces collapse rate changes of at most 0.8 percentage points, and that the collapse boundary is sharply sensitive to the floor definition (Appendices C–D). All experiment configurations, seeds, and result hashes are published. Independent replication has not yet occurred.
+This paper describes a deterministic multi-agent macroeconomic simulation system and reports results from 38 experiments comprising 5,680 world-runs across 2,840,000 computed epochs. Each simulation instantiates a population of agents with genetically determined traits, a metabolic energy economy with taxation and redistribution, logistic resource pools, stochastic catastrophe processes, and a homeostatic parameter controller. Collapse is defined as population reaching zero, or population remaining below a configurable floor ($P_{\text{floor}}$) for a sustained window; the default definition uses $P_{\text{floor}} = 3$ and a 50-epoch window. All simulations are seeded deterministically using SHA-256 hash chains and Knuth MMIX linear congruential generators, producing bit-identical results across runs on the same architecture. Season 1 (25 experiments, 4,180 worlds) swept 10 economic parameters under standard and adversarial conditions. Season 2 (13 experiments, 1,500 worlds) systematically disabled structural invariants including treasury redistribution, ATP decay, resource regeneration, and reproduction grants, individually and in combination. Under the default collapse definition, no collapses were observed in any experiment (0 / 5,680; 95% CI [0, 0.065%], Clopper-Pearson exact). Under stricter definitions ($P_{\text{floor}} = 10$), collapse rates exceeded 97% (95% CI [92.9%, 99.5%]). Under maximal structural violation (zero resource regeneration, death draining resource pools, all safety mechanisms disabled, 10× reproduction cost), populations contracted to a mean of 12.8 agents but did not collapse under the default definition, instead exhibiting pathological inequality (reproductive inequality index 0.95, survival inequality index 0.87, wealth concentration index 0.42). Sensitivity analyses confirm that ±20% perturbation of fitness function weights produces collapse rate changes of at most 0.8 percentage points, and that the collapse boundary is sharply sensitive to the floor definition (Appendices C–D). All experiment configurations, seeds, and result hashes are published. Independent replication has not yet occurred.
 
 ---
 
@@ -245,15 +245,15 @@ $$\kappa(t) = \begin{cases}
 
 The collapse rate is sharply sensitive to the choice of $P_{\text{floor}}$. Sensitivity analysis (Appendix C) applied the s4_full_attack configuration — the most extreme tested condition — under varying floor definitions:
 
-| $P_{\text{floor}}$ | Collapse Rate | Collapsed / Total |
-|---------------------|---------------|-------------------|
-| 3 (default) | 0.0% | 0 / 120 |
-| 5 | 5.8% | 7 / 120 |
-| 10 | 97.5% | 117 / 120 |
-| 15 | 100.0% | 120 / 120 |
-| 20 | 100.0% | 120 / 120 |
+| $P_{\text{floor}}$ | Collapse Rate | Collapsed / Total | 95% CI (Clopper-Pearson) |
+|---------------------|---------------|-------------------|-------------------------|
+| 3 (default) | 0.0% | 0 / 120 | [0.0%, 3.0%] |
+| 5 | 5.8% | 7 / 120 | [2.4%, 11.6%] |
+| 10 | 97.5% | 117 / 120 | [92.9%, 99.5%] |
+| 15 | 100.0% | 120 / 120 | [97.0%, 100%] |
+| 20 | 100.0% | 120 / 120 | [97.0%, 100%] |
 
-Under the default definition ($P_{\text{floor}} = 3$), zero collapses are observed. Under a modestly stricter definition ($P_{\text{floor}} = 5$), 5.8% of worlds collapse. Under $P_{\text{floor}} = 10$, near-universal collapse occurs (97.5%). This indicates that populations under maximal stress stabilize in the range of 3–8 agents: above the default floor but well below the initial soft cap. The collapse boundary, with respect to definition choice, lies between $P_{\text{floor}} = 5$ and $P_{\text{floor}} = 10$ for this configuration. The zero-collapse headline result is therefore contingent on the permissive default definition.
+Under the default definition ($P_{\text{floor}} = 3$), zero collapses are observed (95% CI upper bound: 3.0%). Under a modestly stricter definition ($P_{\text{floor}} = 5$), 5.8% of worlds collapse (CI: [2.4%, 11.6%]). Under $P_{\text{floor}} = 10$, near-universal collapse occurs (97.5%, CI: [92.9%, 99.5%]). This indicates that populations under maximal stress stabilize in the range of 3–8 agents: above the default floor but well below the initial soft cap. The collapse boundary, with respect to definition choice, lies between $P_{\text{floor}} = 5$ and $P_{\text{floor}} = 10$ for this configuration. The zero-collapse headline result is therefore contingent on the permissive default definition.
 
 ### 3.2 Alternative Definitions Considered
 
@@ -353,13 +353,13 @@ All Season 2 experiments: soft cap sweep 30–180, 20 runs/step, base seed 42.
 
 ### 6.1 Collapse Rates
 
-| Season | Experiments | Worlds | Collapse Rate |
-|--------|-------------|--------|---------------|
-| Season 1 | 25 | 4,180 | 0 / 4,180 (0.00%) |
-| Season 2 | 13 | 1,500 | 0 / 1,500 (0.00%) |
-| **Total** | **38** | **5,680** | **0 / 5,680 (0.00%)** |
+| Season | Experiments | Worlds | Collapse Rate | 95% CI (Clopper-Pearson) |
+|--------|-------------|--------|---------------|-------------------------|
+| Season 1 | 25 | 4,180 | 0 / 4,180 (0.00%) | [0, 0.088%] |
+| Season 2 | 13 | 1,500 | 0 / 1,500 (0.00%) | [0, 0.246%] |
+| **Total** | **38** | **5,680** | **0 / 5,680 (0.00%)** | **[0, 0.065%]** |
 
-No world-run triggered either collapse condition ($|P(t)| = 0$ or $|P(t)| < 3$ for 50 consecutive epochs) under the default definition. Under stricter definitions, collapse rates increase sharply (Section 3.1).
+No world-run triggered either collapse condition ($|P(t)| = 0$ or $|P(t)| < 3$ for 50 consecutive epochs) under the default definition. By the rule of three, the true collapse probability is at most 0.053% at 95% confidence. Statistical power exceeds 99.7% — at $N = 5{,}680$, even a true collapse rate of 0.1% would produce at least one observed collapse with probability > 0.997. Under stricter definitions, collapse rates increase sharply (Section 3.1). Complete statistical methodology is detailed in the Statistical Validation Report (Appendix E).
 
 ### 6.2 Season 1 Summary
 
@@ -504,8 +504,8 @@ The following limitations are stated explicitly:
 ### 9.2 Procedure
 
 ```
-git clone https://github.com/FTHTrading/AI.git
-cd AI
+git clone https://github.com/FTHTrading/Genesis.git
+cd Genesis
 cargo test --release
 cargo run --release --features cli -- --experiment <name>
 ```
@@ -522,7 +522,7 @@ Expected output: 38/38 MATCH.
 
 ### 9.4 Submission
 
-Report replication results via GitHub Issue on `FTHTrading/AI` with:
+Report replication results via GitHub Issue on `FTHTrading/Genesis` with:
 - Experiment name
 - Result hash
 - OS, Rust version, CPU architecture
@@ -532,7 +532,7 @@ Report replication results via GitHub Issue on `FTHTrading/AI` with:
 
 ## 10. Conclusion
 
-Across 5,680 deterministic world simulations spanning 38 experiment configurations and 2,840,000 computed epochs, no population collapses were observed under the default collapse definition ($P_{\text{floor}} = 3$, $N_w = 50$ epochs). Season 1 established robustness under parameter stress with all stabilization mechanisms active. Season 2 demonstrated persistence under systematic removal of structural mechanisms including treasury redistribution, ATP decay, resource regeneration, and reproduction grants. The most extreme configuration tested — simultaneous removal of all safety mechanisms with maximal economic hostility — produced contracted but surviving populations (mean 12.8 agents, minimum 3) exhibiting severe inequality.
+Across 5,680 deterministic world simulations spanning 38 experiment configurations and 2,840,000 computed epochs, no population collapses were observed under the default collapse definition ($P_{\text{floor}} = 3$, $N_w = 50$ epochs; 95% CI [0, 0.065%], Clopper-Pearson exact; power > 99.7% at $p = 0.001$). Season 1 established robustness under parameter stress with all stabilization mechanisms active. Season 2 demonstrated persistence under systematic removal of structural mechanisms including treasury redistribution, ATP decay, resource regeneration, and reproduction grants. The most extreme configuration tested — simultaneous removal of all safety mechanisms with maximal economic hostility — produced contracted but surviving populations (mean 12.8 agents, minimum 3) exhibiting severe inequality.
 
 The zero-collapse result is contingent on the permissive collapse definition. Under $P_{\text{floor}} = 10$, near-universal collapse (97.5%) occurs in the most extreme configuration. The collapse boundary, with respect to population floor definition, lies between $P_{\text{floor}} = 5$ and $P_{\text{floor}} = 10$ under maximal stress. Fitness function weight perturbations of ±20% produce negligible effect on collapse rates (≤0.8 percentage points), indicating that the results are not artifacts of weight selection.
 
@@ -577,13 +577,13 @@ The s4_full_attack configuration (zero resource regeneration, death draining res
 
 ### C.1 Collapse Rate by Floor Definition
 
-| $P_{\text{floor}}$ | Collapse Rate | Collapsed / Total | Result Hash |
-|---------------------|---------------|-------------------|-------------|
-| 3 (default) | 0.0% | 0 / 120 | `5595008e...` |
-| 5 | 5.8% | 7 / 120 | `846275ab...` |
-| 10 | 97.5% | 117 / 120 | `4f30c867...` |
-| 15 | 100.0% | 120 / 120 | `84fa372e...` |
-| 20 | 100.0% | 120 / 120 | `0c2d4311...` |
+| $P_{\text{floor}}$ | Collapse Rate | Collapsed / Total | 95% CI | Result Hash |
+|---------------------|---------------|-------------------|--------|-------------|
+| 3 (default) | 0.0% | 0 / 120 | [0.0%, 3.0%] | `5595008e...` |
+| 5 | 5.8% | 7 / 120 | [2.4%, 11.6%] | `846275ab...` |
+| 10 | 97.5% | 117 / 120 | [92.9%, 99.5%] | `4f30c867...` |
+| 15 | 100.0% | 120 / 120 | [97.0%, 100%] | `84fa372e...` |
+| 20 | 100.0% | 120 / 120 | [97.0%, 100%] | `0c2d4311...` |
 
 ### C.2 Interpretation
 
@@ -612,17 +612,17 @@ The s4_full_attack configuration was executed with systematic ±20% perturbation
 
 ### D.1 Results
 
-| Variant | CE ($w_0$) | SQ ($w_1$) | RF ($w_2$) | CC ($w_3$) | Collapse Rate | Collapsed / Total |
-|---------|-----------|-----------|-----------|-----------|---------------|-------------------|
-| Default | 0.2500 | 0.3000 | 0.2000 | 0.2500 | 0.0% | 0 / 120 |
-| CE −20% | 0.2105 | 0.3158 | 0.2105 | 0.2632 | 0.0% | 0 / 120 |
-| CE +20% | 0.2857 | 0.2857 | 0.1905 | 0.2381 | 0.8% | 1 / 120 |
-| SQ −20% | 0.2660 | 0.2553 | 0.2128 | 0.2660 | 0.0% | 0 / 120 |
-| SQ +20% | 0.2358 | 0.3396 | 0.1887 | 0.2358 | 0.0% | 0 / 120 |
-| RF −20% | 0.2604 | 0.3125 | 0.1667 | 0.2604 | 0.8% | 1 / 120 |
-| RF +20% | 0.2404 | 0.2885 | 0.2308 | 0.2404 | 0.0% | 0 / 120 |
-| CC −20% | 0.2632 | 0.3158 | 0.2105 | 0.2105 | 0.0% | 0 / 120 |
-| CC +20% | 0.2381 | 0.2857 | 0.1905 | 0.2857 | 0.0% | 0 / 120 |
+| Variant | CE ($w_0$) | SQ ($w_1$) | RF ($w_2$) | CC ($w_3$) | Collapse Rate | Collapsed / Total | 95% CI |
+|---------|-----------|-----------|-----------|-----------|---------------|-------------------|--------|
+| Default | 0.2500 | 0.3000 | 0.2000 | 0.2500 | 0.0% | 0 / 120 | [0, 3.0%] |
+| CE −20% | 0.2105 | 0.3158 | 0.2105 | 0.2632 | 0.0% | 0 / 120 | [0, 3.0%] |
+| CE +20% | 0.2857 | 0.2857 | 0.1905 | 0.2381 | 0.8% | 1 / 120 | [0.02%, 4.6%] |
+| SQ −20% | 0.2660 | 0.2553 | 0.2128 | 0.2660 | 0.0% | 0 / 120 | [0, 3.0%] |
+| SQ +20% | 0.2358 | 0.3396 | 0.1887 | 0.2358 | 0.0% | 0 / 120 | [0, 3.0%] |
+| RF −20% | 0.2604 | 0.3125 | 0.1667 | 0.2604 | 0.8% | 1 / 120 | [0.02%, 4.6%] |
+| RF +20% | 0.2404 | 0.2885 | 0.2308 | 0.2404 | 0.0% | 0 / 120 | [0, 3.0%] |
+| CC −20% | 0.2632 | 0.3158 | 0.2105 | 0.2105 | 0.0% | 0 / 120 | [0, 3.0%] |
+| CC +20% | 0.2381 | 0.2857 | 0.1905 | 0.2857 | 0.0% | 0 / 120 | [0, 3.0%] |
 
 ### D.2 Interpretation
 
@@ -633,3 +633,30 @@ The system is highly weight-insensitive within the tested perturbation range. Th
 ### D.3 Methodology Note
 
 Custom weights are applied to the `SelectionEngine` selection and replication pathways only. Resource extraction efficiency in the world simulation continues to use the default fitness function. A complete override of all fitness-dependent code paths would provide a stronger robustness guarantee but was not implemented for this analysis.
+
+## Appendix E: Statistical Validation
+
+A complete statistical validation of all experimental claims is provided in `papers/statistical_validation_report.md`. This report includes:
+
+- **Binomial confidence intervals** (Clopper-Pearson exact) for all collapse rates, including per-season, per-floor-definition, and per-weight-perturbation breakdowns
+- **Rule of three** upper bound on true collapse probability given zero observed events
+- **Bootstrap confidence intervals** on population means, Gini coefficients, and other distributional statistics
+- **Cohen's d effect sizes** for all pairwise experiment comparisons
+- **Statistical power analysis** confirming >99.7% power to detect a 0.1% true collapse rate at $N = 5{,}680$
+- **Per-experiment distributional summaries** with standard deviations and ranges
+
+All computations use SciPy 1.17.0 and NumPy 2.3.5 on Python 3.11.9.
+
+## Appendix F: Known Failure Modes
+
+A systematic catalogue of all observed failure modes, pathological states, and degradation patterns is provided in `papers/known_failure_modes.md`. Key findings include:
+
+1. **Strict collapse definition failures**: Under $P_{\text{floor}} = 10$, 97.5% of worlds collapse (Section 1.1). The system maintains minimum viable population ($\geq 3$) but does not achieve robust population sizes under maximal stress.
+
+2. **Pathological survival states**: Under s4_full_attack, populations persist at mean 12.8 but exhibit reproductive inequality of 0.952 and survival inequality of 0.873 — a degenerate oligarchy where a tiny minority monopolizes reproduction (Section 2.1).
+
+3. **Fitness function fragility**: Perturbation of the Resource Foraging weight by −20% causes collapses, identifying a single-point fragility in the selection function (Section 4.3).
+
+4. **Extinction floor dependency**: The global minimum population observed in any core experiment is exactly 3 — the extinction floor threshold — indicating that the floor mechanism actively prevents collapse in extreme conditions (Section 4.1).
+
+5. **Untested regimes**: 8 categories of untested conditions are documented, including epochs > 1,000, populations > 200, correlated shocks, adversarial agents, and multiple simultaneous weight perturbations (Section 5).
