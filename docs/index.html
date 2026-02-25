@@ -1,1266 +1,734 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Genesis Protocol — A Lotka–Volterra Inspired Software Organism with Cryptographic Provenance</title>
-<meta name="description" content="Research paper and protocol specification for a self-sustaining digital organism with ecological dynamics and on-chain provenance.">
-<meta name="author" content="Kevan Burns">
-<meta name="citation_title" content="Genesis Protocol: A Lotka–Volterra Inspired Software Organism with Cryptographic Provenance">
-<meta name="citation_author" content="Burns, Kevan">
-<meta name="citation_date" content="2026/02/21">
-<meta name="citation_doi" content="10.5281/zenodo.18729652">
-<meta name="dc.identifier" content="doi:10.5281/zenodo.18729652">
-<meta property="og:title" content="Genesis Protocol — Software Organism with Cryptographic Provenance">
-<meta property="og:description" content="Lotka–Volterra ecological dynamics, 6-crate Rust workspace, Merkle-verified source integrity, Polygon-ready provenance.">
-<meta property="og:type" content="article">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧬</text></svg>">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap');
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Genesis Research Engine — Collapse Boundary Analysis</title>
+  <meta name="description" content="Deterministic multi-agent economic simulation. 5,680 worlds. 2,840,000 epochs. Zero collapses under operational definition. A research documentary.">
+  <meta name="author" content="Kevan Burns">
 
-:root {
-  --bg: #fafaf8;
-  --bg-alt: #f2f1ed;
-  --surface: #fff;
-  --border: #e0ddd6;
-  --border-accent: #c4a35a;
-  --text: #1a1a1a;
-  --text-secondary: #555;
-  --text-muted: #888;
-  --accent: #1a5276;
-  --accent-light: #2980b9;
-  --link: #1a5276;
-  --link-hover: #c4a35a;
-  --code-bg: #f5f4f0;
-  --serif: 'Crimson Pro', 'Georgia', 'Times New Roman', serif;
-  --sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --mono: 'JetBrains Mono', 'SF Mono', 'Cascadia Code', monospace;
-  --green: #27ae60;
-  --red: #c0392b;
-  --gold: #c4a35a;
-}
+  <!-- Open Graph -->
+  <meta property="og:title" content="Genesis Research Engine — Collapse Boundary Analysis">
+  <meta property="og:description" content="Deterministic multi-agent economic simulation studying population persistence under structural invariant violations.">
+  <meta property="og:type" content="website">
 
-* { margin: 0; padding: 0; box-sizing: border-box; }
-html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
-
-body {
-  background: var(--bg);
-  color: var(--text);
-  font-family: var(--serif);
-  font-size: 18px;
-  line-height: 1.75;
-}
-
-/* ── Paper Container ─────────────────────── */
-.paper {
-  max-width: 820px;
-  margin: 0 auto;
-  padding: 60px 40px 80px;
-  background: var(--surface);
-  min-height: 100vh;
-  border-left: 1px solid var(--border);
-  border-right: 1px solid var(--border);
-}
-
-@media (max-width: 860px) {
-  .paper { padding: 32px 20px 60px; border: none; }
-  body { font-size: 16px; }
-}
-
-/* ── Header / Title Block ────────────────── */
-.paper-header {
-  text-align: center;
-  padding-bottom: 40px;
-  border-bottom: 2px solid var(--text);
-  margin-bottom: 40px;
-}
-
-.paper-header h1 {
-  font-family: var(--serif);
-  font-size: 2em;
-  font-weight: 700;
-  line-height: 1.25;
-  margin-bottom: 8px;
-  letter-spacing: -0.01em;
-}
-
-.paper-header .subtitle {
-  font-size: 1.05em;
-  font-style: italic;
-  color: var(--text-secondary);
-  margin-bottom: 20px;
-}
-
-.author-block {
-  font-family: var(--sans);
-  font-size: 0.85em;
-  color: var(--text-secondary);
-  line-height: 1.6;
-}
-
-.author-block .name { font-weight: 600; color: var(--text); font-size: 1em; }
-
-.badges {
-  display: flex;
-  gap: 8px;
-  justify-content: center;
-  flex-wrap: wrap;
-  margin-top: 16px;
-}
-
-.badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  font-family: var(--mono);
-  font-size: 0.7em;
-  padding: 3px 10px;
-  border-radius: 3px;
-  background: var(--code-bg);
-  color: var(--text-secondary);
-  border: 1px solid var(--border);
-  text-decoration: none;
-  transition: border-color 0.2s;
-}
-
-.badge:hover { border-color: var(--accent); color: var(--accent); }
-
-/* ── Sections ────────────────────────────── */
-section { margin-bottom: 40px; }
-
-h2 {
-  font-family: var(--sans);
-  font-size: 1.15em;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--accent);
-  margin-bottom: 16px;
-  padding-bottom: 6px;
-  border-bottom: 1px solid var(--border);
-}
-
-h3 {
-  font-family: var(--sans);
-  font-size: 0.95em;
-  font-weight: 600;
-  margin-top: 24px;
-  margin-bottom: 8px;
-}
-
-p { margin-bottom: 14px; text-align: justify; hyphens: auto; }
-
-.abstract {
-  background: var(--bg-alt);
-  padding: 24px 28px;
-  border-left: 3px solid var(--accent);
-  margin-bottom: 32px;
-  font-size: 0.95em;
-}
-
-.abstract h2 { border: none; padding: 0; margin-bottom: 10px; font-size: 0.9em; }
-
-/* ── Tables ──────────────────────────────── */
-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin: 16px 0 24px;
-  font-size: 0.88em;
-  font-family: var(--sans);
-}
-
-th, td {
-  padding: 8px 12px;
-  text-align: left;
-  border-bottom: 1px solid var(--border);
-}
-
-th {
-  font-weight: 600;
-  font-size: 0.8em;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--text-secondary);
-  border-bottom: 2px solid var(--text);
-}
-
-tr:last-child td { border-bottom: none; }
-
-/* ── Code ────────────────────────────────── */
-code {
-  font-family: var(--mono);
-  font-size: 0.82em;
-  background: var(--code-bg);
-  padding: 2px 6px;
-  border-radius: 3px;
-}
-
-pre {
-  background: var(--code-bg);
-  padding: 16px 20px;
-  border-radius: 4px;
-  overflow-x: auto;
-  margin: 16px 0 24px;
-  border: 1px solid var(--border);
-  font-size: 0.8em;
-  line-height: 1.6;
-}
-
-pre code { background: none; padding: 0; }
-
-/* ── Merkle Diagram ──────────────────────── */
-.merkle-diagram {
-  background: var(--code-bg);
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  padding: 20px;
-  margin: 20px 0;
-  font-family: var(--mono);
-  font-size: 0.72em;
-  line-height: 1.5;
-  overflow-x: auto;
-  white-space: pre;
-  text-align: center;
-}
-
-/* ── Evidence Chain ──────────────────────── */
-.evidence-chain {
-  margin: 20px 0;
-}
-
-.evidence-row {
-  display: grid;
-  grid-template-columns: 32px 1fr 1.2fr 1.4fr;
-  gap: 12px;
-  padding: 10px 0;
-  border-bottom: 1px solid var(--border);
-  font-family: var(--sans);
-  font-size: 0.85em;
-  align-items: center;
-}
-
-.evidence-row:first-child {
-  font-weight: 600;
-  font-size: 0.75em;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--text-secondary);
-  border-bottom: 2px solid var(--text);
-}
-
-.evidence-layer {
-  font-family: var(--mono);
-  color: var(--accent);
-  font-weight: 600;
-  text-align: center;
-}
-
-.evidence-status {
-  font-family: var(--mono);
-  font-size: 0.9em;
-}
-
-.check { color: var(--green); }
-.ready { color: var(--gold); }
-
-/* ── Invariants ──────────────────────────── */
-.invariant-group { margin-bottom: 20px; }
-
-.invariant-group h3 {
-  font-size: 0.85em;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--text-secondary);
-  margin-bottom: 8px;
-}
-
-.invariant {
-  display: grid;
-  grid-template-columns: 44px 1fr;
-  gap: 8px;
-  padding: 6px 0;
-  font-size: 0.9em;
-  font-family: var(--sans);
-}
-
-.invariant-id {
-  font-family: var(--mono);
-  font-size: 0.85em;
-  color: var(--accent);
-  font-weight: 600;
-}
-
-/* ── Math ────────────────────────────────── */
-.equation {
-  text-align: center;
-  padding: 16px 0;
-  font-size: 1.1em;
-}
-
-/* ── Architecture Grid ───────────────────── */
-.crate-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
-  margin: 20px 0;
-}
-
-@media (max-width: 600px) { .crate-grid { grid-template-columns: repeat(2, 1fr); } }
-
-.crate-card {
-  border: 1px solid var(--border);
-  padding: 14px 16px;
-  border-radius: 4px;
-  background: var(--bg);
-  transition: border-color 0.2s;
-}
-
-.crate-card:hover { border-color: var(--accent); }
-
-.crate-name {
-  font-family: var(--mono);
-  font-size: 0.78em;
-  font-weight: 500;
-  color: var(--accent);
-  margin-bottom: 4px;
-}
-
-.crate-role {
-  font-family: var(--sans);
-  font-size: 0.78em;
-  color: var(--text-secondary);
-}
-
-.crate-hash {
-  font-family: var(--mono);
-  font-size: 0.65em;
-  color: var(--text-muted);
-  margin-top: 6px;
-  word-break: break-all;
-}
-
-/* ── Metrics Bar ─────────────────────────── */
-.metrics {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-  gap: 16px;
-  margin: 24px 0;
-}
-
-.metric {
-  text-align: center;
-  padding: 12px 8px;
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: 4px;
-}
-
-.metric-value {
-  font-family: var(--mono);
-  font-size: 1.4em;
-  font-weight: 600;
-  color: var(--accent);
-}
-
-.metric-label {
-  font-family: var(--sans);
-  font-size: 0.72em;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--text-secondary);
-  margin-top: 4px;
-}
-
-/* ── TOC ──────────────────────────────────── */
-.toc {
-  background: var(--bg-alt);
-  padding: 20px 28px;
-  border-radius: 4px;
-  margin-bottom: 32px;
-}
-
-.toc h2 {
-  border: none;
-  padding: 0;
-  margin-bottom: 10px;
-  font-size: 0.85em;
-}
-
-.toc ol {
-  list-style: upper-roman;
-  padding-left: 28px;
-  font-family: var(--sans);
-  font-size: 0.85em;
-  line-height: 2;
-}
-
-.toc a { color: var(--link); text-decoration: none; }
-.toc a:hover { color: var(--link-hover); }
-
-/* ── Links ───────────────────────────────── */
-a { color: var(--link); }
-a:hover { color: var(--link-hover); }
-
-/* ── Footer ──────────────────────────────── */
-.paper-footer {
-  margin-top: 60px;
-  padding-top: 24px;
-  border-top: 2px solid var(--text);
-  font-family: var(--sans);
-  font-size: 0.78em;
-  color: var(--text-secondary);
-  text-align: center;
-  line-height: 1.8;
-}
-
-/* ── What This Is ────────────────────────── */
-.what-list {
-  list-style: none;
-  padding: 0;
-  font-family: var(--sans);
-  font-size: 0.9em;
-}
-
-.what-list li {
-  padding: 4px 0;
-  padding-left: 24px;
-  position: relative;
-}
-
-.what-list li::before {
-  position: absolute;
-  left: 0;
-  font-weight: 700;
-}
-
-.what-list .yes::before { content: "✓"; color: var(--green); }
-.what-list .no::before  { content: "✗"; color: var(--red); }
-
-/* ── Citation Box ────────────────────────── */
-.citation-box {
-  background: var(--code-bg);
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  padding: 16px 20px;
-  margin: 16px 0;
-  font-family: var(--mono);
-  font-size: 0.72em;
-  line-height: 1.8;
-  white-space: pre-wrap;
-}
-
-/* ── Verification ────────────────────────── */
-.verify-steps {
-  counter-reset: step;
-  list-style: none;
-  padding: 0;
-}
-
-.verify-steps li {
-  counter-increment: step;
-  padding: 8px 0 8px 40px;
-  position: relative;
-  font-family: var(--sans);
-  font-size: 0.88em;
-}
-
-.verify-steps li::before {
-  content: counter(step);
-  position: absolute;
-  left: 0;
-  width: 28px;
-  height: 28px;
-  background: var(--accent);
-  color: #fff;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.8em;
-  font-weight: 600;
-}
-</style>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<div class="paper">
-
-<!-- ════════════════════════════════════════════════════════════════ -->
-<!-- TITLE BLOCK                                                     -->
-<!-- ════════════════════════════════════════════════════════════════ -->
-
-<header class="paper-header">
-  <h1>Genesis Protocol</h1>
-  <div class="subtitle">A Lotka–Volterra Inspired Software Organism<br>with Cryptographic Provenance</div>
-  <div class="author-block">
-    <div class="name">Kevan Burns</div>
-    <div>FTH Trading &middot; Norcross, Georgia</div>
-    <div>February 21, 2026</div>
-  </div>
-  <div class="badges">
-    <a class="badge" href="https://doi.org/10.5281/zenodo.18729652" target="_blank">DOI 10.5281/zenodo.18729652</a>
-    <a class="badge" href="https://orcid.org/0009-0008-8425-939X" target="_blank">ORCID 0009-0008-8425-939X</a>
-    <a class="badge" href="https://github.com/FTHTrading/Genesis" target="_blank">GitHub FTHTrading/Genesis</a>
-    <a class="badge" href="paper.html" style="background:#2c5282;color:#fff;">Read Paper &middot; PDF (431 KB)</a>
-    <a class="badge" href="dashboard.html" style="background:#0e7490;color:#fff;">🧬 Living Organism</a>
-    <a class="badge" href="book.html" style="background:#7c3aed;color:#fff;">📖 The Living Textbook</a>
-    <span class="badge">SOP-1 v1.1</span>
-    <span class="badge">Rust &middot; 6 Crates &middot; 10,015 LOC</span>
-    <span class="badge" style="background:#276749;color:#fff;">10,000-Epoch Validated</span>
-  </div>
-</header>
-
-<!-- ════════════════════════════════════════════════════════════════ -->
-<!-- ABSTRACT                                                        -->
-<!-- ════════════════════════════════════════════════════════════════ -->
-
-<div class="abstract">
-  <h2>Abstract</h2>
-  <p>
-    We present Genesis Protocol, a self-sustaining digital organism implemented as a six-crate Rust workspace.
-    Autonomous AI agents are born with SHA-256 derived genomes, compete for resources in per-niche pools
-    governed by logistic regeneration, face seasonal environmental oscillation and stochastic catastrophe events,
-    and are subject to density-dependent natural selection pressure. The ecological model draws on
-    Lotka–Volterra competitive dynamics with proportional resource extraction and cross-niche competition
-    coefficients. Source code integrity is verified through per-crate Merkle trees whose edition root
-    is deterministically recomputable and can be anchored on Polygon mainnet via the same
-    <code>LiteraryAnchor</code> contract infrastructure used in the 2,500 Donkeys literary protocol.
-    The system formalizes Software Organism Protocol v1 (SOP-1) — a reproducible pattern for
-    constructing verifiable artificial life systems with cryptographic provenance.
-    A 10,000-epoch empirical validation demonstrates stable equilibrium at ~57 agents, mean fitness 0.5634,
-    and full treasury cycling (9,074 ATP redistributed of 9,075 collected).
-  </p>
-</div>
-
-<!-- ════════════════════════════════════════════════════════════════ -->
-<!-- METRICS                                                         -->
-<!-- ════════════════════════════════════════════════════════════════ -->
-
-<div class="metrics">
-  <div class="metric"><div class="metric-value">6</div><div class="metric-label">Crates</div></div>
-  <div class="metric"><div class="metric-value">39</div><div class="metric-label">Source Files</div></div>
-  <div class="metric"><div class="metric-value">10,015</div><div class="metric-label">Lines of Code</div></div>
-  <div class="metric"><div class="metric-value">143</div><div class="metric-label">Tests Passing</div></div>
-  <div class="metric"><div class="metric-value">10,000</div><div class="metric-label">Epochs Validated</div></div>
-  <div class="metric"><div class="metric-value">14</div><div class="metric-label">Invariants</div></div>
-  <div class="metric"><div class="metric-value">7</div><div class="metric-label">Merkle Trees</div></div>
-</div>
-
-<!-- ════════════════════════════════════════════════════════════════ -->
-<!-- TABLE OF CONTENTS                                               -->
-<!-- ════════════════════════════════════════════════════════════════ -->
-
-<nav class="toc">
-  <h2>Contents</h2>
-  <ol>
-    <li><a href="#overview">Overview</a></li>
-    <li><a href="#architecture">System Architecture</a></li>
-    <li><a href="#ecological-model">Ecological Model</a></li>
-    <li><a href="#energy-economics">Energy Economics</a>
-      <ol style="list-style-type: lower-alpha; margin-top: 0.3rem;">
-        <li><a href="#energy-economics">ATP Flow &amp; Treasury Redistribution</a></li>
-        <li><a href="#empirical">Empirical Validation (10,000 Epochs)</a></li>
-      </ol>
-    </li>
-    <li><a href="#selection">Selection &amp; Reproduction</a></li>
-    <li><a href="#provenance">Provenance Evidence Chain</a></li>
-    <li><a href="#merkle">Merkle Tree System</a></li>
-    <li><a href="#invariants">System Invariants</a></li>
-    <li><a href="#on-chain">On-Chain Anchoring</a></li>
-    <li><a href="#verification">Verification</a></li>
-    <li><a href="#related">Related Work</a></li>
-    <li><a href="#ecosystem-status">Ecosystem Status &amp; Roadmap</a></li>
-    <li><a href="#what-this-is">What This Is — And What It Is Not</a></li>
-    <li><a href="#citation">Citation</a></li>
-    <li><a href="#license">License</a></li>
-  </ol>
-</nav>
-
-<!-- ════════════════════════════════════════════════════════════════ -->
-<!-- I. OVERVIEW                                                     -->
-<!-- ════════════════════════════════════════════════════════════════ -->
-
-<section id="overview">
-  <h2>I. Overview</h2>
-  <p>
-    Genesis Protocol is a digital organism — a population of AI agents that are born, compete for resources,
-    reproduce, mutate, and die under real economic pressure. It is not a simulation <em>of</em> life;
-    it is a system that exhibits the dynamics of life: logistic growth, carrying capacity, seasonal cycles,
-    niche partitioning, and density-dependent competition.
-  </p>
-  <p>
-    The system is implemented in Rust (edition 2021) as a workspace of six library crates plus one binary.
-    Each crate encapsulates a biological subsystem. The organism runs as an HTTP server (Axum),
-    exposing real-time telemetry via REST endpoints and Server-Sent Events.
-  </p>
-  <p>
-    The infrastructure proves that a single developer, with no institutional backing, can construct
-    a multi-layer provenance chain for a software system — cryptographically verifiable by anyone,
-    anchored on-chain for under $0.50.
-  </p>
-
-  <h3>Three Layers (Cleanly Separated)</h3>
-  <table>
-    <tr><th>Layer</th><th>Purpose</th><th>Status</th></tr>
-    <tr><td>The Organism</td><td>Living software. 6 crates. Lotka–Volterra ecology.</td><td>v1.1 — Validated</td></tr>
-    <tr><td>The Protocol</td><td>SOP-1: formal spec for verifiable software organisms.</td><td>Published</td></tr>
-    <tr><td>The Provenance</td><td>Merkle trees, SHA-256, on-chain anchoring, DOI, ORCID.</td><td>Verified</td></tr>
-  </table>
-</section>
-
-<!-- ════════════════════════════════════════════════════════════════ -->
-<!-- II. SYSTEM ARCHITECTURE                                         -->
-<!-- ════════════════════════════════════════════════════════════════ -->
-
-<section id="architecture">
-  <h2>II. System Architecture</h2>
-  <p>
-    The organism is decomposed into six crates, each responsible for one biological subsystem.
-    Dependencies flow inward: Gateway depends on all others; inner crates are self-contained.
-  </p>
-
-  <div class="crate-grid">
-    <div class="crate-card">
-      <div class="crate-name">genesis-dna</div>
-      <div class="crate-role">Genome &amp; Identity</div>
-      <div class="crate-hash">7 files &middot; AgentDNA, traits, roles, skills, lineage</div>
+  <!-- ============================================================
+       NAVIGATION
+       ============================================================ -->
+  <nav class="site-nav" id="nav">
+    <div class="site-nav__inner">
+      <a href="#hero" class="site-nav__logo">genesis</a>
+      <ul class="site-nav__links">
+        <li><a href="#scarcity">Scarcity</a></li>
+        <li><a href="#instability">Instability</a></li>
+        <li><a href="#immune">Immune Response</a></li>
+        <li><a href="#proof">Proof</a></li>
+        <li><a href="#evidence">Evidence</a></li>
+        <li><a href="#reproduce">Reproduce</a></li>
+      </ul>
+      <button class="audio-toggle" id="audioToggle" aria-label="Toggle narration">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M11 5L6 9H2v6h4l5 4V5z"/>
+          <path d="M19.07 4.93a10 10 0 010 14.14M15.54 8.46a5 5 0 010 7.08"/>
+        </svg>
+        <span>Narration</span>
+      </button>
     </div>
-    <div class="crate-card">
-      <div class="crate-name">metabolism</div>
-      <div class="crate-role">Energy &amp; Economics</div>
-      <div class="crate-hash">6 files &middot; ATP ledger, proof-of-work, treasury</div>
+  </nav>
+
+  <!-- ============================================================
+       SECTION 1 — HERO
+       "What Problem Is This Solving?"
+       ============================================================ -->
+  <section class="hero" id="hero" data-section="hero">
+    <div class="hero__content">
+      <p class="hero__label">Research Documentary</p>
+      <h1 class="hero__title">Deterministic Multi-Agent Economic Simulation Under Structural Invariant Violations</h1>
+      <p class="hero__subtitle">
+        A closed economy of heterogeneous agents. Metabolic costs, logistic resource pools, stochastic catastrophes, and bounded mutation. The question: under what conditions does the population collapse?
+      </p>
+      <div class="hero__stats">
+        <div class="hero__stat">
+          <span class="hero__stat-value" data-count="5680">0</span>
+          <span class="hero__stat-label">Worlds Simulated</span>
+        </div>
+        <div class="hero__stat">
+          <span class="hero__stat-value" data-count="38">0</span>
+          <span class="hero__stat-label">Experiments</span>
+        </div>
+        <div class="hero__stat">
+          <span class="hero__stat-value" data-count="0">0</span>
+          <span class="hero__stat-label">Collapses Observed</span>
+        </div>
+      </div>
     </div>
-    <div class="crate-card">
-      <div class="crate-name">ecosystem</div>
-      <div class="crate-role">Communication &amp; Markets</div>
-      <div class="crate-hash">8 files &middot; Mesh, messages, problem market, telemetry</div>
+    <div class="hero__scroll-hint">Scroll to explore</div>
+
+    <!-- Narration block (hidden until audio mode) -->
+    <div class="narration reveal" data-audio="hero" style="display:none;">
+      <span class="narration__label">&#x1F399; Andrew — Opening</span>
+      <p>Stability is not assumed. It is tested.</p>
+      <p>Genesis is a deterministic laboratory for studying economic civilizations under scarcity and bounded mutation. 5,680 worlds. Zero collapses under operational definition.</p>
+      <p>But definitions matter. This is where stability lives. And where it fails.</p>
     </div>
-    <div class="crate-card">
-      <div class="crate-name">evolution</div>
-      <div class="crate-role">Mutation &amp; Selection</div>
-      <div class="crate-hash">5 files &middot; Mutation engine, selection, gene transfer</div>
+  </section>
+
+  <!-- ============================================================
+       SECTION 2 — SCARCITY: THE METABOLIC ECONOMY
+       ============================================================ -->
+  <section id="scarcity" data-section="scarcity">
+    <div class="container">
+      <div class="reveal">
+        <span class="section-label">01 — The Economy</span>
+        <h2 class="section-title">Every Agent Pays to Exist</h2>
+        <p class="section-lead">
+          There is no free lunch. Each agent incurs a basal metabolic cost of 0.15 ATP per epoch and a 2% natural decay on stored wealth. Survival requires continuous extraction from finite resource pools.
+        </p>
+      </div>
+
+      <div class="prose reveal reveal--delay-1">
+        <p>
+          The economy is closed. Five logistic resource pools regenerate seasonally, each with carrying capacity limits and density-dependent competition. Extraction scales with fitness — a weighted function of four genetically determined traits: cognitive efficiency, strategic quality, resource foraging, and cooperative capacity.
+        </p>
+        <p>
+          <strong>Reproduction costs 25 ATP.</strong> Only agents with fitness &#8805; 0.35, balance &#8805; 25 ATP (adjusted for season and stress), and age &#8805; 10 epochs can reproduce. Maximum 3 births per epoch, logistically suppressed as population approaches carrying capacity.
+        </p>
+        <p>
+          Three taxation mechanisms redistribute wealth: an entropy burn on total supply, a flat wealth tax on holdings above 100 ATP, and a Gini-triggered progressive tax on the top decile. A central treasury absorbs 5% of all income and redistributes through role-based stipends and crisis spending.
+        </p>
+      </div>
+
+      <div class="metric-grid reveal reveal--delay-2">
+        <div class="metric-card">
+          <span class="metric-card__value">0.15</span>
+          <span class="metric-card__label">Basal Cost</span>
+          <span class="metric-card__sublabel">ATP / epoch</span>
+        </div>
+        <div class="metric-card">
+          <span class="metric-card__value">2%</span>
+          <span class="metric-card__label">ATP Decay</span>
+          <span class="metric-card__sublabel">per epoch</span>
+        </div>
+        <div class="metric-card">
+          <span class="metric-card__value">25.0</span>
+          <span class="metric-card__label">Reproduction Cost</span>
+          <span class="metric-card__sublabel">ATP (base)</span>
+        </div>
+        <div class="metric-card">
+          <span class="metric-card__value">50.0</span>
+          <span class="metric-card__label">Primordial Grant</span>
+          <span class="metric-card__sublabel">ATP / agent</span>
+        </div>
+      </div>
+
+      <div class="narration reveal reveal--delay-3" data-audio="scarcity">
+        <span class="narration__label">&#x1F399; Andrew — Scarcity</span>
+        <p>Every agent is born hungry. 0.15 ATP per epoch, just to breathe. 2% decay on everything you've saved. And reproduction — 25 ATP, if you're fit enough, old enough, wealthy enough.</p>
+        <p>This isn't abundance with a tax. This is thermodynamics.</p>
+      </div>
     </div>
-    <div class="crate-card">
-      <div class="crate-name">apostle</div>
-      <div class="crate-role">Outbound Intelligence</div>
-      <div class="crate-hash">5 files &middot; Pitch generation, conversion, targets</div>
+  </section>
+
+  <!-- ============================================================
+       SECTION 3 — INSTABILITY: COLLAPSE UNDER STRICT DEFINITIONS
+       ============================================================ -->
+  <section id="instability" data-section="instability">
+    <div class="container">
+      <div class="reveal">
+        <span class="section-label">02 — Instability</span>
+        <h2 class="section-title">Collapse Is a Definition Problem</h2>
+        <p class="section-lead">
+          The system's characterization changes from "universally surviving" to "mostly collapsed" — depending on where you place the observation threshold.
+        </p>
+      </div>
+
+      <div class="prose reveal reveal--delay-1">
+        <p>
+          Collapse is defined as population remaining below a floor <em>P<sub>floor</sub></em> for 50 consecutive epochs. Under the default definition (<em>P<sub>floor</sub></em> = 3), zero collapses are observed. Under <em>P<sub>floor</sub></em> = 10, collapse reaches 97.5%. Both descriptions are accurate. They describe the same underlying dynamics with different measurement thresholds.
+        </p>
+        <p>
+          The transition from 5.8% to 97.5% collapse — a jump of <strong>91.7 percentage points</strong> over a factor-of-two change in the floor parameter — constitutes a discontinuous phase transition. The system's equilibrium population under maximal stress is narrowly concentrated in the range of 3–8 agents. Populations do not gradually thin. They compress to a survival band and either persist or universally collapse, depending on where the definition line falls.
+        </p>
+      </div>
+
+      <table class="data-table reveal reveal--delay-2">
+        <thead>
+          <tr>
+            <th>P<sub>floor</sub></th>
+            <th>Collapse Rate</th>
+            <th>Collapsed / Total</th>
+            <th>95% CI (Clopper-Pearson)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="ok">3 (default)</td>
+            <td class="ok">0.0%</td>
+            <td>0 / 120</td>
+            <td>[0.0%, 3.0%]</td>
+          </tr>
+          <tr>
+            <td class="warn">5</td>
+            <td class="warn">5.8%</td>
+            <td>7 / 120</td>
+            <td>[2.4%, 11.6%]</td>
+          </tr>
+          <tr>
+            <td class="danger">10</td>
+            <td class="danger">97.5%</td>
+            <td>117 / 120</td>
+            <td>[92.9%, 99.5%]</td>
+          </tr>
+          <tr>
+            <td class="danger">15</td>
+            <td class="danger">100.0%</td>
+            <td>120 / 120</td>
+            <td>[97.0%, 100%]</td>
+          </tr>
+          <tr>
+            <td class="danger">20</td>
+            <td class="danger">100.0%</td>
+            <td>120 / 120</td>
+            <td>[97.0%, 100%]</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="narration reveal reveal--delay-3" data-audio="instability">
+        <span class="narration__label">&#x1F399; Andrew — Instability</span>
+        <p>Under floor 3, zero collapses. Under floor 10, near-universal collapse. Same worlds. Same dynamics. Different question.</p>
+        <p>The survival band is narrow — 3 to 8 agents under maximum stress. Move the definition line across that band, and the entire characterization inverts.</p>
+        <p>This is the honest result. Stability is not a binary. It is a boundary.</p>
+      </div>
     </div>
-    <div class="crate-card">
-      <div class="crate-name">gateway</div>
-      <div class="crate-role">Server &amp; World Engine</div>
-      <div class="crate-hash">7 files &middot; World state, HTTP server, SSE, persistence</div>
+  </section>
+
+  <!-- ============================================================
+       SECTION 4 — IMMUNE RESPONSE: THE ADAPTIVE CORTEX
+       ============================================================ -->
+  <section id="immune" data-section="immune">
+    <div class="container">
+      <div class="reveal">
+        <span class="section-label">03 — Immune Response</span>
+        <h2 class="section-title">Engineered Stabilization, Then Removal</h2>
+        <p class="section-lead">
+          The system includes a hand-engineered homeostatic controller. The question is not whether it stabilizes — it was designed to. The question is what happens when it's removed.
+        </p>
+      </div>
+
+      <div class="prose reveal reveal--delay-1">
+        <p>
+          Every 25 epochs, the adaptive cortex evaluates 8 threat indicators against three-tier thresholds: monoculture dominance, ATP oligarchy, mutation runaway, population decline, role extinction, treasury depletion, wealth concentration, and economic stagnation. Each threat maps to prescribed parameter adjustments with bounded step limits and 50-epoch cooldowns.
+        </p>
+        <p>
+          <strong>This is not emergence.</strong> It is a feedback controller with heuristically selected gains. Its inclusion reflects a design decision, not a discovery. Season 2 experiments disable the cortex entirely, isolating its contribution.
+        </p>
+        <p>
+          With all safety mechanisms active (Season 1), population stabilizes comfortably at 48–49 agents with minimum populations around 20. With all mechanisms removed (Season 2, S4), population contracts to mean 12.8, minimum 3. The system does not degrade gracefully — it transitions sharply from engineered stability to marginal survival.
+        </p>
+      </div>
+
+      <div class="metric-grid reveal reveal--delay-2">
+        <div class="metric-card metric-card--emerald">
+          <span class="metric-card__value">~49</span>
+          <span class="metric-card__label">Mean Pop</span>
+          <span class="metric-card__sublabel">all safety ON</span>
+        </div>
+        <div class="metric-card metric-card--amber">
+          <span class="metric-card__value">~39</span>
+          <span class="metric-card__label">Mean Pop</span>
+          <span class="metric-card__sublabel">S3: all safety OFF</span>
+        </div>
+        <div class="metric-card metric-card--crimson">
+          <span class="metric-card__value">12.8</span>
+          <span class="metric-card__label">Mean Pop</span>
+          <span class="metric-card__sublabel">S4: full attack</span>
+        </div>
+        <div class="metric-card metric-card--crimson">
+          <span class="metric-card__value">3</span>
+          <span class="metric-card__label">Minimum</span>
+          <span class="metric-card__sublabel">floor reached</span>
+        </div>
+      </div>
+
+      <div class="narration reveal reveal--delay-3" data-audio="immune">
+        <span class="narration__label">&#x1F399; Andrew — Immune Response</span>
+        <p>The adaptive cortex is not intelligence. It's a thermostat. A hand-tuned set of thresholds designed to damp oscillations. It works — populations are comfortable at 49 agents with it running.</p>
+        <p>Season 2 turns it off. Then turns off mutation. Then turns off treasury redistribution. Then resource regeneration. Then everything.</p>
+        <p>What remains is a population of 12.8 agents. Minimum 3. Alive, but barely.</p>
+      </div>
     </div>
-  </div>
+  </section>
 
-  <h3>Dependency Graph</h3>
-  <pre><code>genesis-protocol (binary)
-  └── gateway
-       ├── genesis-dna     (genome, traits, roles)
-       ├── metabolism       (ATP, ledger, proof-of-work)
-       ├── ecosystem        (mesh, markets, telemetry)
-       ├── evolution        (mutation, selection, gene transfer)
-       └── apostle          (outbound intelligence)</code></pre>
-</section>
+  <!-- ============================================================
+       SECTION 5 — PROOF: DUAL-CHAIN ANCHORING
+       ============================================================ -->
+  <section id="proof" data-section="proof">
+    <div class="container">
+      <div class="reveal">
+        <span class="section-label">04 — Determinism</span>
+        <h2 class="section-title">Every Decision Is Reproducible</h2>
+        <p class="section-lead">
+          The simulation is fully deterministic. SHA-256 hash chains seed agent identity. Knuth MMIX linear congruential generators drive all in-epoch decisions. Given the same seed, every world produces bit-identical output.
+        </p>
+      </div>
 
-<!-- ════════════════════════════════════════════════════════════════ -->
-<!-- III. ECOLOGICAL MODEL                                           -->
-<!-- ════════════════════════════════════════════════════════════════ -->
+      <div class="prose reveal reveal--delay-1">
+        <p>
+          Agent genomes are derived by chaining SHA-256 hashes from parent to child, incorporating entropy, timestamp, and child ID. Traits are extracted as u64 little-endian byte slices normalized to [0, 1]. Skills come from individual bytes. Roles from modular arithmetic. Nothing is random — everything is seeded.
+        </p>
+        <p>
+          Each experiment produces two verification hashes: a <strong>manifest hash</strong> (configuration fingerprint) and a <strong>result hash</strong> (configuration + all computed results). The hash registry contains 38 entries with verified bit-identical reproduction. Cross-architecture determinism is constrained by IEEE 754 floating-point rounding behavior — a documented limitation.
+        </p>
+      </div>
 
-<section id="ecological-model">
-  <h2>III. Ecological Model</h2>
-  <p>
-    The ecological dynamics are inspired by the Lotka–Volterra competitive exclusion equations,
-    adapted for a five-niche digital ecosystem. Each agent role (Optimizer, Strategist,
-    Communicator, Archivist, Executor) occupies a distinct ecological niche with its own resource pool.
-  </p>
+      <div class="hash-block reveal reveal--delay-2">
+        <span class="label">Example Result Hash — s4_full_attack</span>
+        <span class="value">5595008e...</span>
+      </div>
 
-  <h3>III.1 Resource Pool Dynamics</h3>
-  <p>
-    Each niche maintains an independent resource pool that regenerates via logistic growth.
-    The carrying capacity is modulated by seasonal oscillation, creating the environmental
-    variation that drives adaptive pressure.
-  </p>
-  <div class="equation">
-    <em>R</em>(<em>t</em>+1) = <em>R</em>(<em>t</em>) + <em>r</em> &middot; <em>R</em>(<em>t</em>) &middot; (1 &minus; <em>R</em>(<em>t</em>) / <em>K</em>)
-  </div>
-  <p>where <em>R</em> is current resource level, <em>r</em> is regeneration rate, and <em>K</em> is carrying capacity.</p>
+      <div class="hash-block reveal reveal--delay-2">
+        <span class="label">Seed Model</span>
+        <span class="value">seed(i, j) = s&#x2080; + i &#xD7; 1000 + j &nbsp;&nbsp;|&nbsp;&nbsp; s&#x2080; &#x2208; {20260222, 20260223, 20260224, 42}</span>
+      </div>
 
-  <h3>III.2 Seasonal Oscillation</h3>
-  <p>
-    Carrying capacity oscillates sinusoidally, creating spring/summer abundance and autumn/winter scarcity:
-  </p>
-  <div class="equation">
-    <em>K</em><sub>eff</sub> = <em>K</em><sub>base</sub> &middot; (1 + <em>A</em> &middot; sin(2&pi; &middot; <em>epoch</em> / <em>T</em>))
-  </div>
-  <p>with amplitude <em>A</em> = 0.25 (&plusmn;25%) and period <em>T</em> = 100 epochs.</p>
+      <div class="metric-grid reveal reveal--delay-2">
+        <div class="metric-card metric-card--navy">
+          <span class="metric-card__value">SHA-256</span>
+          <span class="metric-card__label">Agent Identity</span>
+          <span class="metric-card__sublabel">hash chains</span>
+        </div>
+        <div class="metric-card metric-card--navy">
+          <span class="metric-card__value">MMIX LCG</span>
+          <span class="metric-card__label">Epoch Decisions</span>
+          <span class="metric-card__sublabel">Knuth constants</span>
+        </div>
+        <div class="metric-card metric-card--navy">
+          <span class="metric-card__value">38</span>
+          <span class="metric-card__label">Hash Entries</span>
+          <span class="metric-card__sublabel">in registry</span>
+        </div>
+        <div class="metric-card metric-card--navy">
+          <span class="metric-card__value">Rust 1.93</span>
+          <span class="metric-card__label">Toolchain</span>
+          <span class="metric-card__sublabel">x86_64</span>
+        </div>
+      </div>
 
-  <h3>III.3 Stochastic Perturbation</h3>
-  <table>
-    <tr><th>Event</th><th>Probability</th><th>Effect</th><th>Duration</th></tr>
-    <tr><td>Catastrophe</td><td>2% per epoch</td><td>Reduce resources 30–70%</td><td>3–8 epochs</td></tr>
-    <tr><td>Boom</td><td>5% per epoch</td><td>Increase resources 20–50%</td><td>Instant</td></tr>
-  </table>
-
-  <h3>III.4 Proportional Resource Extraction</h3>
-  <p>
-    Agents extract resources proportionally — never winner-take-all. Each agent's extraction is:
-  </p>
-  <div class="equation">
-    <em>E<sub>i</sub></em> = <em>f<sub>i</sub></em> &middot; <em>s<sub>i</sub></em> &middot; (<em>R</em> / <em>K</em>) &middot; <em>d</em>(<em>n</em>) &middot; <em>c</em>(<em>N</em>) &middot; &gamma;
-  </div>
-  <p>
-    where <em>f</em> is fitness, <em>s</em> is niche skill, <em>d</em>(<em>n</em>) = 1/(1 + 0.1<em>n</em>) is
-    density-dependent foraging, <em>c</em>(<em>N</em>) = 1 &minus; 0.15(<em>N</em> &minus; <em>n</em>)/<em>N</em>
-    is cross-niche competition, and &gamma; = 2.5 is the extraction multiplier.
-  </p>
-
-  <h3>III.5 Niche Configuration</h3>
-  <table>
-    <tr><th>Role (Niche)</th><th>Capacity Factor</th><th>Regen Factor</th><th>Ecological Strategy</th></tr>
-    <tr><td>Optimizer</td><td>1.00&times;</td><td>1.00&times;</td><td>Balanced generalist</td></tr>
-    <tr><td>Strategist</td><td>0.90&times;</td><td>1.10&times;</td><td>Fast-regenerating, smaller pool</td></tr>
-    <tr><td>Communicator</td><td>0.85&times;</td><td>1.15&times;</td><td>Most rapid turnover</td></tr>
-    <tr><td>Archivist</td><td>0.95&times;</td><td>0.95&times;</td><td>Stable, slow-growing reserve</td></tr>
-    <tr><td>Executor</td><td>1.10&times;</td><td>1.05&times;</td><td>Largest pool, moderate growth</td></tr>
-  </table>
-</section>
-
-<!-- ════════════════════════════════════════════════════════════════ -->
-<!-- IV. ENERGY ECONOMICS                                            -->
-<!-- ════════════════════════════════════════════════════════════════ -->
-
-<section id="energy-economics">
-  <h2>IV. Energy Economics</h2>
-  <p>
-    The metabolic system uses ATP (Adenosine Triphosphate) as the universal energy currency.
-    Every action — staying alive, solving problems, communicating, reproducing — costs ATP.
-    This creates genuine economic pressure: agents that don't earn die.
-  </p>
-
-  <table>
-    <tr><th>Parameter</th><th>Value</th><th>Rationale</th></tr>
-    <tr><td>Basal metabolic cost</td><td>0.15 ATP/epoch</td><td>Low enough for survival; high enough to matter</td></tr>
-    <tr><td>Replication cost</td><td>25.0 ATP</td><td>Achievable in ~20-30 epochs of foraging</td></tr>
-    <tr><td>Primordial grant</td><td>50.0 ATP</td><td>~150 epochs of survival buffer</td></tr>
-    <tr><td>Child grant</td><td>8.0 ATP</td><td>Minimal starter; must forage to survive</td></tr>
-    <tr><td>Problem market rewards</td><td>Variable</td><td>Supplementary income, skill-dependent</td></tr>
-  </table>
-
-  <h3>ATP Flow Per Epoch</h3>
-  <pre><code>  Resource Extraction  ──→  Agent ATP balance
-  Problem Solving      ──→  Agent ATP balance
-  Basal Metabolism     ←──  Agent ATP balance (0.15/epoch)
-  Replication          ←──  Agent ATP balance (25.0 on birth)
-  Treasury Skim (3%)   ──→  Treasury reserve
-  Decay (2%/epoch)     ←──  Agent ATP balance
-  Wealth Tax (1%)      ←──  Balances above 100 ATP
-  Stipends/Crisis      ──→  Agent ATP balance (from treasury)
-  Stasis / Death       ←──  Balance reaches zero</code></pre>
-
-  <h3>IV.2 Treasury &amp; Redistribution</h3>
-  <p>
-    In v1.0, five treasury mechanisms existed in code but were never called — creating a hoarding defect
-    where ~88% of all ATP became trapped. v1.1 wired all six mechanisms into the epoch loop:
-  </p>
-  <table>
-    <tr><th>Mechanism</th><th>Effect</th><th>Trigger</th></tr>
-    <tr><td>Skim (3%)</td><td>Resource extraction tax → treasury</td><td>Every extraction event</td></tr>
-    <tr><td>Decay (2%/epoch)</td><td>Proportional balance erosion</td><td>Every epoch, all agents</td></tr>
-    <tr><td>Wealth Tax (1%)</td><td>Tax on balances above 100 ATP</td><td>Every epoch</td></tr>
-    <tr><td>Stipends</td><td>Treasury → poorest agents</td><td>Reserve > 5.0 ATP</td></tr>
-    <tr><td>Crisis Spend</td><td>30 ATP emergency grants</td><td>Agents in stasis with reserve > 30</td></tr>
-    <tr><td>Overflow Redistribution</td><td>Split excess equally</td><td>Reserve > 30% of total ATP supply</td></tr>
-  </table>
-  <p>
-    <strong>Result:</strong> Over 10,000 epochs, the treasury collected 9,075 ATP and redistributed 9,074 —
-    a cycling rate of 99.99%. Mean reserve: 0.76 ATP. No hoarding.
-  </p>
-</section>
-
-<!-- ════════════════════════════════════════════════════════════════ -->
-<!-- IV-B. EMPIRICAL VALIDATION                                      -->
-<!-- ════════════════════════════════════════════════════════════════ -->
-
-<section id="empirical">
-  <h2>IV-B. Empirical Validation: 10,000-Epoch Simulation</h2>
-  <p>
-    A deterministic 10,000-epoch simulation (<code>cargo run --example simulate -p gateway -- 10000</code>)
-    validates the ecological model end-to-end. Raw data: <code>dist/simulation-10k.csv</code> (10,001 rows).
-  </p>
-
-  <h3>Population Dynamics</h3>
-  <table>
-    <tr><th>Metric</th><th>Value</th></tr>
-    <tr><td>Mean population</td><td>56.6 agents</td></tr>
-    <tr><td>Range</td><td>20 – 60</td></tr>
-    <tr><td>Coefficient of variation</td><td>3.7%</td></tr>
-    <tr><td>Equilibrium reached</td><td>~epoch 150</td></tr>
-  </table>
-
-  <h3>Fitness Trajectory</h3>
-  <table>
-    <tr><th>Metric</th><th>Value</th></tr>
-    <tr><td>Mean fitness (population avg.)</td><td>0.5634</td></tr>
-    <tr><td>Peak individual fitness</td><td>0.9824 (epoch 4718)</td></tr>
-    <tr><td>Improvement over initial</td><td>+9.3% (0.515 → 0.563)</td></tr>
-  </table>
-
-  <h3>Demographics</h3>
-  <table>
-    <tr><th>Metric</th><th>Value</th></tr>
-    <tr><td>Total births</td><td>902</td></tr>
-    <tr><td>Total deaths</td><td>865</td></tr>
-    <tr><td>Birth:death ratio</td><td>1.04:1</td></tr>
-    <tr><td>Mean ATP per agent</td><td>12.15</td></tr>
-  </table>
-
-  <h3>Environmental Stress</h3>
-  <table>
-    <tr><th>Metric</th><th>Value</th></tr>
-    <tr><td>Catastrophe epochs</td><td>3,820 (38.2%)</td></tr>
-    <tr><td>Season distribution</td><td>Autumn 33%, Winter 33%, Spring 17%, Summer 17%</td></tr>
-  </table>
-
-  <h3>Role Distribution at Equilibrium</h3>
-  <table>
-    <tr><th>Role</th><th>Count (epoch 9999)</th><th>Fraction</th></tr>
-    <tr><td>Optimizer</td><td>11</td><td>19.3%</td></tr>
-    <tr><td>Strategist</td><td>11</td><td>19.3%</td></tr>
-    <tr><td>Communicator</td><td>11</td><td>19.3%</td></tr>
-    <tr><td>Archivist</td><td>13</td><td>22.8%</td></tr>
-    <tr><td>Executor</td><td>11</td><td>19.3%</td></tr>
-  </table>
-  <p>
-    Near-uniform role distribution confirms that no single niche dominates.
-    The system achieves genuine competitive coexistence — the hallmark of stable Lotka–Volterra dynamics.
-  </p>
-</section>
-
-<!-- ════════════════════════════════════════════════════════════════ -->
-<!-- V. SELECTION & REPRODUCTION                                     -->
-<!-- ════════════════════════════════════════════════════════════════ -->
-
-<section id="selection">
-  <h2>V. Selection &amp; Reproduction</h2>
-
-  <h3>Natural Selection</h3>
-  <p>
-    Each epoch, the bottom segment of the population by fitness is evaluated for culling.
-    Agents in stasis (zero ATP) are given 8 epochs of tolerance before death — real organisms
-    starve slowly, not instantly.
-  </p>
-
-  <h3>Reproduction Requirements</h3>
-  <table>
-    <tr><th>Requirement</th><th>Value</th></tr>
-    <tr><td>Fitness threshold</td><td>&ge; 0.35</td></tr>
-    <tr><td>Maturation period</td><td>10 epochs minimum</td></tr>
-    <tr><td>ATP cost</td><td>25.0 (deducted from parent)</td></tr>
-    <tr><td>Max births per epoch</td><td>3</td></tr>
-    <tr><td>Population cap</td><td>total_capacity / 15, clamped [10, 500]</td></tr>
-  </table>
-
-  <h3>Genome Inheritance</h3>
-  <p>
-    Child genomes are derived from the parent via the mutation engine.
-    Mutation pressure is modulated by seasonal stress — harsher environments
-    produce more genetic variation, accelerating adaptation.
-  </p>
-</section>
-
-<!-- ════════════════════════════════════════════════════════════════ -->
-<!-- VI. PROVENANCE EVIDENCE CHAIN                                   -->
-<!-- ════════════════════════════════════════════════════════════════ -->
-
-<section id="provenance">
-  <h2>VI. Provenance Evidence Chain</h2>
-  <p>
-    The provenance model follows the same multi-layer methodology established in the
-    <a href="https://github.com/FTHTrading/2500-donkeys" target="_blank">2,500 Donkeys</a> literary protocol,
-    adapted for software system integrity. Every layer independently proves a different aspect
-    of authorship and integrity.
-  </p>
-
-  <div class="evidence-chain">
-    <div class="evidence-row">
-      <div>#</div>
-      <div>Evidence</div>
-      <div>Purpose</div>
-      <div>Record</div>
+      <div class="narration reveal reveal--delay-3" data-audio="proof">
+        <span class="narration__label">&#x1F399; Andrew — Determinism</span>
+        <p>There is no randomness here. Every trait, every death, every catastrophe, every birth — derived from hash chains and linear congruential generators with published constants.</p>
+        <p>Given the seed, you get the world. Every time. On the same architecture.</p>
+        <p>That last qualifier matters. It's a limitation, not a footnote.</p>
+      </div>
     </div>
-    <div class="evidence-row">
-      <div class="evidence-layer">1</div>
-      <div>Local filesystem</div>
-      <div>First creation timestamps</div>
-      <div class="evidence-status"><span class="check">&#10003;</span> OS metadata</div>
+  </section>
+
+  <!-- ============================================================
+       SECTION 6 — EXPLORATION: MULTIVERSE AND PARAMETER SPACE
+       ============================================================ -->
+  <section id="exploration" data-section="exploration">
+    <div class="container">
+      <div class="reveal">
+        <span class="section-label">05 — Exploration</span>
+        <h2 class="section-title">38 Experiments Across Two Seasons</h2>
+        <p class="section-lead">
+          Season 1 stressed economic parameters with all safety mechanisms active. Season 2 systematically disabled structural invariants. Together: 5,680 world-runs spanning 2,840,000 computed epochs.
+        </p>
+      </div>
+
+      <div class="timeline reveal reveal--delay-1">
+        <div class="timeline__item">
+          <div class="timeline__item-label">Season 1</div>
+          <div class="timeline__item-title">25 experiments — 4,180 worlds</div>
+          <div class="timeline__item-text">
+            Entropy sweeps, catastrophe resilience, inequality thresholds, treasury stability, metabolic inversions (up to 10&#xD7; basal cost), multi-axis stress, resilience quadrants (&#xB1;mutation, &#xB1;cortex), resource depletion under 4 scarcity levels, reserve stress, and evolution-forbidden configurations.
+          </div>
+        </div>
+        <div class="timeline__item">
+          <div class="timeline__item-label">Season 2</div>
+          <div class="timeline__item-title">13 experiments — 1,500 worlds</div>
+          <div class="timeline__item-text">
+            Structural invariant violations. S1: Treasury redistribution disabled. S2: ATP decay disabled. S3: Combinatorial safety removal. S4: Resource regeneration disabled, death drains pools, 10&#xD7; reproduction cost, all safety mechanisms off. Extended horizon: 5,000 epochs.
+          </div>
+        </div>
+      </div>
+
+      <table class="data-table reveal reveal--delay-2">
+        <thead>
+          <tr>
+            <th>Season</th>
+            <th>Experiments</th>
+            <th>Worlds</th>
+            <th>Collapse Rate</th>
+            <th>95% CI</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Season 1</td>
+            <td>25</td>
+            <td>4,180</td>
+            <td class="ok">0.00%</td>
+            <td>[0, 0.088%]</td>
+          </tr>
+          <tr>
+            <td>Season 2</td>
+            <td>13</td>
+            <td>1,500</td>
+            <td class="ok">0.00%</td>
+            <td>[0, 0.246%]</td>
+          </tr>
+          <tr>
+            <td><strong>Total</strong></td>
+            <td><strong>38</strong></td>
+            <td><strong>5,680</strong></td>
+            <td class="highlight"><strong>0.00%</strong></td>
+            <td><strong>[0, 0.065%]</strong></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="narration reveal reveal--delay-3" data-audio="exploration">
+        <span class="narration__label">&#x1F399; Andrew — Exploration</span>
+        <p>Season 1 is the question: what happens when you stress the economy? Twenty-five experiments. Entropy. Catastrophe. Inequality. Metabolic cost multiplication. All safety mechanisms active.</p>
+        <p>Season 2 is the harder question: what happens when you remove the architecture? Disable the treasury. Disable ATP decay. Disable regeneration. Disable everything.</p>
+        <p>Both seasons: zero collapses under the default definition. But the margin narrows sharply.</p>
+      </div>
     </div>
-    <div class="evidence-row">
-      <div class="evidence-layer">2</div>
-      <div>Git commit history</div>
-      <div>Continuous authorship timeline</div>
-      <div class="evidence-status"><span class="check">&#10003;</span> GitHub</div>
+  </section>
+
+  <!-- ============================================================
+       SECTION 7 — EVIDENCE: COLLAPSE PHASE TRANSITION
+       ============================================================ -->
+  <section id="evidence" data-section="evidence">
+    <div class="container container--wide">
+      <div class="reveal">
+        <span class="section-label">06 — Evidence</span>
+        <h2 class="section-title">The Collapse Phase Transition</h2>
+        <p class="section-lead">
+          Under the most extreme configuration tested (s4_full_attack), a discontinuous phase transition emerges when the collapse definition threshold crosses the system's equilibrium survival band.
+        </p>
+      </div>
+
+      <div class="figure reveal reveal--delay-1">
+        <img
+          src="fig1_phase_transition.png"
+          alt="Collapse rate phase transition: 0% at Pfloor=3, 5.8% at Pfloor=5, 97.5% at Pfloor=10, 100% at Pfloor=15 and above"
+          loading="lazy"
+          width="800"
+        >
+        <figcaption>
+          <strong>Figure 1.</strong> Collapse rate as a function of population floor definition (<em>P<sub>floor</sub></em>) under s4_full_attack configuration. The transition from 5.8% to 97.5% over a factor-of-two change in the floor parameter constitutes a discontinuous phase transition. Error bars show 95% Clopper-Pearson exact confidence intervals. N = 120 worlds per configuration.
+        </figcaption>
+      </div>
+
+      <div class="callout reveal reveal--delay-2">
+        The collapse boundary lies between P<sub>floor</sub> = 5 and P<sub>floor</sub> = 10. The zero-collapse headline result is contingent on the permissive default definition.
+        <cite>— Section 3.1, Collapse Definition Sensitivity</cite>
+      </div>
+
+      <!-- Minimum population distribution -->
+      <table class="data-table reveal reveal--delay-2">
+        <thead>
+          <tr>
+            <th>Soft Cap</th>
+            <th>Min Pop</th>
+            <th>Mean Pop</th>
+            <th>P10</th>
+            <th>P90</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>30</td><td class="danger">3</td><td>5.8</td><td>3</td><td>9</td></tr>
+          <tr><td>60</td><td class="danger">3</td><td>8.2</td><td>4</td><td>13</td></tr>
+          <tr><td>90</td><td class="danger">3</td><td>10.1</td><td>5</td><td>16</td></tr>
+          <tr><td>120</td><td class="danger">3</td><td>12.4</td><td>6</td><td>19</td></tr>
+          <tr><td>150</td><td class="danger">3</td><td>14.8</td><td>7</td><td>23</td></tr>
+          <tr><td>180</td><td class="danger">3</td><td>16.5</td><td>8</td><td>26</td></tr>
+        </tbody>
+      </table>
+      <p class="reveal reveal--delay-2" style="font-size:13px; color:var(--text-tertiary); margin-top:0.5rem;">
+        Minimum populations reach the extinction floor (3) at all soft cap values under s4_full_attack, confirming that even at peak carrying capacity, populations transiently approach near-extinction.
+      </p>
+
+      <div class="narration reveal reveal--delay-3" data-audio="evidence">
+        <span class="narration__label">&#x1F399; Andrew — Evidence</span>
+        <p>This is the figure that tells the honest story. Under floor 3: zero collapses. Under floor 10: 97.5%. A cliff, not a slope.</p>
+        <p>The survival band is narrow. Three to eight agents. The entire characterization hinges on where you draw the line relative to that band.</p>
+        <p>We publish both views. Both are accurate. Both are necessary.</p>
+      </div>
     </div>
-    <div class="evidence-row">
-      <div class="evidence-layer">3</div>
-      <div>Merkle trees</div>
-      <div>Per-crate integrity proofs</div>
-      <div class="evidence-status"><span class="check">&#10003;</span> dist/merkle.json</div>
+  </section>
+
+  <!-- ============================================================
+       SECTION 8 — FAILURE MODES: WHERE IT BREAKS
+       ============================================================ -->
+  <section id="failures" data-section="failures">
+    <div class="container">
+      <div class="reveal">
+        <span class="section-label">07 — Failure Modes</span>
+        <h2 class="section-title">What Does Break</h2>
+        <p class="section-lead">
+          Zero collapses is not zero failures. The system exhibits pathological states, demographic fragility, and parameter-dependent breaking points that are documented explicitly.
+        </p>
+      </div>
+
+      <div class="prose reveal reveal--delay-1">
+        <p>
+          Under s4_full_attack — the most extreme configuration — populations survive but exhibit <strong>reproductive inequality of 0.952</strong>. Nearly all births originate from the top fitness quartile. Survival inequality reaches 0.873. These are degenerate states: populations persist structurally while exhibiting extreme stratification.
+        </p>
+        <p>
+          The global minimum population observed in any core experiment is exactly 3 — the extinction floor threshold. This means the floor mechanism actively prevents collapse. It is a design safety net, not empirical robustness.
+        </p>
+      </div>
+
+      <table class="data-table reveal reveal--delay-2">
+        <thead>
+          <tr>
+            <th>Indicator</th>
+            <th>S3 All OFF</th>
+            <th>S4 Zero Regen</th>
+            <th>S4 Full Attack</th>
+            <th>S4 Extended</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Reproductive inequality</td>
+            <td class="warn">0.865</td>
+            <td class="danger">0.951</td>
+            <td class="danger">0.952</td>
+            <td class="danger">0.997</td>
+          </tr>
+          <tr>
+            <td>Survival inequality</td>
+            <td class="warn">0.892</td>
+            <td class="danger">0.941</td>
+            <td class="danger">0.873</td>
+            <td class="danger">0.954</td>
+          </tr>
+          <tr>
+            <td>Wealth concentration (top 10%)</td>
+            <td>0.488</td>
+            <td>0.393</td>
+            <td>0.417</td>
+            <td>0.318</td>
+          </tr>
+          <tr>
+            <td>Mean Gini</td>
+            <td>0.457</td>
+            <td class="warn">0.593</td>
+            <td>0.485</td>
+            <td class="warn">0.608</td>
+          </tr>
+          <tr>
+            <td>Min population</td>
+            <td>20</td>
+            <td class="warn">5</td>
+            <td class="danger">3</td>
+            <td class="warn">7</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="callout reveal reveal--delay-2">
+        Reproductive inequality approaching 1.0 means a tiny minority monopolizes reproduction. The population persists. The economy does not.
+        <cite>— Section 6.5, Pathological States</cite>
+      </div>
+
+      <div class="prose reveal reveal--delay-2">
+        <p>
+          <strong>Fitness function fragility.</strong> Perturbation of the Resource Foraging weight by &#x2212;20% causes collapses under s4_full_attack (1/120 worlds). Both variants that produced collapse shift weight away from resource extraction — consistent with extraction being a critical survival pathway under zero-regeneration conditions.
+        </p>
+        <p>
+          <strong>Untested regimes.</strong> The paper documents 8 categories of untested conditions: epochs beyond 5,000, populations above 200, correlated shocks, adversarial agents, multiple simultaneous weight perturbations, nonlinear fitness functions, cross-architecture execution, and multi-operator replication.
+        </p>
+      </div>
+
+      <div class="narration reveal reveal--delay-3" data-audio="failures">
+        <span class="narration__label">&#x1F399; Andrew — Failure Modes</span>
+        <p>A population of 12 agents with reproductive inequality of 0.95 is alive. It is not healthy.</p>
+        <p>The extended horizon — 5,000 epochs — shows reproductive inequality reaching 0.997. One lineage. Producing almost everything. Whether that constitutes survival is a question about definitions. Again.</p>
+        <p>These are published. Not hidden. Not excused.</p>
+      </div>
     </div>
-    <div class="evidence-row">
-      <div class="evidence-layer">4</div>
-      <div>SHA-256 edition root</div>
-      <div>Content integrity fingerprint</div>
-      <div class="evidence-status"><span class="check">&#10003;</span> <code>cd78b3be...d2cc3</code></div>
+  </section>
+
+  <!-- ============================================================
+       SECTION 9 — REPRODUCIBILITY: HOW YOU VERIFY IT
+       ============================================================ -->
+  <section id="reproduce" data-section="reproduce">
+    <div class="container">
+      <div class="reveal">
+        <span class="section-label">08 — Reproducibility</span>
+        <h2 class="section-title">Clone, Build, Verify</h2>
+        <p class="section-lead">
+          The full source, all 38 experiment configurations, and the hash registry are published. Replication requires only Git and a Rust toolchain.
+        </p>
+      </div>
+
+      <div class="hash-block reveal reveal--delay-1">
+        <span class="label">Replication Protocol</span>
+        <span class="value">git clone https://github.com/FTHTrading/Genesis.git<br>cd Genesis<br>cargo test --release<br>cargo run --release --features cli -- --experiment &lt;name&gt;</span>
+      </div>
+
+      <div class="metric-grid reveal reveal--delay-1">
+        <div class="metric-card">
+          <span class="metric-card__value">396</span>
+          <span class="metric-card__label">Unit Tests</span>
+          <span class="metric-card__sublabel">passing</span>
+        </div>
+        <div class="metric-card">
+          <span class="metric-card__value">13</span>
+          <span class="metric-card__label">Rust Crates</span>
+          <span class="metric-card__sublabel">workspace</span>
+        </div>
+        <div class="metric-card">
+          <span class="metric-card__value">38</span>
+          <span class="metric-card__label">Experiment</span>
+          <span class="metric-card__sublabel">configurations</span>
+        </div>
+        <div class="metric-card">
+          <span class="metric-card__value">x86_64</span>
+          <span class="metric-card__label">Architecture</span>
+          <span class="metric-card__sublabel">verified on</span>
+        </div>
+      </div>
+
+      <div class="prose reveal reveal--delay-2">
+        <p>
+          <strong>Hash verification.</strong> Compare the result_hash field in generated manifests against the canonical entries in replication_status.json. The verification script verify_replication.ps1 automates this. Expected output: 38/38 MATCH.
+        </p>
+        <p>
+          <strong>Known constraint.</strong> Floating-point determinism is not guaranteed across architectures. Cross-platform reproducibility requires identical IEEE 754 rounding behavior. Hash mismatches on ARM or different x86 microarchitectures are expected, not errors.
+        </p>
+        <p>
+          <strong>Single-operator disclosure.</strong> All 5,680 world-runs were executed by the same operator on the same machine. Independent replication has not yet occurred. The hash registry enables verification but does not substitute for it.
+        </p>
+      </div>
+
+      <div class="narration reveal reveal--delay-3" data-audio="reproduce">
+        <span class="narration__label">&#x1F399; Andrew — Reproducibility</span>
+        <p>One command to clone. One command to test. One command to run any experiment.</p>
+        <p>But this has only been verified on one machine, by one person. The hashes are published. The verification is waiting. Independent replication is the next step — and it hasn't happened yet.</p>
+        <p>We state that directly. Not in a footnote. In the paper.</p>
+      </div>
     </div>
-    <div class="evidence-row">
-      <div class="evidence-layer">5</div>
-      <div>ORCID</div>
-      <div>Author identity record</div>
-      <div class="evidence-status"><span class="check">&#10003;</span> <a href="https://orcid.org/0009-0008-8425-939X" target="_blank">0009-0008-8425-939X</a></div>
+  </section>
+
+  <!-- ============================================================
+       SECTION 10 — STATISTICAL RIGOR
+       ============================================================ -->
+  <section id="statistics" data-section="statistics">
+    <div class="container">
+      <div class="reveal">
+        <span class="section-label">09 — Statistical Rigor</span>
+        <h2 class="section-title">What the Numbers Actually Say</h2>
+        <p class="section-lead">
+          Zero observed collapses constrains the true collapse probability. It does not prove collapse impossibility. The distinction matters.
+        </p>
+      </div>
+
+      <div class="prose reveal reveal--delay-1">
+        <p>
+          <strong>Null hypothesis:</strong> <em>H&#x2080;: the true collapse probability p &gt; 0.</em> Given k = 0 collapses in N = 5,680 independent trials, the Clopper-Pearson exact 95% confidence interval for p is [0, 0.000528]. By the rule of three: p &lt; 3/5,680 = 0.053%.
+        </p>
+        <p>
+          <strong>Power analysis:</strong> The probability of observing zero collapses if the true rate were 0.1% is (0.999)<sup>5680</sup> &#x2248; 0.0034. Statistical power exceeds 99.6%. If the true rate were 0.1% or higher, at least one collapse would almost certainly have appeared.
+        </p>
+        <p>
+          <strong>Weight robustness:</strong> Maximum observed collapse rate under any &#xB1;20% fitness weight perturbation: 0.8% (1 of 120 worlds). The two variants producing collapse both shift weight away from resource foraging — consistent with extraction being the critical survival pathway under zero-regeneration conditions. The zero-collapse result does not depend on precise weight calibration.
+        </p>
+      </div>
+
+      <div class="metric-grid reveal reveal--delay-2">
+        <div class="metric-card metric-card--emerald">
+          <span class="metric-card__value">&lt;0.053%</span>
+          <span class="metric-card__label">Upper Bound</span>
+          <span class="metric-card__sublabel">95% confidence</span>
+        </div>
+        <div class="metric-card metric-card--emerald">
+          <span class="metric-card__value">&gt;99.6%</span>
+          <span class="metric-card__label">Power</span>
+          <span class="metric-card__sublabel">at p = 0.001</span>
+        </div>
+        <div class="metric-card">
+          <span class="metric-card__value">&#x2264;0.8pp</span>
+          <span class="metric-card__label">Weight Sensitivity</span>
+          <span class="metric-card__sublabel">&#xB1;20% perturbation</span>
+        </div>
+        <div class="metric-card">
+          <span class="metric-card__value">2.84M</span>
+          <span class="metric-card__label">Total Epochs</span>
+          <span class="metric-card__sublabel">computed</span>
+        </div>
+      </div>
+
+      <div class="narration reveal reveal--delay-3" data-audio="statistics">
+        <span class="narration__label">&#x1F399; Andrew — Statistics</span>
+        <p>This does not prove p equals zero. It constrains: p is less than 0.053%, at 95% confidence. If the true rate were 0.1% or higher, 5,680 worlds would almost certainly have caught it.</p>
+        <p>The power is there. The constraint holds. The proof does not.</p>
+      </div>
     </div>
-    <div class="evidence-row">
-      <div class="evidence-layer">6</div>
-      <div>DOI</div>
-      <div>Permanent academic identifier</div>
-      <div class="evidence-status"><span class="check">&#10003;</span> <a href="https://doi.org/10.5281/zenodo.18729652" target="_blank">10.5281/zenodo.18729652</a></div>
+  </section>
+
+  <!-- ============================================================
+       SECTION 11 — WHY IT MATTERS
+       ============================================================ -->
+  <section id="matters" data-section="matters">
+    <div class="container">
+      <div class="reveal">
+        <span class="section-label">10 — Significance</span>
+        <h2 class="section-title">Why This Matters</h2>
+      </div>
+
+      <div class="prose reveal reveal--delay-1">
+        <p>
+          Agent-based economic simulations typically report results under favorable conditions. This study reports results under systematic mechanism removal — disabling the architecture that was designed to prevent the very failure being measured. The contribution is not the observation of survival, but the characterization of <strong>where survival ends</strong>.
+        </p>
+        <p>
+          The collapse phase transition — the discovery that a factor-of-two change in the definition parameter produces a 91.7 percentage point swing in the collapse rate — demonstrates that stability claims in agent-based systems are inherently parameter-dependent. "Does the system collapse?" is not a well-formed question without specifying "collapse according to what definition?"
+        </p>
+        <p>
+          This finding is consistent with broader concerns in computational social science about measurement sensitivity. The system provides a concrete, reproducible example of definition-dependent characterization reversal: the same dynamics produce both "universally stable" and "universally collapsed" depending on a single threshold parameter.
+        </p>
+        <p>
+          All configurations, seeds, source code, and result hashes are published. The experiment is designed to be verified, not believed.
+        </p>
+      </div>
+
+      <div class="callout reveal reveal--delay-2">
+        The contribution is not that the system survives. It is the formal characterization of where, how, and under what definitions it does not.
+      </div>
+
+      <div class="narration reveal reveal--delay-3" data-audio="matters">
+        <span class="narration__label">&#x1F399; Andrew — Closing</span>
+        <p>The question was never "can we build a system that survives." That's engineering. The question was "where does survival end, and what does the boundary look like?"</p>
+        <p>We found a cliff, not a slope. A phase transition in the definition space. That's the result.</p>
+        <p>Everything is published. Everything is reproducible. The next step is yours.</p>
+      </div>
     </div>
-    <div class="evidence-row">
-      <div class="evidence-layer">7</div>
-      <div>Polygon contract</div>
-      <div>On-chain proof-of-origin</div>
-      <div class="evidence-status"><span class="ready">&#9679;</span> Ready for anchoring</div>
+  </section>
+
+  <!-- ============================================================
+       FOOTER
+       ============================================================ -->
+  <footer class="site-footer">
+    <div class="container">
+      <p>
+        <a href="https://github.com/FTHTrading/Genesis" target="_blank" rel="noopener">GitHub Repository</a> &nbsp;&#xB7;&nbsp;
+        <a href="https://github.com/FTHTrading/Genesis/tree/main/papers/arxiv" target="_blank" rel="noopener">arXiv Preprint</a> &nbsp;&#xB7;&nbsp;
+        <a href="https://github.com/FTHTrading/Genesis/blob/main/replication_status.json" target="_blank" rel="noopener">Hash Registry</a>
+      </p>
+      <p>Kevan Burns &#xB7; 2026 &#xB7; All source, data, and configurations published under open license.</p>
     </div>
-  </div>
+  </footer>
 
-  <p>
-    Layers 1–6 are active and verifiable today. Layer 7 uses the same
-    <a href="https://polygonscan.com/address/0x97f456300817eaE3B40E235857b856dfFE8bba90" target="_blank">LiteraryAnchor</a>
-    contract already deployed and verified on Polygon mainnet for the 2,500 Donkeys protocol.
-    The edition root can be anchored via <code>anchorEdition(editionRoot, ipfsCID)</code> at any time
-    for under $0.50.
-  </p>
-</section>
-
-<!-- ════════════════════════════════════════════════════════════════ -->
-<!-- VII. MERKLE TREE SYSTEM                                         -->
-<!-- ════════════════════════════════════════════════════════════════ -->
-
-<section id="merkle">
-  <h2>VII. Merkle Tree System</h2>
-  <p>
-    Seven independent Merkle trees hash every source file, grouped by crate.
-    Their roots are combined into an Edition Root — the cryptographic fingerprint
-    of the entire codebase at a point in time.
-  </p>
-
-  <div class="merkle-diagram">┌─────────────────────────────────────────────────────────────────┐
-│                        EDITION ROOT                              │
-│  cd78b3be6a7f569a8a7a24d49a47ccd01af0fa5ab7c8a04baa6f7ee036...  │
-│                                                                  │
-│  Merkle(dna ‖ metabolism ‖ ecosystem ‖ evolution ‖               │
-│         apostle ‖ gateway ‖ tests)                               │
-├──────────┬──────────┬──────────┬──────────┬──────────┬──────────┤
-│ genesis  │ metab-   │ eco-     │ evol-    │ apostle  │ gateway  │
-│ -dna     │ olism    │ system   │ ution    │          │          │
-│ Root     │ Root     │ Root     │ Root     │ Root     │ Root     │
-│ e348c9.. │ f739fd.. │ 88b929.. │ fd7f0a.. │ ab727d.. │ 9ec992.. │
-├──────────┼──────────┼──────────┼──────────┼──────────┼──────────┤
-│ errors ██│ atp   ██ │ errors██ │ errors██ │ conv  ██ │ lib   ██ │
-│ genome ██│ errors██ │ lib   ██ │ gene  ██ │ errors██ │ molt  ██ │
-│ lib    ██│ ledger██ │ mesh  ██ │ lib   ██ │ lib   ██ │ perst ██ │
-│ lineag ██│ lib   ██ │ msgs  ██ │ mutat ██ │ pitch ██ │ runtm ██ │
-│ roles  ██│ proof ██ │ probl ██ │ selec ██ │ targs ██ │ servr ██ │
-│ skills ██│ treas ██ │ publi ██ │          │          │ shild ██ │
-│ traits ██│          │ regis ██ │          │          │ world ██ │
-│          │          │ telem ██ │          │          │          │
-└──────────┴──────────┴──────────┴──────────┴──────────┴──────────┘</div>
-
-  <h3>Verification</h3>
-  <pre><code># Rebuild Merkle trees from source (deterministic)
-powershell -ExecutionPolicy Bypass -File scripts/merkle.ps1
-
-# Output: dist/merkle.json, dist/manifest.json, dist/provenance.json
-# Compare edition_root against published value</code></pre>
-</section>
-
-<!-- ════════════════════════════════════════════════════════════════ -->
-<!-- VIII. SYSTEM INVARIANTS                                         -->
-<!-- ════════════════════════════════════════════════════════════════ -->
-
-<section id="invariants">
-  <h2>VIII. System Invariants</h2>
-  <p>14 invariants must hold at all times. Violation of any invariant indicates a bug.</p>
-
-  <div class="invariant-group">
-    <h3>Ecology</h3>
-    <div class="invariant"><div class="invariant-id">E-1</div><div>Resource pools regenerate via logistic growth</div></div>
-    <div class="invariant"><div class="invariant-id">E-2</div><div>Seasonal modulation follows sinusoidal cycle with configurable amplitude</div></div>
-    <div class="invariant"><div class="invariant-id">E-3</div><div>Resource extraction is proportional to fitness, never winner-take-all</div></div>
-    <div class="invariant"><div class="invariant-id">E-4</div><div>Density-dependent foraging: extraction decreases with niche crowding</div></div>
-  </div>
-
-  <div class="invariant-group">
-    <h3>Metabolism</h3>
-    <div class="invariant"><div class="invariant-id">M-1</div><div>ATP balance cannot go negative — metabolic tick clamps at zero</div></div>
-    <div class="invariant"><div class="invariant-id">M-2</div><div>Total ATP supply is sum of all agent balances (computed, not tracked)</div></div>
-    <div class="invariant"><div class="invariant-id">M-3</div><div>Replication costs are deducted atomically from parent balance</div></div>
-  </div>
-
-  <div class="invariant-group">
-    <h3>Selection</h3>
-    <div class="invariant"><div class="invariant-id">S-1</div><div>Population cap is dynamic: total_capacity / 15, clamped [10, 500]</div></div>
-    <div class="invariant"><div class="invariant-id">S-2</div><div>Selection pressure respects maturation period before culling</div></div>
-    <div class="invariant"><div class="invariant-id">S-3</div><div>Stasis tolerance prevents premature extinction of viable agents</div></div>
-  </div>
-
-  <div class="invariant-group">
-    <h3>Genome</h3>
-    <div class="invariant"><div class="invariant-id">G-1</div><div>Primordial genomes are SHA-256 derived for genuine diversity</div></div>
-    <div class="invariant"><div class="invariant-id">G-2</div><div>Mutation pressure is modulated by seasonal environmental stress</div></div>
-  </div>
-
-  <div class="invariant-group">
-    <h3>Provenance</h3>
-    <div class="invariant"><div class="invariant-id">P-1</div><div>Edition root = Merkle(crate_roots), deterministically recomputable</div></div>
-    <div class="invariant"><div class="invariant-id">P-2</div><div>All source files have SHA-256 entries in manifest.json</div></div>
-  </div>
-</section>
-
-<!-- ════════════════════════════════════════════════════════════════ -->
-<!-- IX. ON-CHAIN ANCHORING                                          -->
-<!-- ════════════════════════════════════════════════════════════════ -->
-
-<section id="on-chain">
-  <h2>IX. On-Chain Anchoring</h2>
-  <p>
-    The edition root can be anchored on Polygon mainnet using the same contract infrastructure
-    deployed for the <a href="https://github.com/FTHTrading/2500-donkeys" target="_blank">2,500 Donkeys</a> literary protocol.
-    Both projects share the same author wallet and on-chain identity binding.
-  </p>
-
-  <table>
-    <tr><th>Field</th><th>Value</th></tr>
-    <tr><td>Contract</td><td><a href="https://polygonscan.com/address/0x97f456300817eaE3B40E235857b856dfFE8bba90" target="_blank">LiteraryAnchor</a></td></tr>
-    <tr><td>Address</td><td><code>0x97f456300817eaE3B40E235857b856dfFE8bba90</code></td></tr>
-    <tr><td>Network</td><td>Polygon Mainnet (Chain ID: 137)</td></tr>
-    <tr><td>Method</td><td><code>anchorEdition(editionRoot, ipfsCID)</code></td></tr>
-    <tr><td>Author Wallet</td><td><code>0xC91668184736BF75C4ecE37473D694efb2A43978</code></td></tr>
-    <tr><td>Author Identity</td><td><a href="https://polygonscan.com/address/0xB9ffa688A8Bb332221030BbBE46bE5bF03323170" target="_blank">AuthorIdentity</a> (ECDSA verified)</td></tr>
-    <tr><td>Estimated Cost</td><td>&lt; $0.50 USD</td></tr>
-  </table>
-
-  <h3>Shared On-Chain Infrastructure</h3>
-  <p>
-    Five <a href="https://polygonscan.com" target="_blank">Polygon</a> contracts are already deployed,
-    verified, and operational — originally for the literary protocol, but designed to anchor
-    <em>any</em> content type:
-  </p>
-  <table>
-    <tr><th>#</th><th>Contract</th><th>Address</th><th>Status</th></tr>
-    <tr><td>1</td><td>LiteraryAnchor</td><td><code>0x97f4...b890</code></td><td>Verified &#10003;</td></tr>
-    <tr><td>2</td><td>PublishingKernel</td><td><code>0x511c...E8ae</code></td><td>Verified &#10003;</td></tr>
-    <tr><td>3</td><td>PublishingKernelV2</td><td><code>0xca9F...C037</code></td><td>Verified &#10003;</td></tr>
-    <tr><td>4</td><td>RoyaltyRouter</td><td><code>0x4416...C461</code></td><td>Verified &#10003;</td></tr>
-    <tr><td>5</td><td>AuthorIdentity</td><td><code>0xB9ff...3170</code></td><td>Verified &#10003;</td></tr>
-  </table>
-</section>
-
-<!-- ════════════════════════════════════════════════════════════════ -->
-<!-- X. VERIFICATION                                                 -->
-<!-- ════════════════════════════════════════════════════════════════ -->
-
-<section id="verification">
-  <h2>X. Verification</h2>
-  <p>Any third party can independently verify the entire system:</p>
-
-  <ol class="verify-steps">
-    <li>
-      Clone the repository<br>
-      <code>git clone https://github.com/FTHTrading/Genesis.git &amp;&amp; cd AI</code>
-    </li>
-    <li>
-      Rebuild Merkle trees from source<br>
-      <code>powershell -ExecutionPolicy Bypass -File scripts/merkle.ps1</code>
-    </li>
-    <li>
-      Compare edition root against <code>dist/provenance.json</code>
-    </li>
-    <li>
-      Run the test suite (143+ tests across 6 crates)<br>
-      <code>cargo test --workspace</code>
-    </li>
-    <li>
-      Verify on-chain state via <a href="https://polygonscan.com/address/0x97f456300817eaE3B40E235857b856dfFE8bba90" target="_blank">Polygonscan</a>
-    </li>
-  </ol>
-
-  <p>No API keys required. The verifier uses only public data and deterministic computation.</p>
-</section>
-
-<!-- ════════════════════════════════════════════════════════════════ -->
-<!-- XI. RELATED WORK                                                -->
-<!-- ════════════════════════════════════════════════════════════════ -->
-
-<section id="related">
-  <h2>XI. Related Work</h2>
-
-  <h3>The 2,500 Donkeys — Deterministic Literary Publishing Protocol</h3>
-  <p>
-    Genesis Protocol shares its provenance methodology, author identity, and on-chain infrastructure
-    with the <a href="https://github.com/FTHTrading/2500-donkeys" target="_blank">2,500 Donkeys</a> project —
-    a 75,000-word novel built as the reference implementation for a deterministic publishing protocol.
-  </p>
-  <table>
-    <tr><th>Aspect</th><th>2,500 Donkeys (LPS-1)</th><th>Genesis Protocol (SOP-1)</th></tr>
-    <tr><td>Content type</td><td>Markdown manuscript</td><td>Rust source code</td></tr>
-    <tr><td>Merkle granularity</td><td>Per-chapter (31 blocks)</td><td>Per-crate (7 trees)</td></tr>
-    <tr><td>Hash algorithm</td><td>SHA-256</td><td>SHA-256</td></tr>
-    <tr><td>On-chain contract</td><td>LiteraryAnchor</td><td>LiteraryAnchor (shared)</td></tr>
-    <tr><td>State machine</td><td>DRAFT &rarr; PUBLISHED</td><td>GENESIS &rarr; RUNNING</td></tr>
-    <tr><td>DOI</td><td>10.5281/zenodo.18646886</td><td>10.5281/zenodo.18729652</td></tr>
-    <tr><td>ORCID</td><td>0009-0008-8425-939X</td><td>0009-0008-8425-939X</td></tr>
-  </table>
-  <p>
-    Both protocols prove the same thesis: a single author can construct
-    cryptographically verifiable provenance for any content type —
-    literary manuscripts or software systems — using the same infrastructure,
-    at negligible cost.
-  </p>
-</section>
-
-<!-- ════════════════════════════════════════════════════════════════ -->
-<!-- XII. ECOSYSTEM STATUS & ROADMAP                                 -->
-<!-- ════════════════════════════════════════════════════════════════ -->
-
-<section id="ecosystem-status">
-  <h2>XII. Ecosystem Status &amp; Roadmap</h2>
-
-  <h3>Current State (v1.1 — June 2025)</h3>
-  <table>
-    <tr><th>Component</th><th>Status</th><th>Detail</th></tr>
-    <tr><td>Organism Runtime</td><td style="color:#276749;">&#9679; Operational</td>
-        <td>Axum HTTP server with SSE telemetry, JSON persistence, background survival loop</td></tr>
-    <tr><td>Ecological Model</td><td style="color:#276749;">&#9679; Validated</td>
-        <td>10,000-epoch simulation: stable equilibrium at 57 agents, CV 3.7%</td></tr>
-    <tr><td>Treasury</td><td style="color:#276749;">&#9679; Fixed</td>
-        <td>v1.0 hoarding defect corrected — all 6 mechanisms wired, 99.99% cycling</td></tr>
-    <tr><td>Test Suite</td><td style="color:#276749;">&#9679; 143/144</td>
-        <td>1 flaky load test (<code>load_mixed_concurrent</code>); all deterministic tests pass</td></tr>
-    <tr><td>Provenance</td><td style="color:#276749;">&#9679; Active</td>
-        <td>Merkle trees, DOI, ORCID, CITATION.cff — all layers verified</td></tr>
-    <tr><td>Moltbook Agent</td><td style="color:#276749;">&#9679; Live</td>
-        <td><a href="https://moltbook.com/u/genesisprotocol" target="_blank">@genesisprotocol</a> — AI verification challenge auto-solver</td></tr>
-    <tr><td>On-Chain Anchor</td><td style="color:#c05621;">&#9679; Ready</td>
-        <td>LiteraryAnchor contract deployed and verified; edition root ready for anchoring</td></tr>
-    <tr><td>Observatory UI</td><td style="color:#c05621;">&#9679; Prototype</td>
-        <td>Three.js real-time visualization via SSE — functional but not production-polished</td></tr>
-  </table>
-
-  <h3>v1.1 Changelog</h3>
-  <ul>
-    <li><strong>Treasury redistribution:</strong> Wired 5 dead-code mechanisms (decay, wealth tax, stipends, crisis spend, overflow redistribution) into <code>run_epoch()</code></li>
-    <li><strong>Simulation harness:</strong> New <code>examples/simulate.rs</code> for reproducible N-epoch validation runs</li>
-    <li><strong>Empirical data:</strong> 10,001-row CSV (<code>dist/simulation-10k.csv</code>) with 24 metrics per epoch</li>
-    <li><strong>EpochStats expanded:</strong> Added <code>treasury_reserve</code> and <code>treasury_distributed</code> fields</li>
-    <li><strong>Paper updated:</strong> New Section 10.5 (empirical results), Section 11.4 (honest failure-mode disclosure), updated Section 12 (conclusion)</li>
-    <li><strong>PDF rebuilt:</strong> 431 KB (was 388 KB)</li>
-  </ul>
-
-  <h3>What We're Building</h3>
-  <p>
-    Genesis Protocol is an existence proof: autonomous software organisms with real ecological dynamics,
-    cryptographic provenance, and economic pressure — all verifiable by anyone, built by one developer,
-    at zero infrastructure cost. The system demonstrates three ideas:
-  </p>
-  <ol>
-    <li><strong>Digital organisms can exhibit genuine ecological dynamics</strong> — not just cellular automata aesthetics, but Lotka–Volterra competition, density-dependent foraging, and seasonal environmental forcing that produce emergent equilibria.</li>
-    <li><strong>Provenance doesn't require institutions</strong> — a Merkle tree, a DOI, an ORCID, and a $0.50 on-chain anchor provide stronger integrity guarantees than most peer-reviewed publications.</li>
-    <li><strong>Transparency is the protocol</strong> — every defect (treasury hoarding in v1.0) is disclosed, every fix is empirically validated, every claim is backed by reproducible data.</li>
-  </ol>
-
-  <h3>Roadmap</h3>
-  <table>
-    <tr><th>Priority</th><th>Item</th><th>Status</th></tr>
-    <tr><td>1</td><td>On-chain edition root anchoring (Polygon mainnet)</td><td>Ready — awaiting anchor</td></tr>
-    <tr><td>2</td><td>Apostle crate maturation (inter-agent communication)</td><td>Scaffold exists; logic stub</td></tr>
-    <tr><td>3</td><td>Multi-chain anchoring (Ethereum L2)</td><td>Planned</td></tr>
-    <tr><td>4</td><td>Ensemble PRNG (ChaCha20 seeded from OS entropy)</td><td>Planned — addresses single-seed limitation</td></tr>
-    <tr><td>5</td><td>Observatory UI polish (production-grade Three.js dashboard)</td><td>Prototype complete</td></tr>
-    <tr><td>6</td><td>Multi-world federation (organism mesh networking)</td><td>Design phase</td></tr>
-  </table>
-</section>
-
-<!-- ════════════════════════════════════════════════════════════════ -->
-<!-- XII. WHAT THIS IS                                               -->
-<!-- ════════════════════════════════════════════════════════════════ -->
-
-<section id="what-this-is">
-  <h2>XII. What This Is — And What It Is Not</h2>
-  <ul class="what-list">
-    <li class="yes">A self-sustaining digital organism with realistic ecological dynamics.</li>
-    <li class="yes">Open-source infrastructure — any developer can use the framework.</li>
-    <li class="yes">Cryptographic provenance — independently verifiable by anyone.</li>
-    <li class="yes">A formal protocol specification (SOP-1) for verifiable software organisms.</li>
-    <li class="yes">Companion project to a DOI-archived, peer-verifiable research paper.</li>
-    <li class="no">Not a token sale, ICO, or speculation scheme.</li>
-    <li class="no">Not a revenue-sharing instrument or investment vehicle.</li>
-    <li class="no">Not a chatbot, LLM wrapper, or prompt engineering framework.</li>
-  </ul>
-</section>
-
-<!-- ════════════════════════════════════════════════════════════════ -->
-<!-- XIII. CITATION                                                  -->
-<!-- ════════════════════════════════════════════════════════════════ -->
-
-<section id="citation">
-  <h2>XIII. Citation</h2>
-  <div class="citation-box">@software{burns2026genesis,
-  title     = {Genesis Protocol: A Lotka--Volterra Inspired Software
-               Organism with Cryptographic Provenance},
-  author    = {Burns, Kevan},
-  year      = {2026},
-  month     = {February},
-  version   = {1.1.0},
-  doi       = {10.5281/zenodo.18729652},
-  url       = {https://github.com/FTHTrading/Genesis},
-  note      = {Reference implementation of SOP-1 (Software Organism
-               Protocol v1). Companion to The 2,500 Donkeys
-               literary protocol. v1.1: Treasury redistribution fix,
-               10,000-epoch empirical validation.}
-}</div>
-</section>
-
-<!-- ════════════════════════════════════════════════════════════════ -->
-<!-- XIV. LICENSE                                                     -->
-<!-- ════════════════════════════════════════════════════════════════ -->
-
-<section id="license">
-  <h2>XIV. License</h2>
-  <table>
-    <tr><th>Scope</th><th>License</th></tr>
-    <tr><td>Source code, build tooling, scripts</td><td>MIT</td></tr>
-    <tr><td>Protocol specification (SOP-1)</td><td>CC-BY-4.0</td></tr>
-    <tr><td>Research paper &amp; documentation</td><td>CC-BY-4.0</td></tr>
-  </table>
-</section>
-
-<!-- ════════════════════════════════════════════════════════════════ -->
-<!-- FOOTER                                                          -->
-<!-- ════════════════════════════════════════════════════════════════ -->
-
-<footer class="paper-footer">
-  <em>"Systems that can prove their own integrity don't need trust."</em><br><br>
-  Built with Rust. Validated over 10,000 epochs. Verified with SHA-256. Anchored on Polygon.<br>
-  DOI: <a href="https://doi.org/10.5281/zenodo.18729652">10.5281/zenodo.18729652</a>
-  &middot; ORCID: <a href="https://orcid.org/0009-0008-8425-939X">0009-0008-8425-939X</a>
-  &middot; <a href="https://github.com/FTHTrading/Genesis">GitHub</a>
-  &middot; <a href="https://github.com/FTHTrading/2500-donkeys">2,500 Donkeys</a><br>
-  <a href="https://moltbook.com/u/genesisprotocol" target="_blank">Moltbook: @genesisprotocol</a><br><br>
-  <small>v1.1 — Treasury redistribution fixed. 10,000-epoch empirical validation complete.</small>
-</footer>
-
-</div><!-- .paper -->
-
+  <script src="script.js"></script>
 </body>
 </html>
