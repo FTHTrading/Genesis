@@ -1,0 +1,79 @@
+{
+  "type": "collapse_bounty",
+  "version": "1.0.0",
+  "posted": "2026-02-25",
+  "status": "open",
+  "protocol": "Genesis Protocol v1.0",
+  "source": "https://github.com/FTHTrading/Genesis",
+  "paper": "https://github.com/FTHTrading/Genesis/tree/main/papers/arxiv",
+  "leaderboard": "https://github.com/FTHTrading/Genesis/blob/main/REPLICATION_LEADERBOARD.md",
+  "collapse_definition": {
+    "extinction": "Population reaches 0 at any epoch",
+    "sustained_critical": "Population < P_floor for N_w consecutive epochs",
+    "P_floor": 3,
+    "N_w": 50
+  },
+  "current_record": {
+    "experiments": 38,
+    "worlds": 5680,
+    "epochs": 2840000,
+    "collapses": 0,
+    "confidence_interval_95": "[0, 0.065%]",
+    "method": "Clopper-Pearson exact"
+  },
+  "categories": {
+    "A_falsification": {
+      "description": "Produce a verified collapse under default definition",
+      "reward": "Leaderboard credit, publication acknowledgment, co-authorship on boundary analysis"
+    },
+    "B_replication": {
+      "description": "Reproduce published results with matching hashes",
+      "reward": "Permanent leaderboard entry, publication acknowledgment"
+    },
+    "C_boundary": {
+      "description": "Identify novel config where collapse rate > 0% under default definition",
+      "reward": "Publication acknowledgment, potential co-authorship"
+    }
+  },
+  "constraints": {
+    "engine": "Current main branch of FTHTrading/Genesis",
+    "rust": "1.77.0+",
+    "collapse_definition": "Default only (P_floor=3, N_w=50)",
+    "source_modifications": "None. Config-only changes permitted.",
+    "minimum_epochs": 500,
+    "minimum_worlds": 1,
+    "determinism": "Must be reproducible from provided seed"
+  },
+  "submission": {
+    "methods": [
+      "GitHub Issue on FTHTrading/Genesis (label: collapse-bounty)",
+      "Moltbook comment on Collapse Bounty post",
+      "Email (see repository)"
+    ],
+    "required_fields": [
+      "username",
+      "category",
+      "experiment_name",
+      "result_hash",
+      "collapse_count",
+      "seed",
+      "os",
+      "rust_version",
+      "cpu_architecture",
+      "timestamp"
+    ],
+    "additional_for_category_A": [
+      "collapse_epoch",
+      "world_index",
+      "config_diff"
+    ]
+  },
+  "known_weak_points": [
+    "Phase transition zone: P_floor=5 yields 5.8% collapse under s4_full_attack",
+    "Maximal structural violation: s3_all_off contracts population to mean 12.8",
+    "Fitness weight perturbation: only ±20% tested",
+    "Long-horizon drift: max 500 epochs tested per world",
+    "Combinatorial parameter space: sparse coverage of full space"
+  ],
+  "expiration": "none"
+}
