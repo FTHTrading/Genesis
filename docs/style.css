@@ -525,14 +525,26 @@ section:last-of-type::after { display: none; }
   word-break: break-all;
 }
 
-/* ---- Narration block ---- */
+/* ---- Narration block — professional documentary voice ---- */
 .narration {
   position: relative;
   margin: 3rem 0;
-  padding: 2rem 2rem 2rem 3rem;
-  background: linear-gradient(135deg, var(--bg-surface), var(--bg-secondary));
-  border-radius: 6px;
+  padding: 2.5rem 2.5rem 2.5rem 2.5rem;
+  background: linear-gradient(135deg, rgba(45,90,142,0.06), rgba(20,21,29,0.9));
+  border-radius: 8px;
   border-left: 3px solid var(--accent);
+  border-top: 1px solid rgba(45,90,142,0.1);
+}
+
+.narration::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, var(--accent), transparent 60%);
+  opacity: 0.3;
 }
 
 .narration__icon {
@@ -549,32 +561,65 @@ section:last-of-type::after { display: none; }
 
 .narration p {
   font-family: var(--serif);
-  font-size: 1.15rem;
+  font-size: 1.1rem;
   line-height: 2;
   color: var(--text-secondary);
   font-style: italic;
+  letter-spacing: 0.005em;
 }
 
-.narration p + p { margin-top: 0.75rem; }
+.narration p + p { margin-top: 1rem; }
+
+.narration p:first-of-type::first-line {
+  color: var(--text-primary);
+}
 
 .narration .narration__label {
   font-family: var(--mono);
   font-size: 10px;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--text-muted);
+  color: var(--accent-glow);
   font-style: normal;
-  margin-bottom: 1rem;
-  display: block;
+  margin-bottom: 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.narration .narration__label::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: rgba(58,123,200,0.15);
+  margin-left: 0.5rem;
+}
+
+.narration__voice-note {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255,255,255,0.03);
+  font-style: normal;
 }
 
 /* Narration hidden by default, shown via body class */
 .narration[data-audio] {
   display: none;
+  opacity: 0;
+  transform: translateY(20px);
 }
 
 body.narration-on .narration[data-audio] {
   display: block;
+  animation: narrationReveal 0.6s ease forwards;
+}
+
+@keyframes narrationReveal {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 /* ---- Access section — downloads & repo ---- */
@@ -703,6 +748,13 @@ body.narration-on .narration[data-audio] {
 .action-btn svg {
   width: 16px;
   height: 16px;
+  flex-shrink: 0;
+}
+
+/* Force SVG sizing inside all Access section elements */
+#access svg {
+  max-width: 24px;
+  max-height: 24px;
 }
 
 /* Clone command box */

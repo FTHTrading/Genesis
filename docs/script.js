@@ -125,12 +125,11 @@
       // Toggle visual state
       audioToggle.classList.toggle('active', isOn);
 
-      // If turning on, trigger reveal for any narration blocks already in view
+      // Stagger narration block animations for storytelling pacing
       if (isOn) {
-        document.querySelectorAll('.narration[data-audio]').forEach((block) => {
-          if (block.getBoundingClientRect().top < window.innerHeight) {
-            block.classList.add('visible');
-          }
+        const blocks = document.querySelectorAll('.narration[data-audio]');
+        blocks.forEach((block, i) => {
+          block.style.animationDelay = (i * 0.1) + 's';
         });
       }
     });
