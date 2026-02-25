@@ -180,6 +180,12 @@ section:last-of-type::after { display: none; }
 
 .audio-toggle svg { width: 14px; height: 14px; }
 
+.audio-toggle.active {
+  border-color: var(--accent-glow);
+  color: var(--accent-glow);
+  background: rgba(45, 90, 142, 0.15);
+}
+
 /* ============================================================
    HERO SECTION
    ============================================================ */
@@ -562,6 +568,183 @@ section:last-of-type::after { display: none; }
   display: block;
 }
 
+/* Narration hidden by default, shown via body class */
+.narration[data-audio] {
+  display: none;
+}
+
+body.narration-on .narration[data-audio] {
+  display: block;
+}
+
+/* ---- Access section — downloads & repo ---- */
+.access-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  margin: 3rem 0;
+}
+
+.access-card {
+  padding: 2rem;
+  background: var(--bg-surface);
+  border: 1px solid rgba(255,255,255,0.04);
+  border-radius: 6px;
+  transition: border-color 0.25s;
+}
+
+.access-card:hover {
+  border-color: rgba(255,255,255,0.08);
+}
+
+.access-card__icon {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-elevated);
+  border-radius: 8px;
+  margin-bottom: 1.25rem;
+  color: var(--text-secondary);
+}
+
+.access-card__icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.access-card__title {
+  font-family: var(--sans);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+}
+
+.access-card__desc {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin-bottom: 1.5rem;
+}
+
+.access-links {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.access-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--accent-glow);
+  text-decoration: none;
+  padding: 6px 0;
+  transition: color 0.2s;
+}
+
+.access-link:hover {
+  color: var(--text-primary);
+}
+
+.access-link svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+/* Action buttons — fork, star, clone */
+.action-row {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin: 2rem 0;
+}
+
+.action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 10px 20px;
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 500;
+  text-decoration: none;
+  border-radius: 4px;
+  transition: all 0.2s;
+  cursor: pointer;
+  border: none;
+}
+
+.action-btn--primary {
+  background: var(--accent);
+  color: #fff;
+}
+
+.action-btn--primary:hover {
+  background: var(--accent-glow);
+}
+
+.action-btn--secondary {
+  background: var(--bg-elevated);
+  border: 1px solid rgba(255,255,255,0.08);
+  color: var(--text-secondary);
+}
+
+.action-btn--secondary:hover {
+  border-color: var(--accent);
+  color: var(--text-primary);
+}
+
+.action-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* Clone command box */
+.clone-box {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 12px 16px;
+  background: var(--bg-primary);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 4px;
+  margin-top: 1.5rem;
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--text-secondary);
+  overflow-x: auto;
+}
+
+.clone-box code {
+  flex: 1;
+  white-space: nowrap;
+  color: var(--text-primary);
+}
+
+.clone-box button {
+  background: none;
+  border: 1px solid rgba(255,255,255,0.08);
+  color: var(--text-tertiary);
+  padding: 4px 10px;
+  border-radius: 3px;
+  font-family: var(--mono);
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.clone-box button:hover {
+  border-color: var(--accent);
+  color: var(--text-primary);
+}
+
 /* ---- Download archive ---- */
 .download-grid {
   display: grid;
@@ -687,6 +870,8 @@ section:last-of-type::after { display: none; }
   .hero__stats { flex-direction: column; gap: 1.5rem; }
   .metric-grid { grid-template-columns: 1fr 1fr; }
   .download-item { grid-template-columns: 1fr; gap: 0.5rem; }
+  .access-grid { grid-template-columns: 1fr; }
+  .action-row { flex-direction: column; }
 
   .site-nav__links { display: none; }
 

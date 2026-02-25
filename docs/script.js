@@ -111,36 +111,44 @@
 
   // ---- Audio / Narration Toggle ----
   const audioToggle = document.getElementById('audioToggle');
-  const narrationBlocks = document.querySelectorAll('.narration[data-audio]');
-  let narrationVisible = false;
 
   if (audioToggle) {
     audioToggle.addEventListener('click', () => {
-      narrationVisible = !narrationVisible;
-
-      narrationBlocks.forEach((block) => {
-        // Hero block has inline style="display:none" — toggle it
-        if (narrationVisible) {
-          block.style.display = '';
-          // Trigger reveal if already in viewport
-          if (block.getBoundingClientRect().top < window.innerHeight) {
-            block.classList.add('visible');
-          }
-        } else {
-          block.style.display = 'none';
-        }
-      });
+      const isOn = document.body.classList.toggle('narration-on');
 
       // Update button text
       const label = audioToggle.querySelector('span');
       if (label) {
-        label.textContent = narrationVisible ? 'Hide Narration' : 'Narration';
+        label.textContent = isOn ? 'Hide Narration' : 'Narration';
       }
 
       // Toggle visual state
-      audioToggle.classList.toggle('active', narrationVisible);
+      audioToggle.classList.toggle('active', isOn);
+
+      // If turning on, trigger reveal for any narration blocks already in view
+      if (isOn) {
+        document.querySelectorAll('.narration[data-audio]').forEach((block) => {
+          if (block.getBoundingClientRect().top < window.innerHeight) {
+            block.classList.add('visible');
+          }
+        });
+      }
     });
   }
+
+  // ---- Copy to clipboard for clone box ----
+  document.querySelectorAll('.clone-box button').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const code = btn.parentElement.querySelector('code');
+      if (code) {
+        navigator.clipboard.writeText(code.textContent).then(() => {
+          const original = btn.textContent;
+          btn.textContent = 'Copied';
+          setTimeout(() => { btn.textContent = original; }, 2000);
+        });
+      }
+    });
+  });
 
   // ---- Smooth Scroll for Nav Links ----
   document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
