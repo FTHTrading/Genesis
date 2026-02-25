@@ -106,6 +106,9 @@
   //  TEXT-TO-SPEECH NARRATION ENGINE (Web Speech API)
   // ============================================================
 
+  console.log('[Genesis] TTS engine initializing...');
+  console.log('[Genesis] speechSynthesis available:', !!window.speechSynthesis);
+
   const synth = window.speechSynthesis;
   const narrationBlocks = Array.from(document.querySelectorAll('.narration[data-audio]'));
   const audioToggle = document.getElementById('audioToggle');
@@ -146,6 +149,7 @@
 
   // ---- Populate voice selector ----
   function loadVoices() {
+    if (!synth || !npVoice) return;
     voices = synth.getVoices();
     if (!voices.length) return;
 
@@ -198,25 +202,38 @@
     if (synth.onvoiceschanged !== undefined) {
       synth.onvoiceschanged = loadVoices;
     }
+    // Log loaded voices for debugging
+    setTimeout(() => {
+      console.log('[Genesis] Voices loaded:', voices.length, '| Selected:', selectedVoice ? selectedVoice.name : 'NONE');
+      console.log('[Genesis] Player element:', !!player, '| Narration blocks:', narrationBlocks.length);
+    }, 1000);
+  } else {
+    console.warn('[Genesis] speechSynthesis not available in this browser/context');
   }
 
-  npVoice.addEventListener('change', () => {
-    const idx = parseInt(npVoice.value, 10);
-    const voiceList = npVoice._voices || [];
-    if (voiceList[idx]) {
-      selectedVoice = voiceList[idx];
-    }
-  });
+  if (npVoice) {
+    npVoice.addEventListener('change', () => {
+      const idx = parseInt(npVoice.value, 10);
+      const voiceList = npVoice._voices || [];
+      if (voiceList[idx]) {
+        selectedVoice = voiceList[idx];
+      }
+    });
+  }
 
   // ---- Show/hide player bar ----
   function showPlayer() {
-    player.classList.add('visible');
-    document.body.style.paddingBottom = '72px';
+    if (player) {
+      player.classList.add('visible');
+      document.body.style.paddingBottom = '72px';
+    }
   }
 
   function hidePlayer() {
-    player.classList.remove('visible');
-    document.body.style.paddingBottom = '';
+    if (player) {
+      player.classList.remove('visible');
+      document.body.style.paddingBottom = '';
+    }
   }
 
   // ---- Show narration block visually (subtitle) ----
@@ -329,6 +346,7 @@
     };
 
     updatePlayButton();
+    console.log('[Genesis] Speaking block', index, ':', name, '| text length:', text.length);
     synth.speak(currentUtterance);
 
     // Chrome has a bug where long utterances stop after ~15 seconds.
@@ -431,6 +449,18 @@
   // Nav bar narration button opens the player and starts playing
   if (audioToggle) {
     audioToggle.addEventListener('click', () => {
+      console.log('[Genesis] Narration button clicked. Player visible:', player && player.classList.contains('visible'), '| isPlaying:', isPlaying);
+
+      if (!player) {
+        console.error('[Genesis] Player element not found! The narration player HTML may not have loaded.');
+        return;
+      }
+
+      if (!synth) {
+        alert('Text-to-Speech is not supported in this browser. Please open the site in Chrome or Edge.');
+        return;
+      }
+
       if (!player.classList.contains('visible')) {
         showPlayer();
         if (!isPlaying) {
