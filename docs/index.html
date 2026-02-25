@@ -870,6 +870,46 @@
     </div>
   </footer>
 
+  <!-- ============================================================
+       NARRATION PLAYER BAR (fixed bottom)
+       ============================================================ -->
+  <div class="narration-player" id="narrationPlayer">
+    <div class="narration-player__inner">
+      <!-- Transport controls -->
+      <div class="narration-player__transport">
+        <button class="np-btn" id="npPrev" aria-label="Previous section" title="Previous">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
+        </button>
+        <button class="np-btn np-btn--play" id="npPlay" aria-label="Play narration" title="Play">
+          <svg class="np-icon-play" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          <svg class="np-icon-pause" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style="display:none"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+        </button>
+        <button class="np-btn" id="npStop" aria-label="Stop narration" title="Stop">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="1"/></svg>
+        </button>
+        <button class="np-btn" id="npNext" aria-label="Next section" title="Next">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M16 18h2V6h-2zM6 18l8.5-6L6 6z"/></svg>
+        </button>
+      </div>
+
+      <!-- Section indicator -->
+      <div class="narration-player__info">
+        <span class="np-section" id="npSection">Ready</span>
+        <div class="np-progress"><div class="np-progress__bar" id="npProgressBar"></div></div>
+      </div>
+
+      <!-- Voice & speed controls -->
+      <div class="narration-player__controls">
+        <select id="npVoice" class="np-select" aria-label="Voice" title="Select voice"></select>
+        <div class="np-speed">
+          <button class="np-btn np-btn--sm" id="npSlower" title="Slower">−</button>
+          <span class="np-speed__val" id="npSpeedVal">1.0×</span>
+          <button class="np-btn np-btn--sm" id="npFaster" title="Faster">+</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script src="script.js"></script>
 </body>
 </html>
