@@ -147,102 +147,139 @@
     return label ? label.textContent.replace(/🎙\s*/, '').trim() : block.dataset.audio;
   }
 
-  // ---- Populate voice selector (neural/cloud voices ONLY) ----
+  // ---- Populate voice selector (best-available per browser) ----
+  let usingFallbackVoice = false;
+
   function loadVoices() {
     if (!synth || !npVoice) return;
     voices = synth.getVoices();
     if (!voices.length) return;
 
     npVoice.innerHTML = '';
+    usingFallbackVoice = false;
 
-    // Only allow high-quality neural/cloud voices.
-    // Robotic "Desktop" SAPI5 voices are excluded entirely.
-    const qualityPatterns = [
-      /Online/i,                // Microsoft neural voices (e.g. "Microsoft Andrew Online")
-      /^Google/i,               // Google cloud voices
-      /Natural/i,               // "Natural" tagged voices (newer browsers)
-      /^Samantha$/i,            // macOS premium
-      /^Alex$/i,                // macOS premium
-      /^Daniel$/i,              // macOS UK
-      /^Karen$/i,               // macOS AU
-      /^Moira$/i,               // macOS IE
-      /^Tessa$/i                // macOS ZA
+    // ---- Tier 1: Neural / cloud / premium voices ----
+    // These are the voices we WANT visitors to hear.
+    const tier1Patterns = [
+      /Online/i,                // Edge: Microsoft neural (Andrew Online, Jenny Online, etc.)
+      /^Google/i,               // Chrome: Google cloud voices (US English, UK English Male/Female)
+      /Natural/i,               // Newer browsers: "Natural" tagged neural voices
+      /Neural/i,                // Some systems label them "Neural"
     ];
 
-    // Explicit block list — never show these
+    // macOS ships high-quality local voices that sound human.
+    // Match them by name since they don't have "Online"/"Google" tags.
+    const macOSPremium = [
+      'Samantha', 'Alex', 'Daniel', 'Karen', 'Moira', 'Tessa',
+      'Rishi', 'Fiona', 'Oliver', 'Serena', 'Tom'
+    ];
+
+    // ---- Explicit block list (never show even in fallback) ----
     const blockPatterns = [
-      /Desktop/i,               // Old SAPI5 robotic voices
-      /Mobile/i,                // Low-quality mobile variants
-      /Compact/i                // Compact/embedded voices
+      /Compact/i,               // Embedded/tiny voices
+      /eSpeak/i                 // Open-source synth, very robotic
     ];
 
-    function isQualityVoice(v) {
+    function isTier1(v) {
       if (!v.lang.startsWith('en')) return false;
-      const blocked = blockPatterns.some(p => p.test(v.name));
-      if (blocked) return false;
-      const quality = qualityPatterns.some(p => p.test(v.name));
-      // Also accept: non-local (cloud) English voices not on block list
-      return quality || !v.localService;
+      if (blockPatterns.some(p => p.test(v.name))) return false;
+      // Check neural/cloud patterns
+      if (tier1Patterns.some(p => p.test(v.name))) return true;
+      // Check macOS premium names
+      if (macOSPremium.some(n => v.name === n || v.name.startsWith(n + ' '))) return true;
+      // Accept any cloud (non-local) English voice
+      if (!v.localService) return true;
+      return false;
     }
 
-    // Priority order for auto-selection
+    // ---- Tier 2: Tolerable system voices (fallback) ----
+    // Used ONLY when zero Tier 1 voices exist (e.g. Firefox on Windows).
+    // Still English, still functional — just not as smooth.
+    function isTier2(v) {
+      if (!v.lang.startsWith('en')) return false;
+      if (blockPatterns.some(p => p.test(v.name))) return false;
+      return true; // Any English voice not blocked
+    }
+
+    // ---- Priority order: auto-select the best available ----
     const preferredOrder = [
+      // Edge neural (Windows)
       'Microsoft Andrew Online',
       'Microsoft Jenny Online',
       'Microsoft Guy Online',
       'Microsoft Aria Online',
       'Microsoft Christopher Online',
+      'Microsoft Eric Online',
+      'Microsoft Michelle Online',
+      'Microsoft Roger Online',
+      'Microsoft Steffan Online',
+      // Chrome cloud
       'Google US English',
       'Google UK English Male',
-      'Samantha',
-      'Alex',
-      'Daniel'
+      'Google UK English Female',
+      // macOS premium
+      'Samantha', 'Alex', 'Daniel', 'Karen', 'Oliver', 'Serena',
+      // Fallback Windows (better of the SAPI5 set)
+      'Microsoft David',
+      'Microsoft Mark',
+      'Microsoft Zira'
     ];
 
-    const qualityVoices = voices.filter(isQualityVoice);
+    // Build Tier 1 list
+    const tier1Voices = voices.filter(isTier1);
     const sorted = [];
 
-    // Add preferred voices first (in exact priority order)
+    // Add preferred in exact priority order
     preferredOrder.forEach(name => {
-      const found = qualityVoices.find(v => v.name.includes(name));
+      const found = tier1Voices.find(v => v.name.includes(name));
       if (found && !sorted.includes(found)) sorted.push(found);
     });
+    // Add remaining Tier 1
+    tier1Voices.forEach(v => { if (!sorted.includes(v)) sorted.push(v); });
 
-    // Add remaining quality voices
-    qualityVoices.forEach(v => { if (!sorted.includes(v)) sorted.push(v); });
-
-    // If zero quality voices found, fall back to ANY English voice
-    // (better than nothing, but warn user)
+    // ---- Fallback to Tier 2 if no Tier 1 voices found ----
     if (sorted.length === 0) {
-      const anyEnglish = voices.filter(v => v.lang.startsWith('en'));
-      anyEnglish.forEach(v => sorted.push(v));
-      if (sorted.length > 0) {
-        console.warn('[Genesis] No neural voices found. Falling back to standard voices. For best quality, use Microsoft Edge.');
-      }
+      usingFallbackVoice = true;
+      const tier2Voices = voices.filter(isTier2);
+
+      // Sort Tier 2: prefer David > Mark > Zira > others
+      preferredOrder.forEach(name => {
+        const found = tier2Voices.find(v => v.name.includes(name));
+        if (found && !sorted.includes(found)) sorted.push(found);
+      });
+      tier2Voices.forEach(v => { if (!sorted.includes(v)) sorted.push(v); });
+
+      console.warn('[Genesis] No neural voices found. Using best available system voice. For premium quality, open in Microsoft Edge or Google Chrome.');
     }
 
+    // ---- Populate dropdown ----
     sorted.forEach((v, i) => {
       const opt = document.createElement('option');
       opt.value = i;
-      // Clean display names
+      // Clean display names for readability
       let displayName = v.name
         .replace('Microsoft ', '')
+        .replace(' Desktop', '')
         .replace(' (Natural)', '')
         .replace(' - English (United States)', '')
-        .replace(' - English (United Kingdom)', ' UK');
-      if (!v.localService) displayName += ' \u2601'; // cloud icon
+        .replace(' - English (United Kingdom)', ' UK')
+        .replace(' - English (Australia)', ' AU')
+        .replace(' - English (India)', ' IN');
+      if (!v.localService) displayName += ' \u2601'; // cloud icon ☁
       opt.textContent = displayName;
       opt.dataset.voiceName = v.name;
       npVoice.appendChild(opt);
     });
 
-    // Store the sorted quality list for selection
+    // Store for selection changes
     npVoice._voices = sorted;
 
     // Auto-select first (highest priority) voice
     if (sorted.length > 0) {
       selectedVoice = sorted[0];
-      console.log('[Genesis] Auto-selected voice:', selectedVoice.name, '| Total quality voices:', sorted.length);
+      console.log('[Genesis] Auto-selected voice:', selectedVoice.name,
+        '| Quality tier:', usingFallbackVoice ? 'FALLBACK' : 'NEURAL/CLOUD',
+        '| Available:', sorted.length);
     }
   }
 
@@ -276,6 +313,18 @@
     if (player) {
       player.classList.add('visible');
       document.body.style.paddingBottom = '72px';
+
+      // Show browser tip if using fallback (non-neural) voices
+      if (usingFallbackVoice) {
+        let tip = player.querySelector('.np-browser-tip');
+        if (!tip) {
+          tip = document.createElement('div');
+          tip.className = 'np-browser-tip';
+          tip.innerHTML = 'For the best voice quality, open this site in <strong>Microsoft Edge</strong> or <strong>Google Chrome</strong>.';
+          player.appendChild(tip);
+        }
+        tip.style.display = 'block';
+      }
     }
   }
 
