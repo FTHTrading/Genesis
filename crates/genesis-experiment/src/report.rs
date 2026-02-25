@@ -222,6 +222,9 @@ mod tests {
             mutation_rate_override: None,
             cortex_enabled_override: None,
             base_stress_override: None,
+            extinction_floor_override: None,
+            extinction_window_override: None,
+            fitness_weights: None,
             base_seed: 42,
         };
         ExperimentRunner::run(&config)

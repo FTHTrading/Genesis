@@ -226,10 +226,15 @@ impl ExperimentRunner {
         let mut all_stats: Vec<EpochStats> = Vec::with_capacity(config.epochs_per_run as usize);
         let mut collapse_epoch: Option<u64> = None;
         // Season 2: functional extinction detector
-        // Population < 3 for 50 consecutive epochs = functional extinction
-        const EXTINCTION_FLOOR: usize = 3;
-        const EXTINCTION_WINDOW: u64 = 50;
+        // Population < floor for window consecutive epochs = functional extinction
+        let extinction_floor = config.extinction_floor_override.unwrap_or(3);
+        let extinction_window = config.extinction_window_override.unwrap_or(50);
         let mut below_floor_streak: u64 = 0;
+
+        // Apply fitness weight override to selection engine if specified
+        if let Some(weights) = config.fitness_weights {
+            world.selection_engine.fitness_weights = Some(weights);
+        }
 
         for epoch_num in 0..config.epochs_per_run {
             let stats = world.run_epoch();
@@ -242,10 +247,10 @@ impl ExperimentRunner {
             }
 
             // Check for functional extinction (population < floor for N consecutive epochs)
-            if world.agents.len() < EXTINCTION_FLOOR {
+            if world.agents.len() < extinction_floor {
                 below_floor_streak += 1;
-                if below_floor_streak >= EXTINCTION_WINDOW {
-                    collapse_epoch = Some(epoch_num + 1 - EXTINCTION_WINDOW + 1);
+                if below_floor_streak >= extinction_window {
+                    collapse_epoch = Some(epoch_num + 1 - extinction_window + 1);
                     break;
                 }
             } else {
@@ -503,6 +508,9 @@ mod tests {
             mutation_rate_override: None,
             cortex_enabled_override: None,
             base_stress_override: None,
+            extinction_floor_override: None,
+            extinction_window_override: None,
+            fitness_weights: None,
             base_seed: 42,
         };
         let trial = ExperimentRunner::run_trial(&config, 0, 0, 0.00002, 42);
@@ -526,6 +534,9 @@ mod tests {
             mutation_rate_override: None,
             cortex_enabled_override: None,
             base_stress_override: None,
+            extinction_floor_override: None,
+            extinction_window_override: None,
+            fitness_weights: None,
             base_seed: 100,
         };
         let result = ExperimentRunner::run(&config);
@@ -553,6 +564,9 @@ mod tests {
             mutation_rate_override: None,
             cortex_enabled_override: None,
             base_stress_override: None,
+            extinction_floor_override: None,
+            extinction_window_override: None,
+            fitness_weights: None,
             base_seed: 999,
         };
         let result = ExperimentRunner::run(&config);
@@ -599,6 +613,9 @@ mod tests {
             mutation_rate_override: None,
             cortex_enabled_override: None,
             base_stress_override: None,
+            extinction_floor_override: None,
+            extinction_window_override: None,
+            fitness_weights: None,
             base_seed: 42,
         };
         let result = ExperimentRunner::run(&config);

@@ -164,6 +164,11 @@ impl AgentDNA {
         self.traits.fitness()
     }
 
+    /// Fitness with custom weights \[CE, SQ, RF, CC\].
+    pub fn fitness_with_weights(&self, w: &[f64; 4]) -> f64 {
+        self.traits.fitness_with_weights(w)
+    }
+
     /// Serialize to JSON bytes.
     pub fn to_json(&self) -> Result<Vec<u8>, DnaError> {
         serde_json::to_vec_pretty(self).map_err(|e| DnaError::Serialization(e.to_string()))

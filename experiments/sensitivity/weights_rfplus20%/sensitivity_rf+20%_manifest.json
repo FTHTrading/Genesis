@@ -1,0 +1,82 @@
+{
+  "manifest_id": "GEN-EXP-D9B8546ED25D",
+  "config": {
+    "name": "S4 Full Attack [RF+20%]",
+    "hypothesis": "The most aggressive experiment in the entire protocol: zero regeneration + death drains resources + all four S3 safety mechanisms OFF + 10× replication cost (250 ATP). Energy cannot enter, death destroys pools, reproduction is nearly impossible, and no safety net exists. If the system still survives, the only explanation is that the primordial grant creates enough initial momentum to reach a stable state before depletion — which would be extraordinary.",
+    "sweep": {
+      "variable": "SoftCap",
+      "start": 30.0,
+      "end": 180.0,
+      "step": 30.0
+    },
+    "runs_per_step": 20,
+    "epochs_per_run": 500,
+    "metrics": [
+      "FinalPopulation",
+      "Collapsed",
+      "SurvivalEpochs",
+      "MeanPopulation",
+      "MinPopulation",
+      "MeanFitness",
+      "GiniCoefficient",
+      "TotalBirths",
+      "TotalDeaths",
+      "TreasuryRatio",
+      "MaxTreasuryReserve",
+      "BirthDeathRatio",
+      "AtpVariance",
+      "WealthConcentrationIndex",
+      "MedianMeanAtpDivergence",
+      "MeanGiniCoefficient",
+      "MaxGiniCoefficient",
+      "ReproductiveInequalityIndex",
+      "SurvivalInequalityIndex",
+      "TopDecilePersistence"
+    ],
+    "base_preset": "EarthPrime",
+    "base_pressure_override": {
+      "soft_cap": 180,
+      "entropy_coeff": 0.0001,
+      "catastrophe_base_prob": 0.03,
+      "catastrophe_pop_scale": 0.00001,
+      "gini_wealth_tax_threshold": 1.0,
+      "gini_wealth_tax_rate": 0.0,
+      "treasury_overflow_threshold": 1.0
+    },
+    "mutation_rate_override": 0.0,
+    "cortex_enabled_override": false,
+    "base_stress_override": {
+      "skim_rate_multiplier": 1.0,
+      "replication_cost_multiplier": 10.0,
+      "basal_cost_multiplier": 1.0,
+      "catastrophe_cluster_bias": 0.0,
+      "mutation_volatility_multiplier": 1.0,
+      "treasury_lock_probability": 0.0,
+      "treasury_cycling_enabled": false,
+      "atp_decay_enabled": false,
+      "reproduction_grants_enabled": false,
+      "extinction_floor_enabled": false,
+      "resource_regeneration_enabled": false,
+      "death_drains_resources": true
+    },
+    "fitness_weights": [
+      0.24038461538461536,
+      0.28846153846153844,
+      0.23076923076923075,
+      0.24038461538461536
+    ],
+    "base_seed": 42
+  },
+  "created_at": "2026-02-25T04:14:02.033441100Z",
+  "result_hash": "f23ed5f865e29a98da41667e3fddb5aba9a97a177e85d38d2ee7a09673daf9de",
+  "manifest_hash": "fd9795ce7caec7ea56f873b8c2bbac4ae813ea1f8c66a7e08acf8b9645e29d66",
+  "total_worlds": 120,
+  "total_epochs": 60000,
+  "duration_ms": 1065,
+  "findings": [
+    "Fitness weight perturbation: RF+20%",
+    "Weights: [0.2404, 0.2885, 0.2308, 0.2404]",
+    "Collapse rate: 0/120 (0.0%)"
+  ],
+  "protocol_version": "0.1.0"
+}

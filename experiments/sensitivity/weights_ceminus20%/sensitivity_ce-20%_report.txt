@@ -1,0 +1,38 @@
+╔══════════════════════════════════════════════════════════╗
+║  Genesis Experiment: S4 Full Attack [CE-20%]             ║
+╚══════════════════════════════════════════════════════════╝
+
+Hypothesis: The most aggressive experiment in the entire protocol: zero regeneration + death drains resources + all four S3 safety mechanisms OFF + 10× replication cost (250 ATP). Energy cannot enter, death destroys pools, reproduction is nearly impossible, and no safety net exists. If the system still survives, the only explanation is that the primordial grant creates enough initial momentum to reach a stable state before depletion — which would be extraordinary.
+
+── Protocol ──
+  Variable:      soft_cap
+  Range:         30.000000 → 180.000000 (step 30.000000)
+  Runs/step:     20
+  Epochs/run:    500
+  Base preset:   EarthPrime
+  Base seed:     42
+  Total worlds:  120
+  Total epochs:  60000
+  Duration:      1017ms
+
+── Results ──
+
+param_value  collapse_%   final_population     collapsed            survival_epochs      mean_population      min_population       mean_fitness         gini_coefficient     total_births         total_deaths         treasury_ratio       max_treasury_reserve birth_death_ratio    atp_variance         wealth_concentration_index median_mean_atp_divergence mean_gini_coefficient max_gini_coefficient reproductive_inequality_index survival_inequality_index top_decile_persistence
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+30.000000    0.0          7.55     ± 1.79     0.00     ± 0.00     500.00   ± 0.00     12.68    ± 0.82     5.35     ± 1.46     0.52     ± 0.05     0.55     ± 0.13     13.25    ± 2.29     25.70    ± 2.43     0.57     ± 0.07     746.02   ± 208.78   1.42     ± 0.49     7913.10  ± 7649.51  0.41     ± 0.13     0.47     ± 0.41     0.47     ± 0.07     0.78     ± 0.04     0.94     ± 0.16     0.88     ± 0.02     0.19     ± 0.18    
+60.000000    0.0          8.15     ± 1.57     0.00     ± 0.00     500.00   ± 0.00     12.96    ± 0.72     5.80     ± 1.11     0.52     ± 0.05     0.57     ± 0.15     12.45    ± 2.28     24.30    ± 2.98     0.55     ± 0.09     732.13   ± 112.10   1.56     ± 0.65     7127.97  ± 3752.33  0.41     ± 0.13     0.45     ± 0.46     0.47     ± 0.06     0.77     ± 0.04     0.99     ± 0.03     0.87     ± 0.03     0.15     ± 0.08    
+90.000000    0.0          7.20     ± 1.85     0.00     ± 0.00     500.00   ± 0.00     12.57    ± 0.98     5.05     ± 1.39     0.53     ± 0.06     0.52     ± 0.15     12.70    ± 2.36     25.50    ± 3.32     0.55     ± 0.07     792.03   ± 251.25   1.65     ± 0.65     7892.52  ± 2963.81  0.40     ± 0.11     0.23     ± 0.45     0.45     ± 0.06     0.77     ± 0.04     0.90     ± 0.16     0.88     ± 0.02     0.17     ± 0.14    
+120.000000   0.0          8.35     ± 1.35     0.00     ± 0.00     500.00   ± 0.00     12.99    ± 0.58     5.70     ± 1.22     0.53     ± 0.05     0.59     ± 0.09     12.90    ± 2.22     24.55    ± 2.35     0.55     ± 0.08     747.58   ± 179.95   1.61     ± 0.70     7665.57  ± 5419.92  0.39     ± 0.15     0.48     ± 0.46     0.49     ± 0.06     0.78     ± 0.04     0.97     ± 0.05     0.88     ± 0.01     0.18     ± 0.16    
+150.000000   0.0          7.65     ± 1.87     0.00     ± 0.00     500.00   ± 0.00     12.56    ± 0.85     5.00     ± 1.21     0.52     ± 0.04     0.54     ± 0.14     12.10    ± 1.92     24.45    ± 2.58     0.59     ± 0.09     821.72   ± 226.36   1.78     ± 0.84     7690.14  ± 8105.98  0.39     ± 0.16     0.33     ± 0.43     0.46     ± 0.06     0.78     ± 0.04     0.94     ± 0.15     0.87     ± 0.02     0.19     ± 0.18    
+180.000000   0.0          8.05     ± 1.85     0.00     ± 0.00     500.00   ± 0.00     12.87    ± 0.91     5.55     ± 1.32     0.51     ± 0.04     0.60     ± 0.15     13.85    ± 2.03     25.80    ± 3.53     0.60     ± 0.07     714.35   ± 128.00   1.65     ± 0.98     5340.74  ± 2980.86  0.45     ± 0.14     0.56     ± 0.45     0.49     ± 0.05     0.79     ± 0.04     0.95     ± 0.09     0.87     ± 0.04     0.21     ± 0.15    
+
+── Findings ──
+
+  1. Fitness weight perturbation: CE-20%
+  2. Weights: [0.2105, 0.3158, 0.2105, 0.2632]
+  3. Collapse rate: 0/120 (0.0%)
+
+── Verification ──
+
+  Result hash:   552ca37fe4b657b05f495812469ca834d466cad7354a5d72cb0abd7eb64f6f42
+

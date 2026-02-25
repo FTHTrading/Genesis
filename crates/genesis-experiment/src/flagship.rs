@@ -63,6 +63,9 @@ impl FlagshipExperiments {
             mutation_rate_override: None,
             cortex_enabled_override: None,
             base_stress_override: None,
+            extinction_floor_override: None,
+            extinction_window_override: None,
+            fitness_weights: None,
             base_seed: 20260222, // Date seed: Feb 22, 2026
         }
     }
@@ -104,6 +107,9 @@ impl FlagshipExperiments {
             mutation_rate_override: None,
             cortex_enabled_override: None,
             base_stress_override: None,
+            extinction_floor_override: None,
+            extinction_window_override: None,
+            fitness_weights: None,
             base_seed: 20260222,
         }
     }
@@ -148,6 +154,9 @@ impl FlagshipExperiments {
             mutation_rate_override: None,
             cortex_enabled_override: None,
             base_stress_override: None,
+            extinction_floor_override: None,
+            extinction_window_override: None,
+            fitness_weights: None,
             base_seed: 20260222,
         }
     }
@@ -194,6 +203,9 @@ impl FlagshipExperiments {
             mutation_rate_override: None,
             cortex_enabled_override: None,
             base_stress_override: None,
+            extinction_floor_override: None,
+            extinction_window_override: None,
+            fitness_weights: None,
             base_seed: 20260222,
         }
     }
@@ -308,6 +320,9 @@ impl FlagshipExperiments {
             mutation_rate_override: None,
             cortex_enabled_override: None,
             base_stress_override: None,
+            extinction_floor_override: None,
+            extinction_window_override: None,
+            fitness_weights: None,
             base_seed: 20260222,
         }
     }
@@ -422,6 +437,9 @@ impl FlagshipExperiments {
             mutation_rate_override: None,
             cortex_enabled_override: None,
             base_stress_override: None,
+            extinction_floor_override: None,
+            extinction_window_override: None,
+            fitness_weights: None,
             base_seed: 20260222,
         }
     }
@@ -486,6 +504,9 @@ impl FlagshipExperiments {
             mutation_rate_override: Some(0.0), // THE KEY: no mutation allowed
             cortex_enabled_override: None,
             base_stress_override: None,
+            extinction_floor_override: None,
+            extinction_window_override: None,
+            fitness_weights: None,
             base_seed: 20260222,
         }
     }
@@ -591,6 +612,9 @@ impl FlagshipExperiments {
             mutation_rate_override: mutation_rate,
             cortex_enabled_override: cortex_enabled,
             base_stress_override: None,
+            extinction_floor_override: None,
+            extinction_window_override: None,
+            fitness_weights: None,
             base_seed: 20260223, // Week 3 seed
         }
     }
@@ -815,6 +839,9 @@ impl FlagshipExperiments {
             mutation_rate_override: Some(0.0),        // No adaptation
             cortex_enabled_override: Some(false),     // No immune self-regulation
             base_stress_override: None,
+            extinction_floor_override: None,
+            extinction_window_override: None,
+            fitness_weights: None,
             base_seed: 20260222,
         }
     }
@@ -905,6 +932,9 @@ impl FlagshipExperiments {
             mutation_rate_override: Some(0.0),        // No adaptation
             cortex_enabled_override: Some(false),     // No immune self-regulation
             base_stress_override: None,               // StressConfig built from sweep variable
+            extinction_floor_override: None,
+            extinction_window_override: None,
+            fitness_weights: None,
             base_seed: 20260223,                      // New seed for this experiment
         }
     }
@@ -980,6 +1010,9 @@ impl FlagshipExperiments {
             mutation_rate_override: Some(0.0),
             cortex_enabled_override: Some(false),
             base_stress_override: None,
+            extinction_floor_override: None,
+            extinction_window_override: None,
+            fitness_weights: None,
             base_seed: 20260224, // Week 4 seed
         }
     }
@@ -1058,6 +1091,9 @@ impl FlagshipExperiments {
             mutation_rate_override: Some(0.0),
             cortex_enabled_override: Some(false),
             base_stress_override: Some(base_stress), // 3x replication cost baked in
+            extinction_floor_override: None,
+            extinction_window_override: None,
+            fitness_weights: None,
             base_seed: 20260224,
         }
     }
@@ -1144,6 +1180,9 @@ impl FlagshipExperiments {
             mutation_rate_override: None,
             cortex_enabled_override: None,
             base_stress_override: Some(treasury_disabled),
+            extinction_floor_override: None,
+            extinction_window_override: None,
+            fitness_weights: None,
             base_seed: 20260223,
         }
     }
@@ -1219,6 +1258,9 @@ impl FlagshipExperiments {
             mutation_rate_override: Some(0.0),
             cortex_enabled_override: Some(false),
             base_stress_override: Some(treasury_disabled),
+            extinction_floor_override: None,
+            extinction_window_override: None,
+            fitness_weights: None,
             base_seed: 20260223,
         }
     }
@@ -1295,6 +1337,9 @@ impl FlagshipExperiments {
             mutation_rate_override: None,
             cortex_enabled_override: None,
             base_stress_override: Some(decay_disabled),
+            extinction_floor_override: None,
+            extinction_window_override: None,
+            fitness_weights: None,
             base_seed: 42,
         }
     }
@@ -1373,6 +1418,9 @@ impl FlagshipExperiments {
             mutation_rate_override: Some(0.0),
             cortex_enabled_override: Some(false),
             base_stress_override: Some(decay_disabled),
+            extinction_floor_override: None,
+            extinction_window_override: None,
+            fitness_weights: None,
             base_seed: 42,
         }
     }
@@ -1512,6 +1560,9 @@ impl FlagshipExperiments {
                 treasury_cycling_enabled: false,
                 ..StressConfig::default()
             }),
+            extinction_floor_override: None,
+            extinction_window_override: None,
+            fitness_weights: None,
             base_seed: 42,
         }
     }
@@ -1555,6 +1606,9 @@ impl FlagshipExperiments {
                 reproduction_grants_enabled: false,
                 ..StressConfig::default()
             }),
+            extinction_floor_override: None,
+            extinction_window_override: None,
+            fitness_weights: None,
             base_seed: 42,
         }
     }
@@ -1601,6 +1655,9 @@ impl FlagshipExperiments {
                 extinction_floor_enabled: false,
                 ..StressConfig::default()
             }),
+            extinction_floor_override: None,
+            extinction_window_override: None,
+            fitness_weights: None,
             base_seed: 42,
         }
     }
@@ -1646,6 +1703,9 @@ impl FlagshipExperiments {
                 extinction_floor_enabled: false,
                 ..StressConfig::default()
             }),
+            extinction_floor_override: None,
+            extinction_window_override: None,
+            fitness_weights: None,
             base_seed: 42,
         }
     }
@@ -1746,6 +1806,9 @@ impl FlagshipExperiments {
                 resource_regeneration_enabled: false,
                 ..StressConfig::default()
             }),
+            extinction_floor_override: None,
+            extinction_window_override: None,
+            fitness_weights: None,
             base_seed: 42,
         }
     }
@@ -1788,6 +1851,9 @@ impl FlagshipExperiments {
                 death_drains_resources: true,
                 ..StressConfig::default()
             }),
+            extinction_floor_override: None,
+            extinction_window_override: None,
+            fitness_weights: None,
             base_seed: 42,
         }
     }
@@ -1828,6 +1894,9 @@ impl FlagshipExperiments {
                 death_drains_resources: true,
                 ..StressConfig::default()
             }),
+            extinction_floor_override: None,
+            extinction_window_override: None,
+            fitness_weights: None,
             base_seed: 42,
         }
     }
@@ -1877,6 +1946,9 @@ impl FlagshipExperiments {
                 replication_cost_multiplier: 10.0,
                 ..StressConfig::default()
             }),
+            extinction_floor_override: None,
+            extinction_window_override: None,
+            fitness_weights: None,
             base_seed: 42,
         }
     }
@@ -1918,6 +1990,9 @@ impl FlagshipExperiments {
                 death_drains_resources: true,
                 ..StressConfig::default()
             }),
+            extinction_floor_override: None,
+            extinction_window_override: None,
+            fitness_weights: None,
             base_seed: 42,
         }
     }

@@ -38,6 +38,10 @@ pub struct SelectionEngine {
     pub max_stasis_cycles: u32,
     /// Per-agent stasis cycle counters.
     stasis_counters: std::collections::HashMap<uuid::Uuid, u32>,
+    /// Optional custom fitness weights [CE, SQ, RF, CC].
+    /// When set, overrides the default weights for selection decisions.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub fitness_weights: Option<[f64; 4]>,
 }
 
 impl SelectionEngine {
@@ -46,6 +50,7 @@ impl SelectionEngine {
             replication_threshold: REPLICATION_FITNESS_THRESHOLD,
             max_stasis_cycles: 8,
             stasis_counters: std::collections::HashMap::new(),
+            fitness_weights: None,
         }
     }
 
@@ -74,7 +79,10 @@ impl SelectionEngine {
         let mut fitness_list: Vec<(uuid::Uuid, f64)> = Vec::with_capacity(population.len());
 
         for (dna, _atp_balance, is_in_stasis) in population {
-            let fitness = dna.fitness();
+            let fitness = match &self.fitness_weights {
+                Some(w) => dna.fitness_with_weights(w),
+                None => dna.fitness(),
+            };
             fitness_sum += fitness;
             fitness_list.push((dna.id, fitness));
 
@@ -128,7 +136,10 @@ impl SelectionEngine {
 
     /// Check if an agent is eligible for replication.
     pub fn can_replicate(&self, dna: &AgentDNA, atp_balance: f64) -> Result<(), EvolutionError> {
-        let fitness = dna.fitness();
+        let fitness = match &self.fitness_weights {
+            Some(w) => dna.fitness_with_weights(w),
+            None => dna.fitness(),
+        };
         if fitness < self.replication_threshold {
             return Err(EvolutionError::IneligibleForReplication {
                 fitness,

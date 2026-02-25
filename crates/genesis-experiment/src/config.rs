@@ -304,6 +304,18 @@ pub struct ExperimentConfig {
     /// the relevant field is overridden on top of this base config.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub base_stress_override: Option<StressConfig>,
+    /// Optional: override the extinction floor for functional-extinction detection.
+    /// Default is 3 (population < 3 for EXTINCTION_WINDOW consecutive epochs = collapse).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub extinction_floor_override: Option<usize>,
+    /// Optional: override the extinction window (consecutive epochs below floor).
+    /// Default is 50.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub extinction_window_override: Option<u64>,
+    /// Optional: custom fitness weights [CE, SQ, RF, CC] for selection decisions.
+    /// Default weights are [0.25, 0.30, 0.20, 0.25]. Weights are used as-is.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub fitness_weights: Option<[f64; 4]>,
     /// Base seed for reproducibility (trial i at step j uses seed = base_seed + j * 1000 + i).
     pub base_seed: u64,
 }
@@ -382,6 +394,9 @@ mod tests {
             mutation_rate_override: None,
             cortex_enabled_override: None,
             base_stress_override: None,
+            extinction_floor_override: None,
+            extinction_window_override: None,
+            fitness_weights: None,
             base_seed: 42,
         };
         // 3 steps × 10 runs = 30 worlds
@@ -403,6 +418,9 @@ mod tests {
             mutation_rate_override: None,
             cortex_enabled_override: None,
             base_stress_override: None,
+            extinction_floor_override: None,
+            extinction_window_override: None,
+            fitness_weights: None,
             base_seed: 1000,
         };
         let mut seeds = std::collections::HashSet::new();
@@ -429,6 +447,9 @@ mod tests {
             mutation_rate_override: None,
             cortex_enabled_override: None,
             base_stress_override: None,
+            extinction_floor_override: None,
+            extinction_window_override: None,
+            fitness_weights: None,
             base_seed: 42,
         };
         let label = config.label();

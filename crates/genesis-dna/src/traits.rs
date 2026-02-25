@@ -138,6 +138,15 @@ impl TraitVector {
             + self.replication_fidelity.value() * 0.20
             + self.cooperation_coefficient.value() * 0.25
     }
+
+    /// Compute fitness with custom weights \[CE, SQ, RF, CC\].
+    /// Weights are used as-is (caller is responsible for normalization).
+    pub fn fitness_with_weights(&self, w: &[f64; 4]) -> f64 {
+        self.compute_efficiency.value() * w[0]
+            + self.solution_quality.value() * w[1]
+            + self.replication_fidelity.value() * w[2]
+            + self.cooperation_coefficient.value() * w[3]
+    }
 }
 
 /// Energy metabolism profile — determines ATP generation and consumption rates.
