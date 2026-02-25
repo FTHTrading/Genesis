@@ -106,7 +106,7 @@ If you disagree with the current definition, propose your alternative and re-run
 To verify collapse detection:
 
 ```bash
-git clone https://github.com/FTHTrading/AI.git
+git clone https://github.com/FTHTrading/Genesis.git
 cd AI
 cargo test --release -p genesis-experiment
 ```

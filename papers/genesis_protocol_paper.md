@@ -253,7 +253,11 @@ The collapse rate is sharply sensitive to the choice of $P_{\text{floor}}$. Sens
 | 15 | 100.0% | 120 / 120 | [97.0%, 100%] |
 | 20 | 100.0% | 120 / 120 | [97.0%, 100%] |
 
-Under the default definition ($P_{\text{floor}} = 3$), zero collapses are observed (95% CI upper bound: 3.0%). Under a modestly stricter definition ($P_{\text{floor}} = 5$), 5.8% of worlds collapse (CI: [2.4%, 11.6%]). Under $P_{\text{floor}} = 10$, near-universal collapse occurs (97.5%, CI: [92.9%, 99.5%]). This indicates that populations under maximal stress stabilize in the range of 3–8 agents: above the default floor but well below the initial soft cap. The collapse boundary, with respect to definition choice, lies between $P_{\text{floor}} = 5$ and $P_{\text{floor}} = 10$ for this configuration. The zero-collapse headline result is therefore contingent on the permissive default definition.
+Under the default definition ($P_{\text{floor}} = 3$), zero collapses are observed (95% CI upper bound: 3.0%). Under a modestly stricter definition ($P_{\text{floor}} = 5$), 5.8% of worlds collapse (CI: [2.4%, 11.6%]). Under $P_{\text{floor}} = 10$, near-universal collapse occurs (97.5%, CI: [92.9%, 99.5%]).
+
+The transition from 5.8% to 97.5% collapse — a jump of 91.7 percentage points over a factor-of-two change in $P_{\text{floor}}$ — constitutes a **discontinuous collapse phase transition** in the definition parameter. This is not a smooth degradation: the system's equilibrium population under maximal stress is narrowly concentrated in the range of 3–8 agents, producing a cliff in the collapse function at the boundary where the definition threshold crosses this equilibrium band. Populations under stress do not gradually thin; they compress to a narrow survival band and either persist (if the floor is below the band) or universally collapse (if the floor is above it). Figure 1 illustrates this transition.
+
+The collapse boundary, with respect to definition choice, lies between $P_{\text{floor}} = 5$ and $P_{\text{floor}} = 10$ for the s4_full_attack configuration. The zero-collapse headline result is therefore contingent on the permissive default definition.
 
 ### 3.2 Alternative Definitions Considered
 
@@ -360,6 +364,26 @@ All Season 2 experiments: soft cap sweep 30–180, 20 runs/step, base seed 42.
 | **Total** | **38** | **5,680** | **0 / 5,680 (0.00%)** | **[0, 0.065%]** |
 
 No world-run triggered either collapse condition ($|P(t)| = 0$ or $|P(t)| < 3$ for 50 consecutive epochs) under the default definition. By the rule of three, the true collapse probability is at most 0.053% at 95% confidence. Statistical power exceeds 99.7% — at $N = 5{,}680$, even a true collapse rate of 0.1% would produce at least one observed collapse with probability > 0.997. Under stricter definitions, collapse rates increase sharply (Section 3.1). Complete statistical methodology is detailed in the Statistical Validation Report (Appendix E).
+
+#### 6.1.1 Null Hypothesis Test
+
+We test the null hypothesis:
+
+> $H_0$: The true collapse probability under the default definition is $p > 0$.
+
+Given $k = 0$ collapses in $N = 5{,}680$ independent trials, the Clopper-Pearson exact 95% confidence interval for the true collapse probability $p$ is:
+
+$$p \in [0,\; 1 - \alpha^{1/N}] = [0,\; 1 - 0.05^{1/5680}] = [0,\; 0.000528]$$
+
+Equivalently, by the rule of three: $p < 3/N = 3/5{,}680 = 0.000528$. The upper bound is 0.053%.
+
+The probability of observing $k = 0$ collapses if the true rate were $p = 0.001$ (0.1%) is:
+
+$$P(k = 0 \mid p = 0.001, N = 5{,}680) = (1 - 0.001)^{5680} = 0.999^{5680} \approx 0.0034$$
+
+Statistical power to detect $p = 0.001$ is therefore $1 - 0.0034 = 0.9966 > 99.6\%$. The experiment has sufficient power to detect even very low collapse rates. The observed zero-count result is therefore informative: if the true rate were 0.1% or higher, we would almost certainly have seen at least one collapse.
+
+This does not prove $p = 0$. It constrains: $p < 0.053\%$ at 95% confidence.
 
 ### 6.2 Season 1 Summary
 

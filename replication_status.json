@@ -2,7 +2,7 @@
     "schema_version":  "1.0.0",
     "protocol":  "Genesis Protocol Replication Leaderboard",
     "last_updated":  "2026-02-25T03:00:00Z",
-    "canonical_source":  "https://github.com/FTHTrading/AI",
+    "canonical_source":  "https://github.com/FTHTrading/Genesis",
     "doi":  "10.5281/zenodo.18646886",
     "collapse_definition":  {
                                 "population_zero":  "Population reaches 0 at any epoch",

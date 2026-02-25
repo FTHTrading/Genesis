@@ -18,7 +18,7 @@ Every result is reproducible. Every hash is verifiable. No one has independently
 
 ```bash
 # Clone
-git clone https://github.com/FTHTrading/AI.git
+git clone https://github.com/FTHTrading/Genesis.git
 cd AI
 
 # Build
@@ -113,7 +113,7 @@ After running the experiments:
 1. Run `./verify_replication.ps1 -Submit -Username "your_handle"`
 2. This generates a `replication_submission_<username>_<date>.json`
 3. Submit via:
-   - **GitHub Issue** on [FTHTrading/AI](https://github.com/FTHTrading/AI/issues) with the JSON attached
+   - **GitHub Issue** on [FTHTrading/Genesis](https://github.com/FTHTrading/Genesis/issues) with the JSON attached
    - **Moltbook comment** on the [Replication Challenge post](https://www.moltbook.com/post/1d61f6e6)
 4. Your entry will be added to the leaderboard after verification
 
@@ -180,4 +180,4 @@ Platforms tested: 0
 - Adversarial Blueprint: [COLLAPSE_HUNTER.md](COLLAPSE_HUNTER.md)
 - Hash Registry: [replication_status.json](replication_status.json)
 - Verification Tool: [verify_replication.ps1](verify_replication.ps1)
-- Source: [github.com/FTHTrading/AI](https://github.com/FTHTrading/AI)
+- Source: [github.com/FTHTrading/Genesis](https://github.com/FTHTrading/Genesis)

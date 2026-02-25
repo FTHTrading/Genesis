@@ -6,7 +6,7 @@ ORCID: 0009-0008-8425-939X
 February 2026
 
 DOI: 10.5281/zenodo.18646886
-Source: https://github.com/FTHTrading/AI
+Source: https://github.com/FTHTrading/Genesis
 
 ---
 
@@ -853,7 +853,7 @@ All experiments are fully reproducible from source:
 
 ```bash
 # Clone
-git clone https://github.com/FTHTrading/AI.git
+git clone https://github.com/FTHTrading/Genesis.git
 cd AI
 
 # Run all 67 experiment tests
