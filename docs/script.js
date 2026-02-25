@@ -147,7 +147,7 @@
     return label ? label.textContent.replace(/🎙\s*/, '').trim() : block.dataset.audio;
   }
 
-  // ---- Populate voice selector ----
+  // ---- Populate voice selector (neural/cloud voices ONLY) ----
   function loadVoices() {
     if (!synth || !npVoice) return;
     voices = synth.getVoices();
@@ -155,44 +155,94 @@
 
     npVoice.innerHTML = '';
 
-    // Preferred voices (high quality), in priority order
-    const preferred = [
-      'Microsoft Andrew Online',  // Windows neural
-      'Microsoft Guy Online',
-      'Microsoft David',
-      'Google US English',
-      'Google UK English Male',
-      'Alex',                     // macOS
-      'Daniel'                    // macOS UK male
+    // Only allow high-quality neural/cloud voices.
+    // Robotic "Desktop" SAPI5 voices are excluded entirely.
+    const qualityPatterns = [
+      /Online/i,                // Microsoft neural voices (e.g. "Microsoft Andrew Online")
+      /^Google/i,               // Google cloud voices
+      /Natural/i,               // "Natural" tagged voices (newer browsers)
+      /^Samantha$/i,            // macOS premium
+      /^Alex$/i,                // macOS premium
+      /^Daniel$/i,              // macOS UK
+      /^Karen$/i,               // macOS AU
+      /^Moira$/i,               // macOS IE
+      /^Tessa$/i                // macOS ZA
     ];
 
-    // Sort: preferred first, then English voices, then rest
-    const english = voices.filter(v => v.lang.startsWith('en'));
+    // Explicit block list — never show these
+    const blockPatterns = [
+      /Desktop/i,               // Old SAPI5 robotic voices
+      /Mobile/i,                // Low-quality mobile variants
+      /Compact/i                // Compact/embedded voices
+    ];
+
+    function isQualityVoice(v) {
+      if (!v.lang.startsWith('en')) return false;
+      const blocked = blockPatterns.some(p => p.test(v.name));
+      if (blocked) return false;
+      const quality = qualityPatterns.some(p => p.test(v.name));
+      // Also accept: non-local (cloud) English voices not on block list
+      return quality || !v.localService;
+    }
+
+    // Priority order for auto-selection
+    const preferredOrder = [
+      'Microsoft Andrew Online',
+      'Microsoft Jenny Online',
+      'Microsoft Guy Online',
+      'Microsoft Aria Online',
+      'Microsoft Christopher Online',
+      'Google US English',
+      'Google UK English Male',
+      'Samantha',
+      'Alex',
+      'Daniel'
+    ];
+
+    const qualityVoices = voices.filter(isQualityVoice);
     const sorted = [];
 
-    // Add preferred voices first (if available)
-    preferred.forEach(name => {
-      const found = english.find(v => v.name.includes(name));
+    // Add preferred voices first (in exact priority order)
+    preferredOrder.forEach(name => {
+      const found = qualityVoices.find(v => v.name.includes(name));
       if (found && !sorted.includes(found)) sorted.push(found);
     });
 
-    // Add remaining English voices
-    english.forEach(v => { if (!sorted.includes(v)) sorted.push(v); });
+    // Add remaining quality voices
+    qualityVoices.forEach(v => { if (!sorted.includes(v)) sorted.push(v); });
+
+    // If zero quality voices found, fall back to ANY English voice
+    // (better than nothing, but warn user)
+    if (sorted.length === 0) {
+      const anyEnglish = voices.filter(v => v.lang.startsWith('en'));
+      anyEnglish.forEach(v => sorted.push(v));
+      if (sorted.length > 0) {
+        console.warn('[Genesis] No neural voices found. Falling back to standard voices. For best quality, use Microsoft Edge.');
+      }
+    }
 
     sorted.forEach((v, i) => {
       const opt = document.createElement('option');
       opt.value = i;
-      opt.textContent = v.name.replace('Microsoft ', 'MS ') + (v.localService ? '' : ' ☁');
+      // Clean display names
+      let displayName = v.name
+        .replace('Microsoft ', '')
+        .replace(' (Natural)', '')
+        .replace(' - English (United States)', '')
+        .replace(' - English (United Kingdom)', ' UK');
+      if (!v.localService) displayName += ' \u2601'; // cloud icon
+      opt.textContent = displayName;
       opt.dataset.voiceName = v.name;
       npVoice.appendChild(opt);
     });
 
-    // Store the sorted English list for selection
+    // Store the sorted quality list for selection
     npVoice._voices = sorted;
 
-    // Select first (best) voice
+    // Auto-select first (highest priority) voice
     if (sorted.length > 0) {
       selectedVoice = sorted[0];
+      console.log('[Genesis] Auto-selected voice:', selectedVoice.name, '| Total quality voices:', sorted.length);
     }
   }
 
