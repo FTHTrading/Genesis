@@ -605,27 +605,15 @@ section:last-of-type::after { display: none; }
   font-style: normal;
 }
 
-/* Narration hidden by default, shown via body class */
+/* Narration hidden by default — JS handles show/hide with inline styles */
 .narration[data-audio] {
   display: none;
-  opacity: 0;
-  transform: translateY(20px);
-}
-
-body.narration-on .narration[data-audio] {
-  display: block;
-  animation: narrationReveal 0.6s ease forwards;
-}
-
-@keyframes narrationReveal {
-  from { opacity: 0; transform: translateY(20px); }
-  to   { opacity: 1; transform: translateY(0); }
 }
 
 /* ---- Access section — downloads & repo ---- */
 .access-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
   gap: 2rem;
   margin: 3rem 0;
 }
@@ -795,6 +783,52 @@ body.narration-on .narration[data-audio] {
 .clone-box button:hover {
   border-color: var(--accent);
   color: var(--text-primary);
+}
+
+/* ---- Fork Value Proposition ---- */
+.fork-value {
+  margin: 2.5rem 0;
+  padding: 2rem 2rem 2rem 2rem;
+  background: linear-gradient(135deg, rgba(45,90,142,0.04), rgba(20,21,29,0.8));
+  border: 1px solid rgba(255,255,255,0.04);
+  border-radius: 8px;
+}
+
+.fork-value__title {
+  font-family: var(--sans);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 1.5rem;
+  letter-spacing: 0.01em;
+}
+
+.fork-value__grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+.fork-value__item strong {
+  display: block;
+  font-family: var(--sans);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent-glow);
+  margin-bottom: 0.4rem;
+}
+
+.fork-value__item p {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.65;
+  margin: 0;
+}
+
+@media (max-width: 600px) {
+  .fork-value__grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* ---- Download archive ---- */

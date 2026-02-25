@@ -110,26 +110,50 @@
   window.addEventListener('scroll', onScroll, { passive: true });
 
   // ---- Audio / Narration Toggle ----
+  // Pure JS approach — CSS animation from display:none is unreliable across
+  // browsers, so we set display:block first, then use setTimeout to ensure
+  // the browser renders the element before applying the opacity transition.
   const audioToggle = document.getElementById('audioToggle');
+  let narrationVisible = false;
 
   if (audioToggle) {
     audioToggle.addEventListener('click', () => {
-      const isOn = document.body.classList.toggle('narration-on');
+      narrationVisible = !narrationVisible;
+      document.body.classList.toggle('narration-on', narrationVisible);
 
       // Update button text
       const label = audioToggle.querySelector('span');
       if (label) {
-        label.textContent = isOn ? 'Hide Narration' : 'Narration';
+        label.textContent = narrationVisible ? 'Hide Narration' : 'Narration';
       }
+      audioToggle.classList.toggle('active', narrationVisible);
 
-      // Toggle visual state
-      audioToggle.classList.toggle('active', isOn);
+      const blocks = document.querySelectorAll('.narration[data-audio]');
 
-      // Stagger narration block animations for storytelling pacing
-      if (isOn) {
-        const blocks = document.querySelectorAll('.narration[data-audio]');
+      if (narrationVisible) {
+        // SHOW: set display:block + opacity:0, then fade in after a frame
         blocks.forEach((block, i) => {
-          block.style.animationDelay = (i * 0.1) + 's';
+          block.style.display = 'block';
+          block.style.opacity = '0';
+          block.style.transform = 'translateY(16px)';
+          block.style.transition = 'none'; // no transition for initial state
+          // Force the browser to acknowledge the above style before transitioning
+          void block.offsetHeight; // trigger reflow
+          setTimeout(() => {
+            block.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+            block.style.opacity = '1';
+            block.style.transform = 'translateY(0)';
+          }, 30 + (i * 60));
+        });
+      } else {
+        // HIDE: fade out, then display:none after transition completes
+        blocks.forEach((block) => {
+          block.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+          block.style.opacity = '0';
+          block.style.transform = 'translateY(16px)';
+          setTimeout(() => {
+            block.style.display = 'none';
+          }, 350);
         });
       }
     });
