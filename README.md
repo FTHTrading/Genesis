@@ -1,132 +1,152 @@
 ﻿# Genesis Protocol
 
-Deterministic evolutionary economics engine. 13 crates. 345 tests. Pure Rust.
+Deterministic multi-agent economic simulation engine. 13 Rust crates. 396 tests. 7,360 simulated worlds. Zero compiler warnings.
 
-Digital organisms are born with cryptographic genomes, metabolize scarce resources, mutate under selective pressure, and die when they can't pay their entropy cost. Institutional mechanisms — treasury, taxation, catastrophe events, adaptive regulation — emerge as endogenous feedback loops, not exogenous parameters. Every state transition is deterministically replayable and cryptographically verifiable.
+## Abstract
 
-This is not a simulation wrapper. It is a research platform for conducting reproducible macroeconomic experiments on populations of autonomous agents operating under real scarcity constraints.
+Genesis Protocol is a closed-economy agent-based simulation in which heterogeneous agents extract resources from logistic niche pools, pay metabolic costs, reproduce conditionally based on a four-trait fitness function, and face stochastic catastrophes. A redistributive treasury, homeostatic parameter controller (Cortex), and bounded genetic mutation engine provide adaptive capacity. Every state transition is deterministically seeded via SHA-256 hash chains and Knuth MMIX LCG, producing bit-identical results on the same architecture.
 
----
-
-## What Has Been Proven
-
-Twelve controlled experiments across six research domains. 1,820 independent world simulations. 910,000 total economic epochs. Zero civilization collapses.
-
-| Experiment | Worlds | Epochs | Key Finding |
-|---|---|---|---|
-| **Entropy Sweep** | 200 | 100,000 | 10× increase in metabolic cost produces only 4.9% Gini increase. No collapses. |
-| **Catastrophe Resilience** | 140 | 70,000 | 0–3% catastrophe probability per epoch → zero collapses. Deaths scale linearly (0 → 12.4). Population declines only 4.6%. |
-| **Inequality Threshold** | 160 | 80,000 | Varying wealth tax threshold from 0.20 to 0.90 produces 31.6% Gini increase. Population stability and mean fitness remain invariant. |
-| **Treasury Stability** | 180 | 90,000 | Sweeping reserve deployment threshold 0.10–0.90: aggressive deployment yields 2.1% higher fitness, <1% Gini variation. Zero collapses at any policy. |
-| **Reserve Stress** (4 tiers) | 540 | 270,000 | Optimal treasury threshold shifts +0.60 (0.10→0.70) from calm to crisis. Crossover detected: deployment outperforms hoarding until shock rate exceeds 1.5%. |
-| **Resource Depletion** (4 tiers) | 600 | 300,000 | Metabolic cost sensitivity under carrying capacity compression. Sweeps entropy cost across abundant→scarce resource environments. |
-
-All results are deterministically reproducible from seed `20260222`, verified via SHA-256 result hashing, and exported as CSV datasets for independent analysis.
-
-Full methodology: [papers/genesis-protocol-III-the-experimental-method.md](papers/genesis-protocol-III-the-experimental-method.md)
-
----
+52 experiment configurations across three research phases (Season 1, Season 2, Sensitivity) have produced 7,360 independent world simulations totaling over 3,680,000 computed epochs. Under the default collapse definition ($P_{\text{floor}} = 3$, 50-epoch sustained window), no collapses were observed. Under stricter definitions ($P_{\text{floor}} = 10$), collapse rates exceed 97%. The zero-collapse result is contingent on the permissive default definition, the presence of a world-level extinction floor mechanism, and multi-layer engineered stabilization. The global stability boundary remains an open problem.
 
 ## Architecture
 
-Thirteen crates. One organism.
-
-| Layer | Crate | Role |
+| Layer | Crate | Purpose |
 |---|---|---|
-| **Identity** | `genesis-dna` | Cryptographic genome, trait expression, phenotype derivation |
-| **Economics** | `metabolism` | ATP energy ledger, treasury, metabolic decay |
-| **Econometrics** | `genesis-econometrics` | Gini coefficient, wealth distribution analysis |
-| **Evolution** | `evolution` | Mutation, natural selection, horizontal gene transfer |
-| **Population** | `ecosystem` | Social mesh, problem markets, carrying capacity, telemetry |
-| **Regulation** | `genesis-homeostasis` | Adaptive Cortex — real-time parameter modulation from population signals |
-| **Multiverse** | `genesis-multiverse` | Parallel world instantiation, parameter sweep, cross-world aggregation |
-| **Experiments** | `genesis-experiment` | Experiment engine, trial runner, statistical reporting |
-| **Cryptography** | `genesis-anchor` | Dual-chain anchoring — SHA-256 state chain + BLAKE3 genome chain |
-| **Replay** | `genesis-replay` | Deterministic replay from any checkpoint |
-| **Federation** | `genesis-federation` | Cross-instance communication protocol |
-| **Gateway** | `gateway` | HTTP API, SSE event stream, observatory dashboard |
-| **Recruitment** | `apostle` | Outbound integration and agent recruitment |
+| Identity | `genesis-dna` | SHA-256 genome derivation, four-trait phenotype, bounded mutation |
+| Economics | `metabolism` | ATP energy ledger, treasury, metabolic decay |
+| Econometrics | `genesis-econometrics` | Gini coefficient, wealth distribution, inequality indices |
+| Evolution | `evolution` | Selection pressure, conditional replication, horizontal gene transfer |
+| Population | `ecosystem` | Social mesh, niche pools, carrying capacity, telemetry |
+| Regulation | `genesis-homeostasis` | Adaptive Cortex — hand-engineered feedback controller |
+| Multiverse | `genesis-multiverse` | Parallel world instantiation, parameter sweep orchestration |
+| Experiments | `genesis-experiment` | Experiment engine, configurable runner, statistical reporting |
+| Cryptography | `genesis-anchor` | Dual-chain anchoring (SHA-256 state + BLAKE3 genome) |
+| Replay | `genesis-replay` | Deterministic replay from any checkpoint |
+| Federation | `genesis-federation` | Cross-instance communication protocol |
+| Gateway | `gateway` | HTTP API, SSE event stream, stress testing |
+| Recruitment | `apostle` | Outbound integration |
 
-### Dual-Chain Cryptographic Architecture
+### Dual-Chain Integrity
 
-Every tick, two independent hash chains advance:
+Two independent hash chains advance per epoch:
 
-- **State Chain** (SHA-256): `H(previous_state_hash ‖ epoch ‖ population_snapshot)` — anchors macroeconomic state
-- **Genome Chain** (BLAKE3): `H(previous_genome_hash ‖ mutated_genomes)` — anchors evolutionary lineage
+- **State Chain** (SHA-256): `H(prev_state_hash ‖ epoch ‖ population_snapshot)`
+- **Genome Chain** (BLAKE3): `H(prev_genome_hash ‖ mutated_genomes)`
 
 Divergence between chains is detectable. Replay integrity is verifiable to any depth.
 
----
+## Experiment Summary
 
-## Reproduce an Experiment
+### Season 1 — Parameter Sweeps (25 experiments, 4,180 worlds)
+
+| Domain | Experiments | Worlds | Key Finding |
+|---|---|---|---|
+| Entropy Sweep | 1 | 200 | 10× metabolic cost increase → 4.9% Gini increase. No collapses. |
+| Catastrophe Resilience | 1 | 140 | 0–3% catastrophe probability → deaths scale linearly, population declines 4.6% |
+| Inequality Threshold | 1 | 160 | Tax threshold 0.20–0.90 → 31.6% Gini increase, population invariant |
+| Treasury Stability | 1 | 180 | Reserve threshold sweep → <1% Gini variation across all policies |
+| Reserve Stress (4 tiers) | 4 | 540 | Optimal threshold shifts +0.60 under escalating shock rates |
+| Resource Depletion (4 tiers) | 4 | 600 | Carrying capacity compression from 200 to 30 |
+| Resilience Quadrants | 4 | 560 | Cortex immunity × genetic immunity factorial design |
+| Inversion Experiments | 3 | 360 | Basal, dual, and metabolic inversion sweeps |
+| Multi-Axis Collapse | 1 | 240 | Combined stressor escalation |
+| Evolution Forbidden | 1 | 200 | Mutation disabled: population persists on initial genome |
+
+### Season 2 — Structural Invariant Violations (13 experiments, 1,500 worlds)
+
+Systematically disabled treasury redistribution, ATP decay, resource regeneration, and reproduction grants — individually and in combination.
+
+| Configuration | Key Result |
+|---|---|
+| Treasury disabled (baseline + hostile) | Population contracts, persists |
+| ATP decay disabled (baseline + hostile) | Immortality → resource exhaustion pressure |
+| All stabilizers disabled | Population ≈ 12.8, reproductive inequality 0.95 |
+| Death-sink economy | Resources drain on death, population compressed |
+| Extended horizon (1000 epochs) | Late-stage dynamics observable |
+
+### Sensitivity Analysis (13 configurations, 1,680 worlds)
+
+| Test | Result |
+|---|---|
+| Collapse floor = 3 (default) | 0% collapse |
+| Collapse floor = 5 | 5.8% collapse |
+| Collapse floor = 10 | 97.5% collapse |
+| Collapse floor = 15 | 100% collapse |
+| Collapse floor = 20 | 100% collapse |
+| Fitness weights ±20% (8 variants) | Max 0.8 pp collapse rate change |
+
+Sharp phase transition between floor = 5 and floor = 10. The zero-collapse headline is definition-dependent.
+
+## Known Limitations
+
+1. Collapse definition uses a permissive default ($P_{\text{floor}} = 3$)
+2. World-level extinction floor mechanism prevents populations below 3 from reaching zero
+3. Cortex is a hand-engineered feedback controller, not a learned or emergent system
+4. Fitness weights (0.25, 0.30, 0.20, 0.25) are fixed a priori, not optimized
+5. Cross-platform determinism depends on floating-point architecture (verified on x86_64 Windows only)
+6. No Lyapunov stability proof exists — stability is empirical within tested parameter ranges
+7. Statistical reporting uses aggregate per-parameter-value summaries, not per-world time series
+8. The global stability boundary in full parameter space is not characterized
+9. Independent replication has not occurred
+10. Multi-layer engineered redundancy makes it difficult to isolate which mechanisms are necessary vs. sufficient
+
+## Reproduce
 
 ```bash
-# Clone and build
-git clone https://github.com/FTHTrading/AI.git
-cd AI
+git clone https://github.com/FTHTrading/Genesis.git
+cd Genesis
 cargo build --release
-
-# Run all twelve experiments
-cargo run --release --bin run_experiments
-
-# Results appear in experiments/
-#   entropy_sweep/                   — 200 worlds, data + manifest + report
-#   catastrophe_resilience/          — 140 worlds, data + manifest + report
-#   inequality_threshold/            — 160 worlds, data + manifest + report
-#   treasury_stability/              — 180 worlds, data + manifest + report
-#   reserve_calm/                    — 135 worlds, shock=0.001
-#   reserve_moderate/                — 135 worlds, shock=0.005
-#   reserve_stressed/                — 135 worlds, shock=0.015
-#   reserve_crisis/                  — 135 worlds, shock=0.030
-#   resource_depletion_abundant/     — 150 worlds, cap=200
-#   resource_depletion_normal/       — 150 worlds, cap=120
-#   resource_depletion_constrained/  — 150 worlds, cap=60
-#   resource_depletion_scarce/       — 150 worlds, cap=30
-
-# Verify the full test suite
-cargo test --workspace
-# Expected: 349 passed, 0 failed
+cargo test --workspace          # 396 tests, 0 failures
+cargo run --release --bin run_experiments    # Season 1: 25 experiments
+cargo run --release --bin run_season2        # Season 2: 13 experiments
+cargo run --release --bin sensitivity_analysis  # Sensitivity: 13 configs
 ```
 
-Each experiment exports:
-- **CSV data** — per-trial metrics for independent analysis
-- **JSON manifest** — parameters, seed, SHA-256 result hash
-- **Text report** — human-readable statistical summary
+Each experiment outputs:
+- **CSV** — per-parameter-value aggregate metrics (mean, stddev, min, max, p10, p90)
+- **JSON manifest** — configuration, seed, SHA-256 result hash
+- **Text report** — human-readable summary
 
----
+All results are seeded from `20260222`. Deterministic on the same architecture.
 
-## Current Metrics
+## Metrics
 
 | Metric | Value |
 |---|---|
 | Crates | 13 |
-| Tests | 349 passing, 0 failed, 7 ignored |
-| Compiler warnings | 0 |
-| Experiment worlds | 1,820 |
-| Total epochs simulated | 910,000 |
-| Civilization collapses | 0 |
+| Tests | 396 passing, 0 failed |
+| Experiment configurations | 51 |
+| World simulations | 7,360 |
+| Computed epochs | > 3,680,000 |
+| Collapses (default definition) | 0 |
+| Collapses (floor ≥ 10) | > 97% |
+| Rust edition | 2021 |
 | Deterministic seed | `20260222` |
-| Result verification | SHA-256 manifest hash per experiment |
 
----
+## Research Paper
 
-## Deliverables
+[Deterministic Multi-Agent Economic Simulation Under Structural Invariant Violations: Collapse Boundary Analysis](papers/genesis_protocol_paper.md) — formal specification, experiment methodology, sensitivity analysis, and limitations.
 
-**[Genesis Experiment Pack v3](deliverables/genesis-experiment-pack-v3/)** — Portable bundle containing the executive brief, all twelve experiment outputs (manifests, CSV datasets, reports), reproduction instructions, and SHA-256 integrity verification. Self-contained and independently verifiable. Includes the 4-tier Reserve Stress Suite (540 worlds, crossover analysis) and 4-tier Resource Depletion Crossover (600 worlds, carrying capacity compression).
+## DOI
 
-Rebuild the pack:
+`10.5281/zenodo.18729652`
 
-```powershell
-powershell -ExecutionPolicy Bypass -File scripts/build_experiment_pack_v3.ps1
+## Citation
+
+```bibtex
+@software{burns2026genesis,
+  author  = {Burns, Kevan},
+  title   = {Genesis Protocol: Deterministic Multi-Agent Economic Simulation},
+  year    = {2026},
+  doi     = {10.5281/zenodo.18729652},
+  url     = {https://github.com/FTHTrading/Genesis}
+}
 ```
 
-[Pack v2](deliverables/genesis-experiment-pack-v2/) (4 experiments, 680 worlds) and [Pack v1](deliverables/genesis-experiment-pack-v1/) (3 experiments, 500 worlds) remain available.
+## License
+
+MIT
 
 ---
 
-![Rust](https://img.shields.io/badge/rust-edition%202021-orange)
-![License](https://img.shields.io/badge/license-MIT-blue)
-
----
-
-*Built by [Kevan Burns](https://github.com/FTHTrading)*
+*Kevan Burns — [FTH Trading](https://github.com/FTHTrading)*

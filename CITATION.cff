@@ -1,42 +1,42 @@
 cff-version: 1.2.0
-title: "Genesis Protocol: A Lotka-Volterra Inspired Software Organism with Cryptographic Provenance"
+title: "Genesis Protocol: Deterministic Multi-Agent Economic Simulation Under Structural Invariant Violations"
 message: "If you use this software, please cite it as below."
 type: software
 authors:
   - family-names: Burns
     given-names: Kevan
     orcid: "https://orcid.org/0009-0008-8425-939X"
-    alias: "Kidd James"
     affiliation: "FTH Trading, Norcross, Georgia"
-repository-code: "https://github.com/FTHTrading/AI"
-url: "https://fthtrading.github.io/AI/"
+repository-code: "https://github.com/FTHTrading/Genesis"
 doi: "10.5281/zenodo.18729652"
 license: MIT
-version: "1.0.0"
-date-released: "2026-02-21"
+version: "2.0.0"
+date-released: "2026-02-24"
 keywords:
-  - artificial-life
-  - evolutionary-computation
-  - lotka-volterra
-  - multi-agent-systems
-  - resource-competition
-  - ecological-simulation
-  - software-organism
+  - agent-based-modeling
+  - multi-agent-simulation
+  - economic-simulation
+  - population-dynamics
+  - collapse-boundary
+  - sensitivity-analysis
+  - deterministic-simulation
+  - reproducible-research
   - rust
-  - cryptographic-provenance
-  - merkle-trees
+  - computational-economics
 abstract: >-
-  Genesis Protocol is a self-sustaining digital organism implemented as a
-  six-crate Rust workspace. AI agents are born with SHA-256 derived genomes,
-  compete for resources in per-niche pools with logistic regeneration, face
-  seasonal environmental oscillation and stochastic catastrophe events, and
-  are subject to natural selection pressure. The system implements a
-  Lotka-Volterra inspired ecological model with density-dependent foraging,
-  cross-niche competition, and proportional resource extraction. Source code
-  integrity is verified through per-crate Merkle trees whose edition root
-  can be anchored on Polygon mainnet via the same LiteraryAnchor contract
-  infrastructure used in the 2,500 Donkeys literary protocol
-  (DOI: 10.5281/zenodo.18646886).
+  Deterministic multi-agent macroeconomic simulation engine implemented as a
+  thirteen-crate Rust workspace. Heterogeneous agents with SHA-256 derived
+  genomes extract resources from logistic niche pools, pay metabolic costs,
+  reproduce conditionally based on a four-trait fitness function, and face
+  stochastic catastrophes. A redistributive treasury, homeostatic parameter
+  controller, and bounded genetic mutation engine provide adaptive capacity.
+  52 experiment configurations across three research phases produced 7,360
+  independent world simulations totaling over 3,680,000 computed epochs.
+  Under the default collapse definition, no collapses were observed. Under
+  stricter definitions, collapse rates exceed 97%. Sensitivity analyses
+  characterize the collapse boundary as a sharp phase transition dependent
+  on the floor definition. All seeds, configurations, and result hashes
+  are published for independent replication.
 references:
   - type: software
     title: "The 2,500 Donkeys: Deterministic Literary Publishing Protocol"
