@@ -113,6 +113,18 @@ Each experiment outputs:
 
 All results are seeded from `20260222`. Deterministic on the same architecture.
 
+## Determinism Risk Statement
+
+All canonical results were produced on Windows x86_64 with Rust 1.77. Determinism depends on Rust compiler version, target architecture, and floating-point accumulation behavior across 500-epoch simulations.
+
+Cross-platform determinism is an open validation axis. Hash divergence across platforms is possible and expected. If your results differ from the canonical hashes:
+
+- Minor divergence (floating-point variance): expected across architectures. Document and submit.
+- Structural divergence (different trajectories, same zero-collapse result): partial independent replication. Submit.
+- Major divergence (different collapse outcomes): open a GitHub issue immediately with label `determinism-failure`. This will be treated as a discovery, not a defense. Findings will be published regardless of outcome.
+
+Full protocol: [REPLICATION_LEADERBOARD.md — If Hashes Don't Match](REPLICATION_LEADERBOARD.md)
+
 ## Metrics
 
 | Metric | Value |
