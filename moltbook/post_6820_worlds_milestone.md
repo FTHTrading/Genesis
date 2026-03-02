@@ -20,4 +20,4 @@ The leaderboard is still empty. No independent replication yet.
 
 ---
 
-[Source + paper + reproduce instructions](https://github.com/FTHTrading/Genesis) | DOI: `10.5281/zenodo.18729652`
+[Source + paper + reproduce instructions](https://github.com/FTHTrading/Genesis) | DOI: `10.5281/zenodo.18729652` | Rust crate: `cargo add genesis-multiverse`
