@@ -1,9 +1,9 @@
-# Collapse Definition — Genesis Protocol
+﻿# Collapse Definition â€” Genesis Protocol
 
 **Version:** 1.0  
 **Date:** February 23, 2026  
-**Reference Implementation:** [`runner.rs`](crates/genesis-experiment/src/runner.rs) lines 227–253  
-**Whitepaper Section:** §8.6.1
+**Reference Implementation:** [`runner.rs`](crates/genesis-experiment/src/runner.rs) lines 227â€“253  
+**Whitepaper Section:** Â§8.6.1
 
 ---
 
@@ -11,13 +11,13 @@
 
 A civilization **collapses** if either condition is met during a simulation run:
 
-### Condition 1 — Extinction
+### Condition 1 â€” Extinction
 
 $$P(t) = 0$$
 
 Population reaches zero at any epoch $t$. The simulation terminates immediately.
 
-### Condition 2 — Functional Extinction
+### Condition 2 â€” Functional Extinction
 
 $$P(t) < P_{\text{floor}} \quad \text{for} \quad N_{\text{consec}} \text{ consecutive epochs}$$
 
@@ -30,7 +30,7 @@ Population falls below a survival floor and fails to recover within a defined wi
 | Parameter | Symbol | Value | Justification |
 |---|---|---|---|
 | Survival floor | $P_{\text{floor}}$ | 3 agents | Minimum for demographic replacement: 1 parent per birth, births capped at 3/epoch. Population of 2 cannot sustain itself if one agent dies before reproducing. |
-| Recovery window | $N_{\text{consec}}$ | 50 epochs | Provides ample time for treasury-assisted recovery if structurally possible. At 1 birth/epoch, 50 epochs would produce 50 births from a floor of 3 — if recovery doesn't happen in 50 epochs, it is not structurally possible under current conditions. |
+| Recovery window | $N_{\text{consec}}$ | 50 epochs | Provides ample time for treasury-assisted recovery if structurally possible. At 1 birth/epoch, 50 epochs would produce 50 births from a floor of 3 â€” if recovery doesn't happen in 50 epochs, it is not structurally possible under current conditions. |
 
 ---
 
@@ -73,14 +73,14 @@ The following conditions are **not** collapse under this definition:
 
 | Condition | Why Not Collapse |
 |---|---|
-| Population decline (e.g., 50 → 17 agents) | Population stabilized above floor |
+| Population decline (e.g., 50 â†’ 17 agents) | Population stabilized above floor |
 | High Gini coefficient (e.g., 0.95) | Inequality is a quality metric, not a survival metric |
 | Role extinction (e.g., no Strategists) | Remaining roles sustain population |
 | Low birth rate | If deaths also decrease, equilibrium persists |
 | Treasury accumulation without redistribution | Agents survive on extraction alone |
 | Mean fitness < 0.35 | Selection still operates; low average does not prevent reproduction by fit individuals |
 
-These may indicate **economic degeneracy** — a pathological but survivable state — which is a separate classification from collapse.
+These may indicate **economic degeneracy** â€” a pathological but survivable state â€” which is a separate classification from collapse.
 
 ---
 
@@ -121,5 +121,5 @@ If you use or contest this definition:
 
 ```
 Burns, K. (2026). Genesis Protocol: Autonomous Metabolic Organism
-with Survival Economics. doi:10.5281/zenodo.18646886
+with Survival Economics. doi:10.5281/zenodo.18729652
 ```

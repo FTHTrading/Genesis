@@ -1,4 +1,4 @@
-# Deterministic Multi-Agent Economic Simulation Under Structural Invariant Violations: Collapse Boundary Analysis
+﻿# Deterministic Multi-Agent Economic Simulation Under Structural Invariant Violations: Collapse Boundary Analysis
 
 **Kevan Burns**
 
@@ -10,7 +10,7 @@ February 2026
 
 We present a deterministic agent-based economic simulation and report results from 38 experiments comprising 5,680 world-runs across 2,840,000 computed epochs. The system models heterogeneous agents with genetically determined traits, a metabolic energy economy, logistic resource dynamics, stochastic catastrophes, and a homeostatic parameter controller. Collapse is defined as population remaining below a configurable floor ($P_{\text{floor}}$) for a sustained window; the default uses $P_{\text{floor}} = 3$ and a 50-epoch window. All simulations are seeded deterministically via SHA-256 hash chains, producing bit-identical results on the same architecture.
 
-Season 1 (25 experiments, 4,180 worlds) swept 10 economic parameters under standard and adversarial conditions. Season 2 (13 experiments, 1,500 worlds) systematically disabled structural invariants — treasury redistribution, ATP decay, resource regeneration, and reproduction grants — individually and in combination. Under the default definition, no collapses were observed (0/5,680; 95% Clopper-Pearson CI [0, 0.065%]; power $>$ 99.7% at $p = 0.001$). Under $P_{\text{floor}} = 10$, collapse rates exceeded 97% (CI [92.9%, 99.5%]), constituting a discontinuous phase transition in the definition parameter. Under maximal structural violation, populations contracted to mean 12.8 agents with pathological inequality (reproductive inequality 0.95) but did not reach extinction.
+Season 1 (25 experiments, 4,180 worlds) swept 10 economic parameters under standard and adversarial conditions. Season 2 (13 experiments, 1,500 worlds) systematically disabled structural invariants â€” treasury redistribution, ATP decay, resource regeneration, and reproduction grants â€” individually and in combination. Under the default definition, no collapses were observed (0/5,680; 95% Clopper-Pearson CI [0, 0.065%]; power $>$ 99.7% at $p = 0.001$). Under $P_{\text{floor}} = 10$, collapse rates exceeded 97% (CI [92.9%, 99.5%]), constituting a discontinuous phase transition in the definition parameter. Under maximal structural violation, populations contracted to mean 12.8 agents with pathological inequality (reproductive inequality 0.95) but did not reach extinction.
 
 Fitness weight perturbation of $\pm$20% produces $\leq$0.8 percentage points of collapse rate change. All configurations, seeds, and result hashes are published. Source code is available at https://github.com/FTHTrading/Genesis. Independent replication has not yet occurred.
 
@@ -22,7 +22,7 @@ Agent-based macroeconomic simulations provide a framework for studying emergent 
 
 The system under study models a closed economy of heterogeneous agents who extract resources from logistic niche pools, pay metabolic costs, reproduce conditionally, and face stochastic catastrophes. A redistributive treasury, homeostatic parameter controller, and genetic mutation engine provide adaptive capacity. The central question is: under what conditions, if any, does the population collapse?
 
-This paper does not claim generality beyond the tested parameter space. The collapse boundary — the surface in parameter space separating survival from extinction — remains an open problem. Sensitivity analyses (Appendices C–D) partially characterize this boundary by varying the collapse definition and fitness function weights.
+This paper does not claim generality beyond the tested parameter space. The collapse boundary â€” the surface in parameter space separating survival from extinction â€” remains an open problem. Sensitivity analyses (Appendices Câ€“D) partially characterize this boundary by varying the collapse definition and fitness function weights.
 
 ---
 
@@ -80,7 +80,7 @@ Agent fitness is a weighted linear combination of the trait vector:
 
 $$F(a) = \sum_{i=0}^{3} w_i \cdot v_i = 0.25 \cdot v_0 + 0.30 \cdot v_1 + 0.20 \cdot v_2 + 0.25 \cdot v_3$$
 
-$F(a) \in [0, 1]$ for all agents. The weight vector $\mathbf{w} = (0.25, 0.30, 0.20, 0.25)$ sums to 1.0 and was fixed prior to any experiments. Strategic Quality receives the highest weight; the slight asymmetry (SQ receiving 0.30 vs. 0.20–0.25 for others) was a subjective design choice reflecting an assumption that long-term strategic behavior contributes more to survival than any single capability. These weights were not optimized to maximize population survival or any other outcome metric. Sensitivity analysis (Appendix D) indicates that perturbing any individual weight by ±20% (with renormalization to maintain $\sum w_i = 1$) produces a maximum collapse rate change of 0.8 percentage points (1 additional collapse out of 120 worlds under S4 Full Attack), indicating that the reported results are not an artifact of weight tuning.
+$F(a) \in [0, 1]$ for all agents. The weight vector $\mathbf{w} = (0.25, 0.30, 0.20, 0.25)$ sums to 1.0 and was fixed prior to any experiments. Strategic Quality receives the highest weight; the slight asymmetry (SQ receiving 0.30 vs. 0.20â€“0.25 for others) was a subjective design choice reflecting an assumption that long-term strategic behavior contributes more to survival than any single capability. These weights were not optimized to maximize population survival or any other outcome metric. Sensitivity analysis (Appendix D) indicates that perturbing any individual weight by Â±20% (with renormalization to maintain $\sum w_i = 1$) produces a maximum collapse rate change of 0.8 percentage points (1 additional collapse out of 120 worlds under S4 Full Attack), indicating that the reported results are not an artifact of weight tuning.
 
 ### 2.4 Pressure Configuration
 
@@ -155,8 +155,8 @@ conditioned on $|P(t)| > 10$. When triggered, one of three effects is selected d
 
 | Type | Effect |
 |------|--------|
-| ATP destruction | All balances reduced by 5–10% |
-| Fitness culling | Weakest 2–5% (by fitness) removed |
+| ATP destruction | All balances reduced by 5â€“10% |
+| Fitness culling | Weakest 2â€“5% (by fitness) removed |
 | Niche resource shock | ~70% of one resource pool destroyed |
 
 Selection is determined by a Knuth MMIX LCG seeded on epoch number:
@@ -164,7 +164,7 @@ Selection is determined by a Knuth MMIX LCG seeded on epoch number:
 $$x_{t} = t \cdot \texttt{0xBF58476D1CE4E5B9} + \texttt{0x94D049BB133111EB}$$
 $$\text{type} = (x_t \gg 16) \bmod 3$$
 
-The environment also maintains a background catastrophe process ($P \approx 0.02$) with duration 10–20 epochs and severity 30–60% capacity reduction to affected resource pools.
+The environment also maintains a background catastrophe process ($P \approx 0.02$) with duration 10â€“20 epochs and severity 30â€“60% capacity reduction to affected resource pools.
 
 ### 2.8 Reproduction
 
@@ -196,7 +196,7 @@ Less fit agents mutate more, increasing variance among underperforming lineages.
 
 ### 2.10 Homeostatic Controller (Adaptive Cortex)
 
-The adaptive cortex is a hand-engineered feedback controller with heuristically selected parameters, thresholds, and gain values. It is not a learned or emergent system. Its inclusion reflects a design decision to provide multi-layer stabilization; the research question is whether collapse emerges *despite* redundant safeguards, not whether stability is surprising given the architecture. Season 2 experiments (stages S2–S4) disable the cortex entirely, isolating its contribution.
+The adaptive cortex is a hand-engineered feedback controller with heuristically selected parameters, thresholds, and gain values. It is not a learned or emergent system. Its inclusion reflects a design decision to provide multi-layer stabilization; the research question is whether collapse emerges *despite* redundant safeguards, not whether stability is surprising given the architecture. Season 2 experiments (stages S2â€“S4) disable the cortex entirely, isolating its contribution.
 
 Every 25 epochs, the adaptive cortex evaluates 8 threat indicators against three-tier thresholds (Watch, Warning, Critical):
 
@@ -206,14 +206,14 @@ Every 25 epochs, the adaptive cortex evaluates 8 threat indicators against three
 | ATP oligarchy | >40% top-10% share | >60% | >80% |
 | Mutation runaway | >30% mutated | >50% | >70% |
 | Population collapse | >30% decline | >50% | >70% |
-| Role extinction | 1 role absent | 2 absent | ≥3 absent |
+| Role extinction | 1 role absent | 2 absent | â‰¥3 absent |
 | Treasury depletion | >50% depleted | >70% | >90% |
 | Wealth concentration | Gini >0.55 | >0.70 | >0.85 |
-| Economic stagnation | velocity ≤0.10 | ≤0.05 | ≤0.01 |
+| Economic stagnation | velocity â‰¤0.10 | â‰¤0.05 | â‰¤0.01 |
 
 Each threat maps to prescribed parameter adjustments on $\Pi(t)$, bounded by per-field step limits and a 50-epoch cooldown per field. In the absence of threats, parameters drift 10% toward defaults per cycle.
 
-The cortex is a hand-engineered feedback controller, not a learned or evolved system. All thresholds, gain values, and prescribed adjustments were selected heuristically by the system designer. It functions as an intentional stabilizing mechanism — its purpose is to counteract parameter drift, not to demonstrate emergent adaptation. In Season 2 experiments (S2–S4), the cortex is disabled along with mutation, isolating the base system dynamics from controller-induced stability. The question addressed by Season 2 is whether populations persist *despite* removal of this engineered safety layer, not whether the cortex itself is surprising.
+The cortex is a hand-engineered feedback controller, not a learned or evolved system. All thresholds, gain values, and prescribed adjustments were selected heuristically by the system designer. It functions as an intentional stabilizing mechanism â€” its purpose is to counteract parameter drift, not to demonstrate emergent adaptation. In Season 2 experiments (S2â€“S4), the cortex is disabled along with mutation, isolating the base system dynamics from controller-induced stability. The question addressed by Season 2 is whether populations persist *despite* removal of this engineered safety layer, not whether the cortex itself is surprising.
 
 ### 2.11 Seasonal Phase
 
@@ -247,7 +247,7 @@ $$\kappa(t) = \begin{cases}
 
 ### 3.1 Definition Sensitivity
 
-The collapse rate is sharply sensitive to the choice of $P_{\text{floor}}$. Sensitivity analysis (Appendix C) applied the s4_full_attack configuration — the most extreme tested condition — under varying floor definitions:
+The collapse rate is sharply sensitive to the choice of $P_{\text{floor}}$. Sensitivity analysis (Appendix C) applied the s4_full_attack configuration â€” the most extreme tested condition â€” under varying floor definitions:
 
 | $P_{\text{floor}}$ | Collapse Rate | Collapsed / Total | 95% CI (Clopper-Pearson) |
 |---------------------|---------------|-------------------|-------------------------|
@@ -259,7 +259,7 @@ The collapse rate is sharply sensitive to the choice of $P_{\text{floor}}$. Sens
 
 Under the default definition ($P_{\text{floor}} = 3$), zero collapses are observed (95% CI upper bound: 3.0%). Under a modestly stricter definition ($P_{\text{floor}} = 5$), 5.8% of worlds collapse (CI: [2.4%, 11.6%]). Under $P_{\text{floor}} = 10$, near-universal collapse occurs (97.5%, CI: [92.9%, 99.5%]).
 
-The transition from 5.8% to 97.5% collapse — a jump of 91.7 percentage points over a factor-of-two change in $P_{\text{floor}}$ — constitutes a **discontinuous collapse phase transition** in the definition parameter. This is not a smooth degradation: the system's equilibrium population under maximal stress is narrowly concentrated in the range of 3–8 agents, producing a cliff in the collapse function at the boundary where the definition threshold crosses this equilibrium band. Populations under stress do not gradually thin; they compress to a narrow survival band and either persist (if the floor is below the band) or universally collapse (if the floor is above it). Figure 1 illustrates this transition.
+The transition from 5.8% to 97.5% collapse â€” a jump of 91.7 percentage points over a factor-of-two change in $P_{\text{floor}}$ â€” constitutes a **discontinuous collapse phase transition** in the definition parameter. This is not a smooth degradation: the system's equilibrium population under maximal stress is narrowly concentrated in the range of 3â€“8 agents, producing a cliff in the collapse function at the boundary where the definition threshold crosses this equilibrium band. Populations under stress do not gradually thin; they compress to a narrow survival band and either persist (if the floor is below the band) or universally collapse (if the floor is above it). Figure 1 illustrates this transition.
 
 The collapse boundary, with respect to definition choice, lies between $P_{\text{floor}} = 5$ and $P_{\text{floor}} = 10$ for the s4_full_attack configuration. The zero-collapse headline result is therefore contingent on the permissive default definition.
 
@@ -326,19 +326,19 @@ Season 1 sweeps economic parameters under standard and adversarial conditions wi
 
 | Category | Experiments | Sweep Variable | Range | Worlds | Seed |
 |----------|-------------|----------------|-------|--------|------|
-| Entropy | 1 | EntropyCoeff | 0.00001–0.0001 | 200 | 20260222 |
-| Catastrophe | 1 | CatastropheBaseProb | 0.0–0.03 | 140 | 20260222 |
-| Inequality | 1 | GiniWealthTaxThreshold | 0.2–0.9 | 160 | 20260222 |
-| Treasury | 1 | TreasuryOverflowThreshold | 0.1–0.9 | 180 | 20260222 |
-| Metabolic inversion | 1 | ReplicationCostMultiplier | 1.0–5.0 | 180 | 20260223 |
-| Basal inversion | 1 | BasalCostMultiplier | 1.0–10.0 | 200 | 20260224 |
-| Dual inversion | 1 | BasalCostMultiplier (+ 3× replication) | 1.0–10.0 | 200 | 20260224 |
-| Multi-axis | 1 | SoftCap (all safety OFF) | 30–180 | 220 | 20260222 |
-| Resilience quadrant | 4 | CatastropheBaseProb (±mutation, ±cortex) | 0.0–0.05 | 4×220 | 20260223 |
-| Resource depletion | 4 | EntropyCoeff (under 4 scarcity levels) | 0.00001–0.0001 | 4×150 | 20260222 |
-| Reserve stress | 4 | TreasuryOverflowThreshold (4 stress levels) | 0.1–0.8 | 4×135 | 20260222 |
-| Alt. reserve stress | 4 | TreasuryOverflowThreshold (4 levels, alt config) | 0.1–0.8 | 4×135 | 20260222 |
-| Evolution forbidden | 1 | CatastropheBaseProb (mutation=0, cortex=OFF) | 0.0–0.03 | 140 | 20260222 |
+| Entropy | 1 | EntropyCoeff | 0.00001â€“0.0001 | 200 | 20260222 |
+| Catastrophe | 1 | CatastropheBaseProb | 0.0â€“0.03 | 140 | 20260222 |
+| Inequality | 1 | GiniWealthTaxThreshold | 0.2â€“0.9 | 160 | 20260222 |
+| Treasury | 1 | TreasuryOverflowThreshold | 0.1â€“0.9 | 180 | 20260222 |
+| Metabolic inversion | 1 | ReplicationCostMultiplier | 1.0â€“5.0 | 180 | 20260223 |
+| Basal inversion | 1 | BasalCostMultiplier | 1.0â€“10.0 | 200 | 20260224 |
+| Dual inversion | 1 | BasalCostMultiplier (+ 3Ã— replication) | 1.0â€“10.0 | 200 | 20260224 |
+| Multi-axis | 1 | SoftCap (all safety OFF) | 30â€“180 | 220 | 20260222 |
+| Resilience quadrant | 4 | CatastropheBaseProb (Â±mutation, Â±cortex) | 0.0â€“0.05 | 4Ã—220 | 20260223 |
+| Resource depletion | 4 | EntropyCoeff (under 4 scarcity levels) | 0.00001â€“0.0001 | 4Ã—150 | 20260222 |
+| Reserve stress | 4 | TreasuryOverflowThreshold (4 stress levels) | 0.1â€“0.8 | 4Ã—135 | 20260222 |
+| Alt. reserve stress | 4 | TreasuryOverflowThreshold (4 levels, alt config) | 0.1â€“0.8 | 4Ã—135 | 20260222 |
+| Evolution forbidden | 1 | CatastropheBaseProb (mutation=0, cortex=OFF) | 0.0â€“0.03 | 140 | 20260222 |
 
 All experiments: 500 epochs per run, 20 runs per sweep step, EarthPrime base preset.
 
@@ -348,12 +348,12 @@ Season 2 disables structural mechanisms that are assumed necessary for populatio
 
 | Stage | Experiments | Mechanism Disabled | Additional Conditions |
 |-------|-------------|--------------------|-----------------------|
-| S1 | 2 | Treasury redistribution | Baseline + hostile (mutation=0, cortex=OFF, 5× entropy, max catastrophe) |
+| S1 | 2 | Treasury redistribution | Baseline + hostile (mutation=0, cortex=OFF, 5Ã— entropy, max catastrophe) |
 | S2 | 2 | ATP decay | Baseline + hostile |
 | S3 | 4 | Combinatorial: decay, treasury, grants, extinction floor | Each pair OFF + all four OFF |
-| S4 | 5 | Resource regeneration, death drains pools, 10× replication cost, all S3 mechanisms OFF | Baseline, death sink, zero regen, combined, extended horizon (5,000 epochs) |
+| S4 | 5 | Resource regeneration, death drains pools, 10Ã— replication cost, all S3 mechanisms OFF | Baseline, death sink, zero regen, combined, extended horizon (5,000 epochs) |
 
-All Season 2 experiments: soft cap sweep 30–180, 20 runs/step, base seed 42.
+All Season 2 experiments: soft cap sweep 30â€“180, 20 runs/step, base seed 42.
 
 ---
 
@@ -367,7 +367,7 @@ All Season 2 experiments: soft cap sweep 30–180, 20 runs/step, base seed 42.
 | Season 2 | 13 | 1,500 | 0 / 1,500 (0.00%) | [0, 0.246%] |
 | **Total** | **38** | **5,680** | **0 / 5,680 (0.00%)** | **[0, 0.065%]** |
 
-No world-run triggered either collapse condition ($|P(t)| = 0$ or $|P(t)| < 3$ for 50 consecutive epochs) under the default definition. By the rule of three, the true collapse probability is at most 0.053% at 95% confidence. Statistical power exceeds 99.7% — at $N = 5{,}680$, even a true collapse rate of 0.1% would produce at least one observed collapse with probability > 0.997. Under stricter definitions, collapse rates increase sharply (Section 3.1). Complete statistical methodology is detailed in the Statistical Validation Report (Appendix E).
+No world-run triggered either collapse condition ($|P(t)| = 0$ or $|P(t)| < 3$ for 50 consecutive epochs) under the default definition. By the rule of three, the true collapse probability is at most 0.053% at 95% confidence. Statistical power exceeds 99.7% â€” at $N = 5{,}680$, even a true collapse rate of 0.1% would produce at least one observed collapse with probability > 0.997. Under stricter definitions, collapse rates increase sharply (Section 3.1). Complete statistical methodology is detailed in the Statistical Validation Report (Appendix E).
 
 #### 6.1.1 Null Hypothesis Test
 
@@ -393,26 +393,26 @@ This does not prove $p = 0$. It constrains: $p < 0.053\%$ at 95% confidence.
 
 | Experiment | Worlds | Mean Pop | Mean Fitness | Gini |
 |-----------|--------|----------|-------------|------|
-| Entropy sweep | 200 | 47.8–48.8 | 0.535–0.550 | 0.533–0.581 |
-| Catastrophe resilience | 140 | 48.4–49.1 | — | — |
-| Inequality threshold | 160 | 49.5 | 0.538–0.555 | 0.554–0.717 |
-| Treasury stability | 180 | 49.4 | 0.531–0.542 | 0.539–0.550 |
-| Metabolic inversion (5×) | 180 | — | — | — |
-| Basal inversion (10×) | 200 | — | — | — |
-| Dual inversion (3×/10×) | 200 | — | — | — |
-| Multi-axis collapse | 220 | — | — | — |
-| Resilience Q1 (both ON) | 220 | 45.1–49.1 | 0.533–0.579 | — |
-| Resilience Q4 (static) | 220 | 45.0–48.4 | 0.535–0.576 | — |
-| Resource depletion (scarce) | 150 | 30.2–30.3 | 0.541 | 0.490–0.507 |
+| Entropy sweep | 200 | 47.8â€“48.8 | 0.535â€“0.550 | 0.533â€“0.581 |
+| Catastrophe resilience | 140 | 48.4â€“49.1 | â€” | â€” |
+| Inequality threshold | 160 | 49.5 | 0.538â€“0.555 | 0.554â€“0.717 |
+| Treasury stability | 180 | 49.4 | 0.531â€“0.542 | 0.539â€“0.550 |
+| Metabolic inversion (5Ã—) | 180 | â€” | â€” | â€” |
+| Basal inversion (10Ã—) | 200 | â€” | â€” | â€” |
+| Dual inversion (3Ã—/10Ã—) | 200 | â€” | â€” | â€” |
+| Multi-axis collapse | 220 | â€” | â€” | â€” |
+| Resilience Q1 (both ON) | 220 | 45.1â€“49.1 | 0.533â€“0.579 | â€” |
+| Resilience Q4 (static) | 220 | 45.0â€“48.4 | 0.535â€“0.576 | â€” |
+| Resource depletion (scarce) | 150 | 30.2â€“30.3 | 0.541 | 0.490â€“0.507 |
 
-Population under baseline conditions stabilizes near 48–49 agents. Under resource scarcity (soft cap 30), equilibrium contracts to ~30. Fitness remains narrowly bounded (0.53–0.58 across all conditions). Gini coefficient ranges from 0.49 (scarce resource, equal poverty) to 0.72 (laissez-faire inequality threshold at 0.90).
+Population under baseline conditions stabilizes near 48â€“49 agents. Under resource scarcity (soft cap 30), equilibrium contracts to ~30. Fitness remains narrowly bounded (0.53â€“0.58 across all conditions). Gini coefficient ranges from 0.49 (scarce resource, equal poverty) to 0.72 (laissez-faire inequality threshold at 0.90).
 
 ### 6.3 Season 2 Summary
 
 | Experiment | Worlds | Mean Pop | Mean Fitness | Mean Gini | WCI | Repro Ineq | Surv Ineq |
 |-----------|--------|----------|-------------|-----------|-----|-----------|-----------|
-| S1: Treasury OFF (baseline) | 120 | 43.1 | 0.549 | — | — | — | — |
-| S1: Treasury OFF (hostile) | 120 | 41.8 | 0.577 | — | — | — | — |
+| S1: Treasury OFF (baseline) | 120 | 43.1 | 0.549 | â€” | â€” | â€” | â€” |
+| S1: Treasury OFF (hostile) | 120 | 41.8 | 0.577 | â€” | â€” | â€” | â€” |
 | S2: ATP decay OFF | 120 | 51.6 | 0.523 | 0.402 | 0.250 | 0.526 | 0.845 |
 | S3: All safety OFF | 120 | 38.9 | 0.591 | 0.457 | 0.488 | 0.865 | 0.892 |
 | S4: Zero regeneration | 120 | 23.0 | 0.519 | 0.593 | 0.393 | 0.951 | 0.941 |
@@ -421,7 +421,7 @@ Population under baseline conditions stabilizes near 48–49 agents. Under resou
 | S4: Full attack | 120 | 12.8 | 0.519 | 0.485 | 0.417 | 0.952 | 0.873 |
 | S4: Extended horizon (5K epochs) | 60 | 26.0 | 0.519 | 0.608 | 0.318 | 0.997 | 0.954 |
 
-Minimum observed population floor across all S4 experiments: 3 agents (the extinction floor threshold). The s4_full_attack configuration — zero resource regeneration, death draining pools, all safety mechanisms disabled, 10× reproduction cost — represents the most extreme structural violation tested. Mean population contracted to 12.8 but did not collapse under the default definition.
+Minimum observed population floor across all S4 experiments: 3 agents (the extinction floor threshold). The s4_full_attack configuration â€” zero resource regeneration, death draining pools, all safety mechanisms disabled, 10Ã— reproduction cost â€” represents the most extreme structural violation tested. Mean population contracted to 12.8 but did not collapse under the default definition.
 
 ### 6.4 Distributional Analysis
 
@@ -439,7 +439,7 @@ Population minima and mean distributions across Season 2 experiments:
 | S4: Full attack | 3 | 12.8 | Sustained near-floor |
 | S4: Extended horizon (5K) | 7 | 26.0 | Transient |
 
-Experiments S1–S3 never approach the extinction floor; the world-level extinction floor mechanism (juvenile cost rebates, stasis tolerance adjustments) clamps minimum populations at 20. In S4 experiments where this mechanism is disabled, populations reach the detection floor (3–7 agents), confirming that the world-level floor is a significant contributor to population persistence in earlier stages.
+Experiments S1â€“S3 never approach the extinction floor; the world-level extinction floor mechanism (juvenile cost rebates, stasis tolerance adjustments) clamps minimum populations at 20. In S4 experiments where this mechanism is disabled, populations reach the detection floor (3â€“7 agents), confirming that the world-level floor is a significant contributor to population persistence in earlier stages.
 
 The s4_full_attack configuration produces sustained near-floor populations (min = 3, mean = 12.8), meaning survival under the default collapse definition is narrow. A population of 3 is demographically fragile: with a maximum birth rate of 3 per epoch and single-parent reproduction, any single-epoch loss exceeding births would trigger a downward spiral. That this does not occur within 500 epochs is observed but not guaranteed at longer horizons.
 
@@ -453,9 +453,9 @@ Five Season 2 experiments produced populations that survive but exhibit economic
 | Survival inequality | 0.892 | 0.941 | 0.873 | 0.954 |
 | Wealth concentration (top 10%) | 0.488 | 0.393 | 0.417 | 0.318 |
 | Mean Gini | 0.457 | 0.593 | 0.485 | 0.608 |
-| Min population observed | — | 5 | 3 | 7 |
+| Min population observed | â€” | 5 | 3 | 7 |
 
-Reproductive inequality approaching 1.0 indicates that nearly all births originate from the top fitness quartile. Survival inequality approaching 1.0 indicates that nearly all deaths concentrate in the bottom quartile. These are survivable but degenerate states — the population persists structurally while exhibiting extreme stratification.
+Reproductive inequality approaching 1.0 indicates that nearly all births originate from the top fitness quartile. Survival inequality approaching 1.0 indicates that nearly all deaths concentrate in the bottom quartile. These are survivable but degenerate states â€” the population persists structurally while exhibiting extreme stratification.
 
 ### 6.6 Observed Stability Region
 
@@ -467,21 +467,21 @@ All tested configurations fall within a bounded region of the 10-dimensional par
 
 The system is intentionally multi-layer stabilized: logistic resource regeneration, redistributive treasury, homeostatic parameter control, mutation-driven genetic diversity, juvenile cost rebates, and extinction floor protection are all engineered mechanisms. Population persistence under benign conditions (Season 1) is therefore an expected consequence of the architecture, not evidence of emergent robustness. The more informative question is: does collapse emerge when these mechanisms are systematically removed?
 
-Season 2 addresses this directly by disabling mechanisms in combination. When all safety mechanisms are removed (S3, S4), population persistence narrows from a comfortable margin (min population ~20, mean ~49) to near-floor survival (min population 3, mean 12.8). The system does not exhibit graceful degradation — it exhibits a sharp transition from engineered stability to marginal survival. Under stricter collapse definitions ($P_{\text{floor}} = 10$), this marginal survival registers as near-universal collapse (97.5%).
+Season 2 addresses this directly by disabling mechanisms in combination. When all safety mechanisms are removed (S3, S4), population persistence narrows from a comfortable margin (min population ~20, mean ~49) to near-floor survival (min population 3, mean 12.8). The system does not exhibit graceful degradation â€” it exhibits a sharp transition from engineered stability to marginal survival. Under stricter collapse definitions ($P_{\text{floor}} = 10$), this marginal survival registers as near-universal collapse (97.5%).
 
 The results are consistent with several non-exclusive interpretive hypotheses. None constitute claims of proof.
 
 ### 7.1 Capital Circulation as Survival Mechanism
 
-The data is consistent with capital flow — ATP moving from extraction through agents through taxation back to treasury and redistribution — dominating capital accumulation as a determinant of population persistence. Disabling ATP decay (S2) increases population but produces oligarchic accumulation. Disabling treasury redistribution (S1) reduces population by ~13% but does not collapse it, suggesting that alternative survival pathways may exist through direct resource extraction.
+The data is consistent with capital flow â€” ATP moving from extraction through agents through taxation back to treasury and redistribution â€” dominating capital accumulation as a determinant of population persistence. Disabling ATP decay (S2) increases population but produces oligarchic accumulation. Disabling treasury redistribution (S1) reduces population by ~13% but does not collapse it, suggesting that alternative survival pathways may exist through direct resource extraction.
 
 ### 7.2 Population Contraction as Adaptive Response
 
-Under severe resource constraints (S4 zero regeneration), the population contracts from ~49 to ~23 agents. This contraction reduces total metabolic cost while preserving a core of high-fitness agents. The observed behavior is consistent with contraction functioning as a stabilizing response rather than a precursor to collapse — the system appears to find a lower-energy equilibrium rather than progressing to extinction. However, whether this equilibrium is stable at longer time horizons remains untested beyond 5,000 epochs.
+Under severe resource constraints (S4 zero regeneration), the population contracts from ~49 to ~23 agents. This contraction reduces total metabolic cost while preserving a core of high-fitness agents. The observed behavior is consistent with contraction functioning as a stabilizing response rather than a precursor to collapse â€” the system appears to find a lower-energy equilibrium rather than progressing to extinction. However, whether this equilibrium is stable at longer time horizons remains untested beyond 5,000 epochs.
 
 ### 7.3 Primordial Grant Momentum
 
-Under s4_full_attack (zero regeneration, death sink, all safety OFF, 10× reproduction cost), mean population stabilizes at 12.8. The initial primordial grant (50 ATP per agent) provides sufficient starting energy for high-fitness agents to reach reproductive threshold before resource depletion. The data does not determine whether this represents genuine stability or a slow decline that would manifest at longer time horizons. The s4_extended_horizon experiment (5,000 epochs, 10× standard duration) shows mean population of 26.0 agents with minimum of 7, which is consistent with persistent equilibrium but does not rule out secular decline on longer timescales.
+Under s4_full_attack (zero regeneration, death sink, all safety OFF, 10Ã— reproduction cost), mean population stabilizes at 12.8. The initial primordial grant (50 ATP per agent) provides sufficient starting energy for high-fitness agents to reach reproductive threshold before resource depletion. The data does not determine whether this represents genuine stability or a slow decline that would manifest at longer time horizons. The s4_extended_horizon experiment (5,000 epochs, 10Ã— standard duration) shows mean population of 26.0 agents with minimum of 7, which is consistent with persistent equilibrium but does not rule out secular decline on longer timescales.
 
 ### 7.4 Inequality Tolerance
 
@@ -505,13 +505,13 @@ The following limitations are stated explicitly:
 
 6. **No cross-architecture validation.** All experiments were run on a single Windows x86_64 machine. The same Rust source compiled on Linux or macOS may produce different floating-point intermediate values, leading to hash mismatches.
 
-7. **Adaptive cortex confound.** In Season 1 experiments where the homeostatic controller is active, parameter drift makes it difficult to attribute survival to the base parameter configuration versus the controller's corrections. Season 2 experiments (S2–S4) disable the cortex and mutation engine, partially isolating this confound.
+7. **Adaptive cortex confound.** In Season 1 experiments where the homeostatic controller is active, parameter drift makes it difficult to attribute survival to the base parameter configuration versus the controller's corrections. Season 2 experiments (S2â€“S4) disable the cortex and mutation engine, partially isolating this confound.
 
-8. **Fitness function arbitrariness.** The weight vector $\mathbf{w} = (0.25, 0.30, 0.20, 0.25)$ is a design choice without empirical grounding. Sensitivity analysis (Appendix D) indicates that ±20% perturbation produces at most 0.8 percentage points of collapse rate change, suggesting the reported results are not weight-tuning artifacts. However, larger perturbations and qualitatively different fitness functions (e.g., nonlinear, multiplicative) remain untested.
+8. **Fitness function arbitrariness.** The weight vector $\mathbf{w} = (0.25, 0.30, 0.20, 0.25)$ is a design choice without empirical grounding. Sensitivity analysis (Appendix D) indicates that Â±20% perturbation produces at most 0.8 percentage points of collapse rate change, suggesting the reported results are not weight-tuning artifacts. However, larger perturbations and qualitatively different fitness functions (e.g., nonlinear, multiplicative) remain untested.
 
-9. **No analytical stability proof.** All results are empirical. No formal stability analysis (e.g., Lyapunov functions, spectral analysis of linearized dynamics) has been performed. The system's high dimensionality (agent-level state × population size × 5 resource pools × treasury × cortex state) makes analytical treatment intractable without significant simplification. The absence of collapse in 5,680 runs does not constitute a proof of stability.
+9. **No analytical stability proof.** All results are empirical. No formal stability analysis (e.g., Lyapunov functions, spectral analysis of linearized dynamics) has been performed. The system's high dimensionality (agent-level state Ã— population size Ã— 5 resource pools Ã— treasury Ã— cortex state) makes analytical treatment intractable without significant simplification. The absence of collapse in 5,680 runs does not constitute a proof of stability.
 
-10. **Engineered redundancy.** The system includes multiple overlapping stabilization mechanisms: logistic resource regeneration, redistributive treasury, homeostatic controller, juvenile cost rebates, extinction floor protection, and mutation-driven diversity. Under benign conditions (Season 1), these redundancies make collapse unlikely by design. The more informative results come from Season 2, where mechanisms are removed. Even there, the world-level extinction floor mechanism (disabled only in S4) provides implicit population support in S1–S3 stages. The contribution of each individual mechanism to survival is partially confounded by the presence of others.
+10. **Engineered redundancy.** The system includes multiple overlapping stabilization mechanisms: logistic resource regeneration, redistributive treasury, homeostatic controller, juvenile cost rebates, extinction floor protection, and mutation-driven diversity. Under benign conditions (Season 1), these redundancies make collapse unlikely by design. The more informative results come from Season 2, where mechanisms are removed. Even there, the world-level extinction floor mechanism (disabled only in S4) provides implicit population support in S1â€“S3 stages. The contribution of each individual mechanism to survival is partially confounded by the presence of others.
 
 11. **Fitness weight application scope.** The fitness weight sensitivity analysis (Appendix D) applies custom weights only to the selection and replication pathways. Resource extraction efficiency in the world simulation still uses the default fitness function. A complete weight override across all fitness-dependent pathways remains untested.
 
@@ -560,9 +560,9 @@ Report replication results via GitHub Issue on `FTHTrading/Genesis` with:
 
 ## 10. Conclusion
 
-Across 5,680 deterministic world simulations spanning 38 experiment configurations and 2,840,000 computed epochs, no population collapses were observed under the default collapse definition ($P_{\text{floor}} = 3$, $N_w = 50$ epochs; 95% CI [0, 0.065%], Clopper-Pearson exact; power > 99.7% at $p = 0.001$). Season 1 established robustness under parameter stress with all stabilization mechanisms active. Season 2 demonstrated persistence under systematic removal of structural mechanisms including treasury redistribution, ATP decay, resource regeneration, and reproduction grants. The most extreme configuration tested — simultaneous removal of all safety mechanisms with maximal economic hostility — produced contracted but surviving populations (mean 12.8 agents, minimum 3) exhibiting severe inequality.
+Across 5,680 deterministic world simulations spanning 38 experiment configurations and 2,840,000 computed epochs, no population collapses were observed under the default collapse definition ($P_{\text{floor}} = 3$, $N_w = 50$ epochs; 95% CI [0, 0.065%], Clopper-Pearson exact; power > 99.7% at $p = 0.001$). Season 1 established robustness under parameter stress with all stabilization mechanisms active. Season 2 demonstrated persistence under systematic removal of structural mechanisms including treasury redistribution, ATP decay, resource regeneration, and reproduction grants. The most extreme configuration tested â€” simultaneous removal of all safety mechanisms with maximal economic hostility â€” produced contracted but surviving populations (mean 12.8 agents, minimum 3) exhibiting severe inequality.
 
-The zero-collapse result is contingent on the permissive collapse definition. Under $P_{\text{floor}} = 10$, near-universal collapse (97.5%) occurs in the most extreme configuration. The collapse boundary, with respect to population floor definition, lies between $P_{\text{floor}} = 5$ and $P_{\text{floor}} = 10$ under maximal stress. Fitness function weight perturbations of ±20% produce negligible effect on collapse rates (≤0.8 percentage points), indicating that the results are not artifacts of weight selection.
+The zero-collapse result is contingent on the permissive collapse definition. Under $P_{\text{floor}} = 10$, near-universal collapse (97.5%) occurs in the most extreme configuration. The collapse boundary, with respect to population floor definition, lies between $P_{\text{floor}} = 5$ and $P_{\text{floor}} = 10$ under maximal stress. Fitness function weight perturbations of Â±20% produce negligible effect on collapse rates (â‰¤0.8 percentage points), indicating that the results are not artifacts of weight selection.
 
 These results characterize a stability region within the tested parameter space under a specific collapse definition. They do not establish collapse impossibility, universal stability, or generalizability beyond the tested configurations. The system's multi-layer stabilization architecture contributes significantly to population persistence; the extent to which observed survival reflects intrinsic dynamical stability versus engineered redundancy remains an open question. Independent replication is required to strengthen confidence in these findings.
 
@@ -570,7 +570,7 @@ These results characterize a stability region within the tested parameter space 
 
 ## References
 
-Burns, K. (2026). Genesis Protocol: Autonomous Metabolic Organism with Survival Economics. Zenodo. doi:10.5281/zenodo.18646886
+Burns, K. (2026). Genesis Protocol: Autonomous Metabolic Organism with Survival Economics. Zenodo. doi:10.5281/zenodo.18729652
 
 Knuth, D. E. (1997). *The Art of Computer Programming, Vol. 2: Seminumerical Algorithms* (3rd ed.). Addison-Wesley. [LCG constants: MMIX parameters]
 
@@ -601,7 +601,7 @@ The complete hash registry for all 38 experiments is published in `replication_s
 
 ## Appendix C: Collapse Definition Sensitivity
 
-The s4_full_attack configuration (zero resource regeneration, death draining resource pools, all safety mechanisms disabled, 10× reproduction cost, soft cap sweep 30–180, 20 runs per step, 500 epochs, base seed 42) was executed under varying extinction floor definitions while holding all other parameters constant. The extinction window ($N_w = 50$) was held fixed. Each configuration produced 120 world-runs.
+The s4_full_attack configuration (zero resource regeneration, death draining resource pools, all safety mechanisms disabled, 10Ã— reproduction cost, soft cap sweep 30â€“180, 20 runs per step, 500 epochs, base seed 42) was executed under varying extinction floor definitions while holding all other parameters constant. The extinction window ($N_w = 50$) was held fixed. Each configuration produced 120 world-runs.
 
 ### C.1 Collapse Rate by Floor Definition
 
@@ -615,9 +615,9 @@ The s4_full_attack configuration (zero resource regeneration, death draining res
 
 ### C.2 Interpretation
 
-The collapse boundary under the s4_full_attack configuration lies between $P_{\text{floor}} = 5$ (5.8% collapse) and $P_{\text{floor}} = 10$ (97.5% collapse). This indicates that populations under maximal stress stabilize in the range of 3–8 agents. The sharp phase transition between floor 5 and floor 10 implies that the system's equilibrium population under extreme conditions is narrowly bounded.
+The collapse boundary under the s4_full_attack configuration lies between $P_{\text{floor}} = 5$ (5.8% collapse) and $P_{\text{floor}} = 10$ (97.5% collapse). This indicates that populations under maximal stress stabilize in the range of 3â€“8 agents. The sharp phase transition between floor 5 and floor 10 implies that the system's equilibrium population under extreme conditions is narrowly bounded.
 
-At $P_{\text{floor}} = 3$, the default definition, all 120 worlds survive. At $P_{\text{floor}} = 5$, 7 of 120 worlds (5.8%) collapse — meaning populations in those worlds dropped below 5 for 50+ consecutive epochs. At $P_{\text{floor}} = 10$, 117 of 120 worlds (97.5%) register as collapsed, despite containing living agents. The 3 surviving worlds at $P_{\text{floor}} = 10$ are those at higher soft cap values where the population can sustain above 10.
+At $P_{\text{floor}} = 3$, the default definition, all 120 worlds survive. At $P_{\text{floor}} = 5$, 7 of 120 worlds (5.8%) collapse â€” meaning populations in those worlds dropped below 5 for 50+ consecutive epochs. At $P_{\text{floor}} = 10$, 117 of 120 worlds (97.5%) register as collapsed, despite containing living agents. The 3 surviving worlds at $P_{\text{floor}} = 10$ are those at higher soft cap values where the population can sustain above 10.
 
 This analysis shows that the zero-collapse headline result is sensitive to the permissiveness of the collapse definition. Under stricter but reasonable definitions, the system's characterization changes from "universally surviving" to "mostly collapsed." Both characterizations are accurate descriptions of the same underlying population dynamics; they differ only in where the observation threshold is placed.
 
@@ -636,25 +636,25 @@ Minimum populations hit the floor (3) at all soft cap values, confirming that ev
 
 ## Appendix D: Fitness Weight Robustness
 
-The s4_full_attack configuration was executed with systematic ±20% perturbations of each individual fitness weight, with renormalization to maintain $\sum w_i = 1.0$. One weight was perturbed at a time (increased or decreased by 20% of its default value), and all four weights were then divided by their new sum. This produced 8 perturbation variants plus 1 default baseline, each comprising 120 world-runs.
+The s4_full_attack configuration was executed with systematic Â±20% perturbations of each individual fitness weight, with renormalization to maintain $\sum w_i = 1.0$. One weight was perturbed at a time (increased or decreased by 20% of its default value), and all four weights were then divided by their new sum. This produced 8 perturbation variants plus 1 default baseline, each comprising 120 world-runs.
 
 ### D.1 Results
 
 | Variant | CE ($w_0$) | SQ ($w_1$) | RF ($w_2$) | CC ($w_3$) | Collapse Rate | Collapsed / Total | 95% CI |
 |---------|-----------|-----------|-----------|-----------|---------------|-------------------|--------|
 | Default | 0.2500 | 0.3000 | 0.2000 | 0.2500 | 0.0% | 0 / 120 | [0, 3.0%] |
-| CE −20% | 0.2105 | 0.3158 | 0.2105 | 0.2632 | 0.0% | 0 / 120 | [0, 3.0%] |
+| CE âˆ’20% | 0.2105 | 0.3158 | 0.2105 | 0.2632 | 0.0% | 0 / 120 | [0, 3.0%] |
 | CE +20% | 0.2857 | 0.2857 | 0.1905 | 0.2381 | 0.8% | 1 / 120 | [0.02%, 4.6%] |
-| SQ −20% | 0.2660 | 0.2553 | 0.2128 | 0.2660 | 0.0% | 0 / 120 | [0, 3.0%] |
+| SQ âˆ’20% | 0.2660 | 0.2553 | 0.2128 | 0.2660 | 0.0% | 0 / 120 | [0, 3.0%] |
 | SQ +20% | 0.2358 | 0.3396 | 0.1887 | 0.2358 | 0.0% | 0 / 120 | [0, 3.0%] |
-| RF −20% | 0.2604 | 0.3125 | 0.1667 | 0.2604 | 0.8% | 1 / 120 | [0.02%, 4.6%] |
+| RF âˆ’20% | 0.2604 | 0.3125 | 0.1667 | 0.2604 | 0.8% | 1 / 120 | [0.02%, 4.6%] |
 | RF +20% | 0.2404 | 0.2885 | 0.2308 | 0.2404 | 0.0% | 0 / 120 | [0, 3.0%] |
-| CC −20% | 0.2632 | 0.3158 | 0.2105 | 0.2105 | 0.0% | 0 / 120 | [0, 3.0%] |
+| CC âˆ’20% | 0.2632 | 0.3158 | 0.2105 | 0.2105 | 0.0% | 0 / 120 | [0, 3.0%] |
 | CC +20% | 0.2381 | 0.2857 | 0.1905 | 0.2857 | 0.0% | 0 / 120 | [0, 3.0%] |
 
 ### D.2 Interpretation
 
-Maximum observed collapse rate under any ±20% perturbation: 0.8% (1 world out of 120). The two variants producing collapse (CE +20% and RF −20%) both shift weight away from Resource Foraging ($w_2$), which governs extraction efficiency. This is consistent with resource extraction being a critical survival pathway under zero-regeneration conditions.
+Maximum observed collapse rate under any Â±20% perturbation: 0.8% (1 world out of 120). The two variants producing collapse (CE +20% and RF âˆ’20%) both shift weight away from Resource Foraging ($w_2$), which governs extraction efficiency. This is consistent with resource extraction being a critical survival pathway under zero-regeneration conditions.
 
 The system is highly weight-insensitive within the tested perturbation range. The zero-collapse result does not depend on precise weight calibration. However, this analysis is limited to small perturbations around the default weights; qualitatively different weight distributions (e.g., single-trait dominance, uniform weights at $w = 0.25$ across all dimensions) or nonlinear fitness functions remain untested.
 
@@ -681,10 +681,10 @@ A systematic catalogue of all observed failure modes, pathological states, and d
 
 1. **Strict collapse definition failures**: Under $P_{\text{floor}} = 10$, 97.5% of worlds collapse (Section 1.1). The system maintains minimum viable population ($\geq 3$) but does not achieve robust population sizes under maximal stress.
 
-2. **Pathological survival states**: Under s4_full_attack, populations persist at mean 12.8 but exhibit reproductive inequality of 0.952 and survival inequality of 0.873 — a degenerate oligarchy where a tiny minority monopolizes reproduction (Section 2.1).
+2. **Pathological survival states**: Under s4_full_attack, populations persist at mean 12.8 but exhibit reproductive inequality of 0.952 and survival inequality of 0.873 â€” a degenerate oligarchy where a tiny minority monopolizes reproduction (Section 2.1).
 
-3. **Fitness function fragility**: Perturbation of the Resource Foraging weight by −20% causes collapses, identifying a single-point fragility in the selection function (Section 4.3).
+3. **Fitness function fragility**: Perturbation of the Resource Foraging weight by âˆ’20% causes collapses, identifying a single-point fragility in the selection function (Section 4.3).
 
-4. **Extinction floor dependency**: The global minimum population observed in any core experiment is exactly 3 — the extinction floor threshold — indicating that the floor mechanism actively prevents collapse in extreme conditions (Section 4.1).
+4. **Extinction floor dependency**: The global minimum population observed in any core experiment is exactly 3 â€” the extinction floor threshold â€” indicating that the floor mechanism actively prevents collapse in extreme conditions (Section 4.1).
 
 5. **Untested regimes**: 8 categories of untested conditions are documented, including epochs > 1,000, populations > 200, correlated shocks, adversarial agents, and multiple simultaneous weight perturbations (Section 5).

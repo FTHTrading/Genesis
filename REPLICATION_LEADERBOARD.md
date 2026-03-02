@@ -1,4 +1,4 @@
-# Replication Leaderboard
+﻿# Replication Leaderboard
 
 **Status:** Awaiting first independent replication.
 
@@ -48,7 +48,7 @@ All hashes are SHA-256: `result_hash` from each experiment manifest.
 
 Full registry: [`replication_status.json`](replication_status.json) (38 experiments, 5,680 worlds).
 
-### Season 1 — Survival Under Hostile Conditions (25 experiments, 4,180 worlds)
+### Season 1 â€” Survival Under Hostile Conditions (25 experiments, 4,180 worlds)
 
 | Experiment | Worlds | Seed | Result Hash (first 16) |
 |---|---|---|---|
@@ -78,7 +78,7 @@ Full registry: [`replication_status.json`](replication_status.json) (38 experime
 | resource_depletion_scarce | 150 | 20260222 | `270d93fce13b9654` |
 | treasury_stability | 180 | 20260222 | `8eaf27d368207e2b` |
 
-### Season 2 — Structural Invariant Violations (13 experiments, 1,500 worlds)
+### Season 2 â€” Structural Invariant Violations (13 experiments, 1,500 worlds)
 
 | Experiment | Worlds | Seed | Result Hash (first 16) |
 |---|---|---|---|
@@ -102,7 +102,7 @@ Full registry: [`replication_status.json`](replication_status.json) (38 experime
 
 | # | Replicator | Experiments | Matches | Mismatches | Platform | Date |
 |---|---|---|---|---|---|---|
-| — | *awaiting first entry* | — | — | — | — | — |
+| â€” | *awaiting first entry* | â€” | â€” | â€” | â€” | â€” |
 
 ---
 
@@ -139,7 +139,7 @@ Post the mismatch. Include:
 - Your OS, Rust version, and CPU architecture
 - Any non-default configuration
 
-Cross-platform hash mismatches are expected if floating-point behavior differs. Document them — that's science.
+Cross-platform hash mismatches are expected if floating-point behavior differs. Document them â€” that's science.
 
 ---
 
@@ -175,7 +175,7 @@ Platforms tested: 0
 
 ## References
 
-- Whitepaper: [WHITEPAPER.md](WHITEPAPER.md) — DOI: [10.5281/zenodo.18646886](https://doi.org/10.5281/zenodo.18646886)
+- Whitepaper: [WHITEPAPER.md](WHITEPAPER.md) â€” DOI: [10.5281/zenodo.18729652](https://doi.org/10.5281/zenodo.18729652)
 - Collapse Definition: [COLLAPSE_DEFINITION.md](COLLAPSE_DEFINITION.md)
 - Adversarial Blueprint: [COLLAPSE_HUNTER.md](COLLAPSE_HUNTER.md)
 - Hash Registry: [replication_status.json](replication_status.json)

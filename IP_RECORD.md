@@ -1,4 +1,4 @@
-# Genesis Protocol — IP Priority Record
+﻿# Genesis Protocol â€” IP Priority Record
 
 **Document Type:** Intellectual Property Priority Evidence
 **Created:** 2026-02-22
@@ -55,7 +55,7 @@ No known published system integrates all six capabilities.
 
 ### 3. Domain Application
 - FTH Reserve Stress Suite models real-world asset-backed stablecoin reserves
-- Four-tier shock scenarios (calm → crisis) with crossover detection
+- Four-tier shock scenarios (calm â†’ crisis) with crossover detection
 - Direct applicability to FTHUSD / USDF reserve management
 
 ---
@@ -64,15 +64,15 @@ No known published system integrates all six capabilities.
 
 ```
 Git commit (immutable SHA)
-    ↓
+    â†“
 Frozen bundle (local archive)
-    ↓
+    â†“
 SHA-256 hash (integrity proof)
-    ↓
+    â†“
 IPFS CID (content-addressed, timestamped, distributed)
-    ↓
-DOI 10.5281/zenodo.18646886 (academic record)
-    ↓
+    â†“
+DOI 10.5281/zenodo.18729652 (academic record)
+    â†“
 This document (evidence manifest)
 ```
 
@@ -84,17 +84,17 @@ Each layer independently proves existence at the stated time.
 
 ```
 Genesis-Protocol-v1.0.0-Experimental-Engine/
-├── SYSTEM_STATE.md          # Engine state at freeze
-├── BUNDLE_MANIFEST.md       # Full contents listing
-├── README.md                # Project overview
-├── crate-snapshot/          # Build metadata (Cargo.toml/lock, .zenodo.json, CITATION.cff)
-│   └── CRATE_MANIFEST.md   # 13-crate architecture
-├── experiments/             # 8 experiment outputs (data + manifests + reports)
-├── deliverables/            # Experiment Pack v3
-├── papers/                  # 3 technical papers
-└── integrity/
-    ├── sha256sums.txt       # SHA-256 of every file (62 entries)
-    └── archive-hash.txt     # SHA-256 of the .tar.gz
+â”œâ”€â”€ SYSTEM_STATE.md          # Engine state at freeze
+â”œâ”€â”€ BUNDLE_MANIFEST.md       # Full contents listing
+â”œâ”€â”€ README.md                # Project overview
+â”œâ”€â”€ crate-snapshot/          # Build metadata (Cargo.toml/lock, .zenodo.json, CITATION.cff)
+â”‚   â””â”€â”€ CRATE_MANIFEST.md   # 13-crate architecture
+â”œâ”€â”€ experiments/             # 8 experiment outputs (data + manifests + reports)
+â”œâ”€â”€ deliverables/            # Experiment Pack v3
+â”œâ”€â”€ papers/                  # 3 technical papers
+â””â”€â”€ integrity/
+    â”œâ”€â”€ sha256sums.txt       # SHA-256 of every file (62 entries)
+    â””â”€â”€ archive-hash.txt     # SHA-256 of the .tar.gz
 ```
 
 ### Excluded (Trade Secret)
@@ -107,8 +107,8 @@ Genesis-Protocol-v1.0.0-Experimental-Engine/
 ## Legal Status
 
 - **Prior Art:** Established via git history (first commit predates this record)
-- **Publication:** DOI 10.5281/zenodo.18646886 (Open-Access Archived on Zenodo)
-- **Patent Strategy:** Hybrid — provisional patent + selective trade secret (pending)
+- **Publication:** DOI 10.5281/zenodo.18729652 (Open-Access Archived on Zenodo)
+- **Patent Strategy:** Hybrid â€” provisional patent + selective trade secret (pending)
 - **Trademark:** FTH Trading, FTHUSD, Genesis Protocol (pending)
 - **License:** Proprietary. All rights reserved.
 
@@ -116,7 +116,7 @@ Genesis-Protocol-v1.0.0-Experimental-Engine/
 
 ## Next Steps
 
-- [ ] Upload archive to IPFS via Pinata → record CID above
+- [ ] Upload archive to IPFS via Pinata â†’ record CID above
 - [ ] Technical Disclosure Document (Day 2-3)
 - [ ] Provisional patent application outline (Day 5)
 - [ ] Trademark filing preparation
