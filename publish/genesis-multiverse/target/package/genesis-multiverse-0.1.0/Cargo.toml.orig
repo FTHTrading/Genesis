@@ -1,0 +1,15 @@
+[package]
+name = "genesis-multiverse"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+description = "Multiverse-scale systemic experiment engine. Deterministic simulation across parameter space with phase transition detection and collapse boundary mapping."
+repository = "https://github.com/FTHTrading/Genesis"
+homepage = "https://github.com/FTHTrading/Genesis"
+documentation = "https://docs.rs/genesis-multiverse"
+readme = "README.md"
+keywords = ["simulation", "economics", "multiverse", "stability", "experiment"]
+categories = ["science", "simulation"]
+
+# Treat as independent workspace root — prevents Cargo from inheriting the parent workspace
+[workspace]
