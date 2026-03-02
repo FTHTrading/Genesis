@@ -1,6 +1,6 @@
 # Collapse Bounty — Open Challenge
 
-38 experiments. 5,680 worlds. Zero collapses.
+44 experiments. 6,820 worlds. Zero collapses.
 
 Single-operator result. Unverified. This is an open invitation to change that.
 

@@ -1,12 +1,12 @@
 ﻿# Genesis Protocol
 
-Deterministic multi-agent economic simulation engine. 13 Rust crates. 396 tests. 7,360 simulated worlds. Zero compiler warnings.
+Deterministic multi-agent economic simulation engine. 13 Rust crates. 396 tests. 6,820 simulated worlds. Zero compiler warnings.
 
 ## Abstract
 
 Genesis Protocol is a closed-economy agent-based simulation in which heterogeneous agents extract resources from logistic niche pools, pay metabolic costs, reproduce conditionally based on a four-trait fitness function, and face stochastic catastrophes. A redistributive treasury, homeostatic parameter controller (Cortex), and bounded genetic mutation engine provide adaptive capacity. Every state transition is deterministically seeded via SHA-256 hash chains and Knuth MMIX LCG, producing bit-identical results on the same architecture.
 
-52 experiment configurations across three research phases (Season 1, Season 2, Sensitivity) have produced 7,360 independent world simulations totaling over 3,680,000 computed epochs. Under the default collapse definition ($P_{\text{floor}} = 3$, 50-epoch sustained window), no collapses were observed. Under stricter definitions ($P_{\text{floor}} = 10$), collapse rates exceed 97%. The zero-collapse result is contingent on the permissive default definition, the presence of a world-level extinction floor mechanism, and multi-layer engineered stabilization. The global stability boundary remains an open problem.
+44 experiment configurations across three research phases (Season 1, Season 2, Sensitivity) have produced 6,820 independent world simulations totaling over 3,410,000 computed epochs. Under the default collapse definition ($P_{\text{floor}} = 3$, 50-epoch sustained window), no collapses were observed. Under stricter definitions ($P_{\text{floor}} = 10$), collapse rates exceed 97%. The zero-collapse result is contingent on the permissive default definition, the presence of a world-level extinction floor mechanism, and multi-layer engineered stabilization. The global stability boundary remains an open problem.
 
 ## Architecture
 
@@ -37,7 +37,7 @@ Divergence between chains is detectable. Replay integrity is verifiable to any d
 
 ## Experiment Summary
 
-### Season 1 — Parameter Sweeps (25 experiments, 4,180 worlds)
+### Season 1 — Parameter Sweeps (17 experiments, 3,640 worlds)
 
 | Domain | Experiments | Worlds | Key Finding |
 |---|---|---|---|
@@ -47,12 +47,13 @@ Divergence between chains is detectable. Replay integrity is verifiable to any d
 | Treasury Stability | 1 | 180 | Reserve threshold sweep → <1% Gini variation across all policies |
 | Reserve Stress (4 tiers) | 4 | 540 | Optimal threshold shifts +0.60 under escalating shock rates |
 | Resource Depletion (4 tiers) | 4 | 600 | Carrying capacity compression from 200 to 30 |
-| Resilience Quadrants | 4 | 560 | Cortex immunity × genetic immunity factorial design |
+| Resilience Quadrants | 4 | 880 | Cortex immunity × genetic immunity factorial design |
 | Inversion Experiments | 3 | 360 | Basal, dual, and metabolic inversion sweeps |
 | Multi-Axis Collapse | 1 | 240 | Combined stressor escalation |
 | Evolution Forbidden | 1 | 200 | Mutation disabled: population persists on initial genome |
 
 ### Season 2 — Structural Invariant Violations (13 experiments, 1,500 worlds)
+
 
 Systematically disabled treasury redistribution, ATP decay, resource regeneration, and reproduction grants — individually and in combination.
 
@@ -64,7 +65,7 @@ Systematically disabled treasury redistribution, ATP decay, resource regeneratio
 | Death-sink economy | Resources drain on death, population compressed |
 | Extended horizon (1000 epochs) | Late-stage dynamics observable |
 
-### Sensitivity Analysis (13 configurations, 1,680 worlds)
+### Sensitivity Analysis (14 configurations, 1,680 worlds)
 
 | Test | Result |
 |---|---|
@@ -96,10 +97,13 @@ Sharp phase transition between floor = 5 and floor = 10. The zero-collapse headl
 git clone https://github.com/FTHTrading/Genesis.git
 cd Genesis
 cargo build --release
-cargo test --workspace          # 396 tests, 0 failures
-cargo run --release --bin run_experiments    # Season 1: 25 experiments
-cargo run --release --bin run_season2        # Season 2: 13 experiments
-cargo run --release --bin sensitivity_analysis  # Sensitivity: 13 configs
+cargo test --workspace                            # 396 tests, 0 failures
+cargo run --release --bin run_experiments         # Season 1: 17 experiments
+cargo run --release --bin s1_treasury_disabled    # Season 2-S1: treasury
+cargo run --release --bin s2_atp_decay_disabled   # Season 2-S2: ATP decay
+cargo run --release --bin s3_coupled_violations   # Season 2-S3: coupled
+cargo run --release --bin s4_topology_violations  # Season 2-S4: topology
+cargo run --release --bin sensitivity_analysis    # Sensitivity: 14 configs
 ```
 
 Each experiment outputs:
@@ -115,9 +119,9 @@ All results are seeded from `20260222`. Deterministic on the same architecture.
 |---|---|
 | Crates | 13 |
 | Tests | 396 passing, 0 failed |
-| Experiment configurations | 51 |
-| World simulations | 7,360 |
-| Computed epochs | > 3,680,000 |
+| Experiment configurations | 44 |
+| World simulations | 6,820 |
+| Computed epochs | > 3,410,000 |
 | Collapses (default definition) | 0 |
 | Collapses (floor ≥ 10) | > 97% |
 | Rust edition | 2021 |

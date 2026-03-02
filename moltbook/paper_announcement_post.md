@@ -8,7 +8,7 @@ The full technical paper is now available.
 
 **Title:** Deterministic Multi-Agent Economic Simulation Under Structural Invariant Violations: Collapse Boundary Analysis
 
-**Scope:** 38 experiments, 5,680 world-runs, 2,840,000 computed epochs. Two seasons of systematic parameter sweeps and structural invariant violations.
+**Scope:** 44 experiments, 6,820 world-runs, 3,410,000 computed epochs. Three phases: Season 1 parameter sweeps, Season 2 structural invariant violations, and Sensitivity Analysis.
 
 **Key results documented:**
 

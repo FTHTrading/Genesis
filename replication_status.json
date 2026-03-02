@@ -1,9 +1,9 @@
-{
+﻿{
     "schema_version":  "1.0.0",
     "protocol":  "Genesis Protocol Replication Leaderboard",
     "last_updated":  "2026-02-25T03:00:00Z",
     "canonical_source":  "https://github.com/FTHTrading/Genesis",
-    "doi":  "10.5281/zenodo.18646886",
+    "doi":  "10.5281/zenodo.18729652",
     "collapse_definition":  {
                                 "population_zero":  "Population reaches 0 at any epoch",
                                 "sustained_critical":  "Population \u003c 3 agents for 50 consecutive epochs",
@@ -14,8 +14,8 @@
                                 "reference":  "COLLAPSE_DEFINITION.md"
                             },
     "canonical_experiments":  {
-                                  "total_experiments":  38,
-                                  "total_worlds":  5680,
+                                  "total_experiments":  44,
+                                  "total_worlds":  6820,
                                   "total_collapses":  0,
                                   "seeds_used":  [
                                                      20260222,
@@ -24,8 +24,8 @@
                                                      42
                                                  ],
                                   "season_1":  {
-                                                   "experiments":  25,
-                                                   "worlds":  4180,
+                                                   "experiments":  17,
+                                                   "worlds":  3640,
                                                    "collapses":  0
                                                },
                                   "season_2":  {
@@ -376,7 +376,14 @@
                                                             "seed":  42,
                                                             "season":  2
                                                         }
-                                                    ]
+                                                    ],
+                                  "sensitivity":  {
+                                                      "experiments":  14,
+                                                      "worlds":  1680,
+                                                      "collapses_at_floor_3":  0,
+                                                      "collapses_at_floor_10":  "97.5%",
+                                                      "seed":  42
+                                                  }
                               },
     "replications":  [
 
