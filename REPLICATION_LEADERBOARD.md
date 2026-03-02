@@ -131,15 +131,49 @@ After running the experiments:
 
 ### If Hashes Don't Match
 
-**That's more valuable than a match.**
+**Post it. A mismatch is more scientifically valuable than a match.**
 
-Post the mismatch. Include:
-- Your full result hash
-- The diff between your manifest and the canonical one
-- Your OS, Rust version, and CPU architecture
-- Any non-default configuration
+There are three divergence scenarios, each with a different interpretation:
 
-Cross-platform hash mismatches are expected if floating-point behavior differs. Document them â€” that's science.
+---
+
+**Scenario A — Minor divergence (platform variance)**
+
+Your hashes differ slightly. Population counts or fitness values vary by small margins across platforms.
+
+*Interpretation:* Expected if floating-point arithmetic differs across CPU architectures or Rust versions. The simulation uses deterministic seeding but floating-point accumulation over 500 epochs can produce platform-specific divergence.
+
+*What to do:* Submit the mismatch with full platform details. This is a documentation finding, not a failure. It extends the platform coverage map.
+
+---
+
+**Scenario B — Structural divergence (Rust version sensitivity)**
+
+Your hashes differ significantly but the zero-collapse result holds. Different world trajectories, same aggregate outcome.
+
+*Interpretation:* The collapse boundary is robust across platforms even if exact world histories differ. If zero collapses on your platform, that is independent corroboration of the main result under a different trajectory distribution.
+
+*What to do:* Submit with both your hash and your collapse count. Note whether zero-collapse holds on your platform. That is a partial independent replication regardless of hash match.
+
+---
+
+**Scenario C — Major divergence (determinism failure)**
+
+Your hashes differ substantially and your collapse results differ from the canonical record. You observe collapses where the canonical run records none, or vice versa.
+
+*Interpretation:* This is the most important possible finding. It means either: (1) the engine is not fully deterministic across platforms, or (2) a bug exists in the canonical run or your run that produces different effective configurations.
+
+*What to do:*
+1. Submit the full divergence immediately — GitHub Issue with label `determinism-failure`
+2. Include: your result hash, collapse count, world index of any collapse, your OS/Rust/architecture
+3. This will be treated as a priority investigation, not a defense
+4. If determinism is broken, that finding will be published directly — it supersedes all prior claims
+
+The canonical result is a measurement. Measurements can be wrong. If Scenario C occurs, the correct response is investigation and publication, not dispute.
+
+---
+
+In all cases: post what you found. The hash registry exists to be tested.
 
 ---
 
