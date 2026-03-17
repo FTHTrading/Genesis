@@ -107,11 +107,11 @@ To verify collapse detection:
 
 ```bash
 git clone https://github.com/FTHTrading/Genesis.git
-cd AI
+cd Genesis
 cargo test --release -p genesis-experiment
 ```
 
-The test suite includes experiments specifically designed to approach (but not cross) the collapse boundary. All 4,920 worlds across 36 configurations produced `collapse_epoch: None`.
+The test suite includes experiments specifically designed to approach (but not cross) the collapse boundary. All 6,820 worlds across 44 configurations produced `collapse_epoch: None`.
 
 ---
 

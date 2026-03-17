@@ -97,8 +97,8 @@ Genesis-Protocol-v1.0.0-Experimental-Engine/
     â””â”€â”€ archive-hash.txt     # SHA-256 of the .tar.gz
 ```
 
-### Excluded (Trade Secret)
-- All source code (`crates/*/src/**`)
+### Excluded (Historical — now MIT licensed)
+- All source code (`crates/*/src/**`) — previously proprietary, now open source
 - Build artifacts and binaries
 - Private keys and wallet configuration
 
@@ -110,7 +110,7 @@ Genesis-Protocol-v1.0.0-Experimental-Engine/
 - **Publication:** DOI 10.5281/zenodo.18729652 (Open-Access Archived on Zenodo)
 - **Patent Strategy:** Hybrid â€” provisional patent + selective trade secret (pending)
 - **Trademark:** FTH Trading, FTHUSD, Genesis Protocol (pending)
-- **License:** Proprietary. All rights reserved.
+- **License:** MIT (see LICENSE file). Source code is open source as of v0.1.0.
 
 ---
 

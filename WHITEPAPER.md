@@ -897,7 +897,7 @@ All experiments are fully reproducible from source:
 ```bash
 # Clone
 git clone https://github.com/FTHTrading/Genesis.git
-cd AI
+cd Genesis
 
 # Run all 67 experiment tests
 cargo test

@@ -1,9 +1,9 @@
 [package]
 name = "genesis-multiverse"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 license = "MIT"
-description = "Multiverse-scale systemic experiment engine. Deterministic simulation across parameter space with phase transition detection and collapse boundary mapping."
+description = "Public crate namespace for the Genesis Protocol simulation ecosystem. Canonical metadata, experiment totals, and repository linkage for the 13-crate deterministic macroeconomic simulation engine."
 repository = "https://github.com/FTHTrading/Genesis"
 homepage = "https://github.com/FTHTrading/Genesis"
 documentation = "https://docs.rs/genesis-multiverse"

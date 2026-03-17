@@ -1,6 +1,6 @@
 {
   "title": "Genesis Protocol: Deterministic Multi-Agent Economic Simulation Under Structural Invariant Violations",
-  "description": "Deterministic multi-agent macroeconomic simulation engine. 13 Rust crates, 396 tests, 7,360 simulated worlds, 3,680,000+ epochs. Heterogeneous agents with SHA-256 derived genomes extract resources from logistic niche pools, reproduce conditionally, and face stochastic catastrophes. Sensitivity analyses characterize a sharp collapse boundary dependent on the floor definition.",
+  "description": "Deterministic multi-agent macroeconomic simulation engine. 13 Rust crates, 403 tests, 6,820 simulated worlds, 3,410,000+ epochs. Heterogeneous agents with SHA-256 derived genomes extract resources from logistic niche pools, reproduce conditionally, and face stochastic catastrophes. Sensitivity analyses characterize a sharp collapse boundary dependent on the floor definition.",
   "creators": [
     {
       "name": "Burns, Kevan",
@@ -41,7 +41,7 @@
     }
   ],
   "grants": [],
-  "version": "2.0.0",
+  "version": "0.1.0",
   "language": "eng",
-  "notes": "52 experiment configurations across three research phases (parameter sweeps, structural invariant violations, sensitivity analysis). All seeds, configurations, and SHA-256 result hashes published for independent replication."
+  "notes": "44 experiment configurations across three research phases (parameter sweeps, structural invariant violations, sensitivity analysis). All seeds, configurations, and SHA-256 result hashes published for independent replication."
 }

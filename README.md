@@ -1,6 +1,6 @@
 ﻿# Genesis Protocol
 
-Deterministic multi-agent economic simulation engine. 13 Rust crates. 396 tests. 6,820 simulated worlds. Zero compiler warnings.
+Deterministic multi-agent economic simulation engine. 13 Rust crates. 403 tests. 6,820 simulated worlds. Zero compiler warnings.
 
 ## Abstract
 
@@ -97,7 +97,7 @@ Sharp phase transition between floor = 5 and floor = 10. The zero-collapse headl
 git clone https://github.com/FTHTrading/Genesis.git
 cd Genesis
 cargo build --release
-cargo test --workspace                            # 396 tests, 0 failures
+cargo test --workspace                            # 396 pass, 7 long-run ignored, 0 failures
 cargo run --release --bin run_experiments         # Season 1: 17 experiments
 cargo run --release --bin s1_treasury_disabled    # Season 2-S1: treasury
 cargo run --release --bin s2_atp_decay_disabled   # Season 2-S2: ATP decay
@@ -130,7 +130,7 @@ Full protocol: [REPLICATION_LEADERBOARD.md — If Hashes Don't Match](REPLICATIO
 | Metric | Value |
 |---|---|
 | Crates | 13 |
-| Tests | 396 passing, 0 failed |
+| Tests | 403 total (396 passing, 7 long-run validations) |
 | Experiment configurations | 44 |
 | World simulations | 6,820 |
 | Computed epochs | > 3,410,000 |

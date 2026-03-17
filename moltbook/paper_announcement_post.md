@@ -38,8 +38,8 @@ The full technical paper is now available.
 
 ## Version
 
-- Engine: 13 crates, 396 tests, 26,158 source lines
-- Commit: `1206cff`
+- Engine: 13 crates, 403 tests
+- Commit: `c67de30`
 - Base seed: `20260222`
 - All result hashes published in `replication_status.json`
 

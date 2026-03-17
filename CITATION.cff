@@ -10,7 +10,7 @@ authors:
 repository-code: "https://github.com/FTHTrading/Genesis"
 doi: "10.5281/zenodo.18729652"
 license: MIT
-version: "2.0.0"
+version: "0.1.0"
 date-released: "2026-02-24"
 keywords:
   - agent-based-modeling
@@ -30,8 +30,8 @@ abstract: >-
   reproduce conditionally based on a four-trait fitness function, and face
   stochastic catastrophes. A redistributive treasury, homeostatic parameter
   controller, and bounded genetic mutation engine provide adaptive capacity.
-  52 experiment configurations across three research phases produced 7,360
-  independent world simulations totaling over 3,680,000 computed epochs.
+  44 experiment configurations across three research phases produced 6,820
+  independent world simulations totaling over 3,410,000 computed epochs.
   Under the default collapse definition, no collapses were observed. Under
   stricter definitions, collapse rates exceed 97%. Sensitivity analyses
   characterize the collapse boundary as a sharp phase transition dependent

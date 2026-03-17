@@ -6,7 +6,7 @@
 
 ## The Claim
 
-Genesis Protocol: 5,680 deterministic world simulations across 38 experiment configurations. Zero population collapses.
+Genesis Protocol: 6,820 deterministic world simulations across 44 experiment configurations. Zero population collapses.
 
 Every result is reproducible. Every hash is verifiable. No one has independently confirmed them.
 
@@ -19,12 +19,12 @@ Every result is reproducible. Every hash is verifiable. No one has independently
 ```bash
 # Clone
 git clone https://github.com/FTHTrading/Genesis.git
-cd AI
+cd Genesis
 
 # Build
 cargo build --release
 
-# Run tests (396 pass, 0 fail)
+# Run tests (396 pass, 7 long-run ignored, 0 fail — 403 total)
 cargo test --release --workspace
 
 # Run experiments
@@ -46,7 +46,7 @@ cargo run --release --bin run_experiments
 
 All hashes are SHA-256: `result_hash` from each experiment manifest.
 
-Full registry: [`replication_status.json`](replication_status.json) (38 experiments, 5,680 worlds).
+Full registry: [`replication_status.json`](replication_status.json) (38 individually hashed experiments, 5,680 worlds; 44 total configurations, 6,820 worlds including sensitivity).
 
 ### Season 1 â€” Survival Under Hostile Conditions (25 experiments, 4,180 worlds)
 

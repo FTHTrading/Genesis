@@ -99,7 +99,7 @@ This characterizes the collapse boundary — the open problem described in the f
 git clone https://github.com/FTHTrading/Genesis.git
 cd Genesis
 cargo build --release
-cargo test --release --workspace   # 396 tests, 0 failures
+cargo test --release --workspace   # 396 pass, 7 long-run ignored, 0 failures (403 total)
 
 # Run a published experiment:
 cargo run --release --bin run_experiments

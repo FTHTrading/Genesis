@@ -2,7 +2,7 @@
 
 There's a number buried in our sensitivity analysis that I keep thinking about.
 
-At P_floor = 3 (our default collapse definition): **0% collapse** across 120 worlds.
+At P_floor = 3 (our default collapse definition): **0% collapse** across all sensitivity configurations (1,680 worlds total; 120 per configuration).
 At P_floor = 5: **5.8% collapse**.
 At P_floor = 10: **97.5% collapse**.
 

@@ -1,48 +1,62 @@
 # genesis-multiverse
 
-Multiverse-scale systemic experiment engine.
+Public crate namespace for the **Genesis Protocol** simulation ecosystem.
 
-Deterministic simulation across thousands of parallel worlds with phase transition detection and collapse boundary mapping.
+This crate is a canonical entry point — it publishes authoritative metadata constants and links to the full 13-crate engine. It is not the engine itself.
 
-## What This Is
+## What This Crate Is For
 
-Genesis Multiverse is a research-grade simulation ecosystem built in Rust. It runs deterministic macroeconomic experiments across large parameter spaces, identifies systemic phase transitions, and maps collapse boundaries with statistical precision.
+- **Namespace ownership** for the `genesis-multiverse` package on crates.io
+- **Canonical constants** — experiment totals, world counts, test counts, crate count
+- **On-ramp** into the full repository, paper, and replication protocol
 
-## Current Scale
+## What This Crate Does NOT Contain
+
+The simulation engine, experiment runner, deterministic replay, econometric analysis, and all runtime code live in the full workspace:
+
+**Full engine → <https://github.com/FTHTrading/Genesis>**
+
+## Current Scale (full engine)
 
 | Metric | Value |
 |---|---|
-| Parallel worlds | 6,820 |
-| Configurations | 44 |
+| World simulations | 6,820 |
+| Experiment configurations | 44 |
 | Engine crates | 13 |
-| Test count | 396 |
-| P_floor=3 collapse rate | 0% |
+| Tests | 403 (396 passing, 7 long-run validations) |
+| Source lines | 26,581 Rust |
+| Collapses at P_floor=3 | 0 |
 | Phase transition zone | floors 5–10 |
+| DOI | `10.5281/zenodo.18729652` |
 
-## Architecture
+## Constants Exported
 
-The engine is a multi-crate Rust workspace:
-
-- `genesis-dna` — core agent representation
-- `genesis-experiment` — experiment orchestration
-- `genesis-homeostasis` — equilibrium modeling
-- `genesis-multiverse` — world-sweep engine
-- `genesis-econometrics` — statistical analysis
-- `genesis-anchor` — deterministic hash anchoring
-- `genesis-replay` — deterministic replay engine
-- `genesis-federation` — multi-chain coordination
-
-## The Cliff
-
-At P_floor=3, zero collapses across 6,820 worlds.  
-At P_floor=5–10, a phase transition emerges — systemic instability crosses threshold.  
-This is "The Cliff."
+```rust
+pub const ENGINE_WORLDS: u32 = 6820;
+pub const ENGINE_EXPERIMENTS: u32 = 44;
+pub const ENGINE_CRATES: u32 = 13;
+pub const ENGINE_TESTS: u32 = 403;
+```
 
 ## Replication Challenge
 
-The replication challenge is open. Canonical data and methodology are publicly available.
+The replication challenge is open. Clone the repo, run the experiments, compare hashes.
 
-Full engine: <https://github.com/FTHTrading/Genesis>
+```bash
+git clone https://github.com/FTHTrading/Genesis.git
+cd Genesis
+cargo test --release --workspace
+cargo run --release --bin run_experiments
+```
+
+Full protocol: [REPLICATION_LEADERBOARD.md](https://github.com/FTHTrading/Genesis/blob/main/REPLICATION_LEADERBOARD.md)
+
+## Links
+
+- [Repository](https://github.com/FTHTrading/Genesis)
+- [Paper](https://github.com/FTHTrading/Genesis/blob/main/papers/genesis_protocol_paper.md)
+- [DOI](https://doi.org/10.5281/zenodo.18729652)
+- [Canonical Counts](https://github.com/FTHTrading/Genesis/blob/main/docs/CANONICAL_COUNTS.md)
 
 ## License
 

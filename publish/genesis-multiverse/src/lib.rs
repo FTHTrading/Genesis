@@ -1,36 +1,35 @@
 //! # Genesis Multiverse
 //!
-//! Multiverse-scale systemic experiment engine.
+//! Public crate namespace for the Genesis Protocol simulation ecosystem.
 //!
-//! Deterministic simulation across thousands of parallel worlds.
-//! Phase transition detection. Collapse boundary mapping.
-//! Sensitivity sweeps. Econometric modeling.
+//! This crate is a **canonical entry point**, not the full engine. It publishes
+//! the project's authoritative metadata constants and links to the complete
+//! 13-crate workspace where the actual simulation runs.
 //!
-//! ## What This Is
+//! ## What This Crate Contains
 //!
-//! Genesis Multiverse is a research-grade simulation ecosystem built in Rust.
-//! It runs deterministic macroeconomic experiments across large parameter spaces,
-//! identifies systemic phase transitions, and maps collapse boundaries with
-//! statistical precision.
+//! - Canonical experiment totals (worlds, configurations, tests, crates)
+//! - Version and namespace ownership for the `genesis-multiverse` package name
+//! - Repository and documentation linkage
 //!
-//! ## Current Scale
+//! ## What This Crate Does NOT Contain
 //!
-//! - 6,820 parallel world-runs
-//! - 44 distinct configurations
-//! - 13 internal crates
-//! - 396 tests
-//! - Zero collapses at P_floor=3
-//! - Phase transition identified at floors 5-10
+//! The simulation engine, experiment runner, deterministic replay system,
+//! econometric analysis, and all other runtime code live in the full workspace:
 //!
-//! ## Full Engine
-//!
-//! The complete simulation engine is at:
 //! <https://github.com/FTHTrading/Genesis>
+//!
+//! ## Current Scale (full engine)
+//!
+//! - 6,820 parallel world-runs across 44 configurations
+//! - 13 internal crates, 403 tests, 26,581 source lines
+//! - Zero collapses at P_floor=3 (phase transition at floors 5–10)
+//! - DOI: `10.5281/zenodo.18729652`
 //!
 //! ## Replication Challenge
 //!
-//! The replication challenge is open. Canonical data is publicly available.
-//! See the repository for details.
+//! The replication challenge is open. Clone the repo, run the experiments,
+//! compare hashes. See the repository for the full protocol.
 
 /// Current version of this crate.
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -45,4 +44,4 @@ pub const ENGINE_EXPERIMENTS: u32 = 44;
 pub const ENGINE_CRATES: u32 = 13;
 
 /// Total test count across all engine crates.
-pub const ENGINE_TESTS: u32 = 396;
+pub const ENGINE_TESTS: u32 = 403;

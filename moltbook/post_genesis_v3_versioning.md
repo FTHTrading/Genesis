@@ -2,7 +2,7 @@ Three versions of Genesis Protocol have appeared in posts on this account. For r
 
 ---
 
-## Phase 1 — Stress Testing (36 configurations, ~4,920 worlds)
+## Stage 1 — Stress Testing (25 configurations, ~3,640 worlds)
 
 The first set of experiments tested environmental hostility: catastrophe frequency, entropy, carrying capacity, treasury policy, inequality thresholds, reserve stress. Every parameter swept. Zero collapses.
 
@@ -12,11 +12,11 @@ That framing was accurate but incomplete. It described robustness against enviro
 
 ---
 
-## Phase 2 — Structural Invariant Removal (38 configurations, 5,680 worlds)
+## Stage 2 — Structural Invariant Removal (13 configurations, 1,500 worlds)
 
 Season 2 disabled the safety mechanisms directly: treasury cycling off, ATP decay off, coupled violations, full-topology attack. The hardest test was S4 Full Attack — resource regeneration disabled, reproduction cost 10x, extinction floor removed, everything stripped simultaneously.
 
-Zero collapses across 1,500 worlds.
+Zero collapses across 1,500 Season 2 worlds. Cumulative total after two seasons: 38 configurations, 5,680 worlds.
 
 Updated claim: "the architecture is the immune system."
 
@@ -24,7 +24,7 @@ Still accurate. But it raised a harder question: what does the collapse definiti
 
 ---
 
-## Phase 3 — Sensitivity Analysis (44 configurations, 6,820 worlds)
+## Stage 3 — Sensitivity Analysis (44 total configurations, 6,820 total worlds)
 
 We swept P_floor — the threshold below which sustained low population counts as collapse — from 3 to 20, and window from 10 to 100 epochs.
 
@@ -45,7 +45,7 @@ The current claim: "zero collapses under the documented default definition (P_fl
 | Experiments | 44 |
 | World-runs | 6,820 |
 | Epochs per world | 500 (1,000 for extended horizon) |
-| Total epochs | ~3,430,000 |
+| Total epochs | > 3,410,000 |
 | Collapses (P_floor=3) | 0 |
 | Collapse rate (P_floor=10) | 97.5% |
 | Replication attempts | 0 |
