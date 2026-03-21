@@ -8,6 +8,27 @@
 
 ---
 
+## AUDIT UPDATE — 2026-03-21
+
+All P0 and P1 issues identified in this audit have been resolved in subsequent commits. The following critical items were addressed:
+
+| # | Item | Resolution | Status |
+|---|---|---|---|
+| 1 | `CITATION.cff` version "2.0.0" | Updated to `0.1.0` | ✅ Resolved |
+| 2 | `CITATION.cff` abstract — 52 configs / 7,360 worlds | Updated to 44 configs / 6,820 worlds | ✅ Resolved |
+| 3 | `.zenodo.json` version "2.0.0" | Updated to `0.1.0` | ✅ Resolved |
+| 4 | `.zenodo.json` description — 7,360 worlds / 52 configs | Updated to 6,820 worlds / 44 configs / 403 tests | ✅ Resolved |
+| 5 | `IP_RECORD.md` license "Proprietary" | Updated to MIT | ✅ Resolved |
+| 6 | `README.md` test count — 396 | README now shows 403 total (396 passing + 7 ignored) at line 3 and line 133. Line 100 correctly shows `396 pass, 7 long-run ignored`. | ✅ Resolved |
+
+**Current state (HEAD `50d4da4`):** All public-facing metadata documents (README, CITATION.cff, .zenodo.json, IP_RECORD.md) are consistent and accurate. The section references below that show the OLD claimed values represent the state at audit-date commit `c67de30` and are retained for historical completeness.
+
+For the current independent technical audit and peer review, see:
+- `THIRD_PARTY_AUDIT.md` — Third-person code and security audit (2026-03-21)
+- `PEER_REVIEW.md` — Formal peer review of research claims (2026-03-21)
+
+---
+
 ## SECTION 1 — CURRENT TRUTH
 
 All values below are derived directly from source code, data files, and experiment artifacts.
