@@ -9,7 +9,9 @@ use crate::roles::AgentRole;
 use crate::skills::{Reputation, SkillProfile};
 use crate::traits::{traits_from_hash, EnergyProfile, TraitVector};
 
-/// Unique agent identifier (UUID v4).
+/// Unique agent identifier — deterministically derived from the genesis hash.
+/// The first 16 bytes of SHA-256(entropy) are used so that identical entropy
+/// always produces an identical ID (no OS-entropy UUID v4).
 pub type AgentID = Uuid;
 
 /// 256-bit genesis hash.
@@ -36,7 +38,10 @@ pub struct AgentDNA {
     pub lineage: Lineage,
     /// Generation number (0 = primordial, increments on replication).
     pub generation: u64,
-    /// Timestamp of genesis event.
+    /// Logical genesis marker. In deterministic mode this is always
+    /// `DateTime::UNIX_EPOCH`; wall-clock time is excluded from the
+    /// determinism boundary. Callers needing real timestamps must inject
+    /// them after construction.
     pub genesis_time: DateTime<Utc>,
     /// Whether this agent carries the Primordial marker.
     pub is_primordial: bool,
@@ -59,17 +64,23 @@ impl AgentDNA {
             });
         }
 
-        // Build genesis hash: SHA-256(entropy || timestamp || uuid)
-        let id = AgentID::new_v4();
-        let now = Utc::now();
+        // Build genesis hash: SHA-256(entropy) — purely deterministic.
+        // Wall-clock time and OS-entropy UUIDs are intentionally excluded so
+        // that from_entropy is bit-identical across runs, machines, and OSes.
         let mut hasher = Sha256::new();
         hasher.update(entropy);
-        hasher.update(now.timestamp_nanos_opt().unwrap_or(0).to_le_bytes());
-        hasher.update(id.as_bytes());
         let hash_result = hasher.finalize();
 
         let mut genesis_hash = [0u8; 32];
         genesis_hash.copy_from_slice(&hash_result);
+
+        // Derive agent ID deterministically from genesis hash (first 16 bytes).
+        let id_bytes: [u8; 16] = genesis_hash[..16].try_into().expect("hash is 32 bytes");
+        let id = AgentID::from_bytes(id_bytes);
+
+        // genesis_time is UNIX_EPOCH in deterministic builds; callers that
+        // need real timestamps should set this field after construction.
+        let genesis_time = DateTime::from_timestamp(0, 0).expect("epoch is valid");
 
         // Derive traits from hash
         let traits = traits_from_hash(&genesis_hash);
@@ -97,7 +108,7 @@ impl AgentDNA {
             energy_metabolism,
             lineage: Lineage::new_origin(id),
             generation: 0,
-            genesis_time: now,
+            genesis_time,
             is_primordial,
             mutation_rate: 0.01, // 1% base mutation rate
             version: crate::DNA_VERSION,
@@ -116,19 +127,20 @@ impl AgentDNA {
             });
         }
 
-        let child_id = AgentID::new_v4();
-        let now = Utc::now();
-
-        // Child hash mixes parent hash with new entropy
+        // Child hash mixes parent hash with new entropy — deterministic.
+        // No wall-clock or OS-entropy UUID in the hash chain.
         let mut hasher = Sha256::new();
         hasher.update(&self.genesis_hash);
         hasher.update(child_entropy);
-        hasher.update(now.timestamp_nanos_opt().unwrap_or(0).to_le_bytes());
-        hasher.update(child_id.as_bytes());
         let hash_result = hasher.finalize();
 
         let mut genesis_hash = [0u8; 32];
         genesis_hash.copy_from_slice(&hash_result);
+
+        // Child ID derived deterministically from child genesis hash.
+        let id_bytes: [u8; 16] = genesis_hash[..16].try_into().expect("hash is 32 bytes");
+        let child_id = AgentID::from_bytes(id_bytes);
+        let genesis_time = DateTime::from_timestamp(0, 0).expect("epoch is valid");
 
         let traits = traits_from_hash(&genesis_hash);
         let skills = SkillProfile::from_genome(&genesis_hash);
@@ -147,7 +159,7 @@ impl AgentDNA {
             energy_metabolism: EnergyProfile::default_profile(), // children are not primordial
             lineage,
             generation: self.generation + 1,
-            genesis_time: now,
+            genesis_time,
             is_primordial: false,
             mutation_rate: self.mutation_rate,
             version: crate::DNA_VERSION,
@@ -219,6 +231,38 @@ mod tests {
     fn test_insufficient_entropy() {
         let short = [0u8; 16];
         assert!(AgentDNA::from_entropy(&short, false).is_err());
+    }
+
+    /// Determinism guarantee: identical entropy → identical ID and hash on every run.
+    #[test]
+    fn test_deterministic_genesis() {
+        let entropy = [0x42u8; 64];
+        let dna1 = AgentDNA::from_entropy(&entropy, false).unwrap();
+        let dna2 = AgentDNA::from_entropy(&entropy, false).unwrap();
+        assert_eq!(
+            dna1.id, dna2.id,
+            "Same entropy must always produce the same agent ID"
+        );
+        assert_eq!(
+            dna1.genesis_hash, dna2.genesis_hash,
+            "Same entropy must always produce the same genesis hash"
+        );
+    }
+
+    /// Replication determinism: same parent + same child entropy → same child.
+    #[test]
+    fn test_deterministic_replication() {
+        let parent = AgentDNA::from_entropy(&[0x11u8; 64], true).unwrap();
+        let child1 = parent.replicate(&[0x22u8; 64]).unwrap();
+        let child2 = parent.replicate(&[0x22u8; 64]).unwrap();
+        assert_eq!(
+            child1.id, child2.id,
+            "Same parent + same child entropy must produce the same child ID"
+        );
+        assert_eq!(
+            child1.genesis_hash, child2.genesis_hash,
+            "Same parent + same child entropy must produce the same child hash"
+        );
     }
 
     #[test]

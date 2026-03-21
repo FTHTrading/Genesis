@@ -1,0 +1,90 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  schedule:
+    # Nightly long-run at 03:00 UTC
+    - cron: "0 3 * * *"
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: short
+
+jobs:
+  # ── Formatting ─────────────────────────────────────────────────────────────
+  fmt:
+    name: Formatting
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt
+      - name: cargo fmt --check
+        run: cargo fmt --all -- --check
+
+  # ── Linting ────────────────────────────────────────────────────────────────
+  clippy:
+    name: Clippy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+      - uses: Swatinem/rust-cache@v2
+      - name: cargo clippy
+        run: cargo clippy --workspace --all-targets --all-features -- -D warnings
+
+  # ── Tests ──────────────────────────────────────────────────────────────────
+  test:
+    name: Tests (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: ${{ matrix.os }}
+
+      - name: Build workspace
+        run: cargo build --release --workspace
+
+      - name: Run test suite (excluding long-run)
+        run: cargo test --release --workspace
+
+      - name: Run determinism conformance tests
+        run: cargo test --release -p genesis-dna deterministic -- --nocapture
+
+      - name: Verify deterministic feature compiles
+        run: cargo build --release -p genesis-dna --features genesis-dna/deterministic
+
+      # Upload experiment artifacts so cross-platform hashes can be compared
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: genesis-binary-${{ matrix.os }}
+          path: target/release/genesis-protocol*
+          if-no-files-found: ignore
+
+  # ── Nightly long-run (scheduled only) ──────────────────────────────────────
+  long-run:
+    name: Long-run determinism (nightly)
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' || contains(github.event.head_commit.message, '[long-run]')
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Run long-run validation suite
+        run: cargo test --release --test long_run_validation -- --ignored --nocapture
+        timeout-minutes: 30
