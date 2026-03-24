@@ -1720,6 +1720,48 @@ pub fn start_adapter_loop(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::sync::{Mutex, OnceLock};
+
+    const MOLTBOT_ENV_KEYS: &[&str] = &[
+        "MOLTBOOK_API_KEY",
+        "MOLTBOOK_SUBMOLT",
+        "MOLTBOOK_BASE_URL",
+        "MOLTBOT_POST_INTERVAL",
+        "MOLTBOT_MAX_RETRIES",
+        "MOLTBOT_TIMEOUT_SECS",
+    ];
+
+    fn moltbot_env_lock() -> &'static Mutex<()> {
+        static LOCK: OnceLock<Mutex<()>> = OnceLock::new();
+        LOCK.get_or_init(|| Mutex::new(()))
+    }
+
+    fn snapshot_env(keys: &[&str]) -> Vec<(String, Option<String>)> {
+        keys.iter()
+            .map(|key| ((*key).to_string(), std::env::var(key).ok()))
+            .collect()
+    }
+
+    fn restore_env(saved: Vec<(String, Option<String>)>) {
+        for (key, value) in saved {
+            if let Some(value) = value {
+                std::env::set_var(&key, value);
+            } else {
+                std::env::remove_var(&key);
+            }
+        }
+    }
+
+    fn with_isolated_moltbot_env<T>(test_fn: impl FnOnce() -> T) -> T {
+        let _guard = moltbot_env_lock().lock().unwrap();
+        let saved = snapshot_env(MOLTBOT_ENV_KEYS);
+        let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(test_fn));
+        restore_env(saved);
+        match result {
+            Ok(value) => value,
+            Err(payload) => std::panic::resume_unwind(payload),
+        }
+    }
 
     fn test_stats(epoch: u64, pop: usize, fitness: f64, births: u64, deaths: u64) -> EpochStats {
         EpochStats {
@@ -1793,40 +1835,32 @@ mod tests {
 
     #[test]
     fn test_config_from_env_disabled() {
-        // Without MOLTBOOK_API_KEY, adapter should be None.
-        // Note: env vars are process-global, so we save/restore to avoid
-        // races with other tests or .env files loaded by the binary.
-        let saved = std::env::var("MOLTBOOK_API_KEY").ok();
-        std::env::remove_var("MOLTBOOK_API_KEY");
-        let result = MoltbotConfig::from_env().is_none();
-        if let Some(v) = saved {
-            std::env::set_var("MOLTBOOK_API_KEY", v);
-        }
-        assert!(result);
+        with_isolated_moltbot_env(|| {
+            std::env::remove_var("MOLTBOOK_API_KEY");
+            std::env::remove_var("MOLTBOOK_SUBMOLT");
+            std::env::remove_var("MOLTBOOK_BASE_URL");
+            std::env::remove_var("MOLTBOT_POST_INTERVAL");
+            std::env::remove_var("MOLTBOT_MAX_RETRIES");
+            std::env::remove_var("MOLTBOT_TIMEOUT_SECS");
+
+            assert!(MoltbotConfig::from_env().is_none());
+        });
     }
 
     #[test]
     fn test_config_from_env_enabled() {
-        let saved = std::env::var("MOLTBOOK_API_KEY").ok();
-        std::env::set_var("MOLTBOOK_API_KEY", "moltbook_sk_test123");
-        std::env::set_var("MOLTBOOK_SUBMOLT", "genesis-protocol");
-        std::env::set_var("MOLTBOOK_BASE_URL", "http://localhost:8080/api/v1");
+        with_isolated_moltbot_env(|| {
+            std::env::set_var("MOLTBOOK_API_KEY", "moltbook_sk_test123");
+            std::env::set_var("MOLTBOOK_SUBMOLT", "genesis-protocol");
+            std::env::set_var("MOLTBOOK_BASE_URL", "http://localhost:8080/api/v1");
 
-        let config = MoltbotConfig::from_env().unwrap();
-        assert_eq!(config.api_key, "moltbook_sk_test123");
-        assert_eq!(config.submolt, "genesis-protocol");
-        assert_eq!(config.base_url, "http://localhost:8080/api/v1");
-        // post_interval enforces minimum
-        assert!(config.post_interval >= MIN_POST_INTERVAL);
-
-        // Cleanup — restore original or remove
-        if let Some(v) = saved {
-            std::env::set_var("MOLTBOOK_API_KEY", v);
-        } else {
-            std::env::remove_var("MOLTBOOK_API_KEY");
-        }
-        std::env::remove_var("MOLTBOOK_SUBMOLT");
-        std::env::remove_var("MOLTBOOK_BASE_URL");
+            let config = MoltbotConfig::from_env().unwrap();
+            assert_eq!(config.api_key, "moltbook_sk_test123");
+            assert_eq!(config.submolt, "genesis-protocol");
+            assert_eq!(config.base_url, "http://localhost:8080/api/v1");
+            // post_interval enforces minimum
+            assert!(config.post_interval >= MIN_POST_INTERVAL);
+        });
     }
 
     #[test]
