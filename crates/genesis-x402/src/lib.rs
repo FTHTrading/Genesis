@@ -4,7 +4,7 @@
 //   config.rs     — X402Config::from_env() for runtime configuration
 //   wallet.rs     — EVM key vault (AES-256-GCM + Argon2id), address derivation
 //   eip3009.rs    — EIP-712 / EIP-3009 signing for USDC transferWithAuthorization
-//   facilitator.rs — CDP facilitator client (verify + settle)
+//   facilitator.rs — In-house ECDSA verifier (replaces CDP; no external HTTP)
 //   middleware.rs  — Axum x402 payment middleware (Genesis as seller)
 //   lineage.rs    — Transaction heredity ledger (JSONL, full ancestry chain)
 //   settlement.rs — Milestone settlement events (agent birth/death/anchor)
@@ -13,14 +13,17 @@
 //   Client → GET /api/ai-call
 //   Genesis → 402 + PAYMENT-REQUIRED header (USDC amount, payTo, network)
 //   Client → GET /api/ai-call + PAYMENT-SIGNATURE header (signed EIP-3009 auth)
-//   Genesis → POST facilitator /verify → 200 if valid
-//   Genesis → POST facilitator /settle → onchain tx
-//   Genesis → 200 + resource + PAYMENT-RESPONSE header
+//   Genesis → InHouseVerifier::verify() → local k256 ECDSA recovery → payer address
+//   Genesis → 200 + resource + PAYMENT-RESPONSE header (status: pending-batch-settlement)
 //   Genesis → lineage.append(LineageRecord { ... })
+//   Genesis → genesis-ledger.execute_action() → triple-write (balance+journal+lineage)
+//   Genesis → batch accumulates → SettlementAnchor.sol on Polygon (ONE tx per batch)
 //
 // Token layers:
 //   GENESIS (Polygon ERC-20, 10B) — internal economy, identity, incentives
 //   USDC (Polygon, EIP-3009)      — real x402 payment settlement
+//
+// External dependencies: ONLY Polygon mainnet. No CDP. No third-party facilitator.
 
 pub mod config;
 pub mod eip3009;

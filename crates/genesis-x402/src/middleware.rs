@@ -3,14 +3,15 @@
 // Usage:
 //   Router::new()
 //       .route("/api/ai-call", get(ai_call_handler))
-//       .layer(X402Layer::new(config, facilitator, lineage, price_usdc))
+//       .layer(X402Layer::new(config, price_usdc))
 //
 // Flow for each request:
 //   1. Check PAYMENT-SIGNATURE header.
 //   2. If absent  → 402 + PAYMENT-REQUIRED header.
-//   3. If present → verify with facilitator.
-//   4. If valid   → settle on-chain, record to lineage, pass through.
-//   5. Record PAYMENT-RESPONSE header on the way back.
+//   3. If present → verify with in-house ECDSA verifier (no HTTP call).
+//   4. If valid   → record to lineage, pass through.
+//   5. On-chain settlement is batched by genesis-ledger → SettlementAnchor.sol.
+//   6. Attach PAYMENT-RESPONSE header on the way back.
 
 use std::sync::Arc;
 
@@ -25,7 +26,7 @@ use uuid::Uuid;
 
 use crate::{
     config::X402Config,
-    facilitator::{FacilitatorClient, FacilitatorError, PaymentRequired},
+    facilitator::{FacilitatorError, InHouseVerifier, PaymentRequired},
     lineage::{LineageLedger, LineageRecord},
 };
 
@@ -38,10 +39,10 @@ pub const HEADER_PAYMENT_RESPONSE:  &str = "PAYMENT-RESPONSE";
 #[derive(Clone)]
 pub struct X402State {
     pub config:      Arc<X402Config>,
-    pub facilitator: Arc<FacilitatorClient>,
+    pub verifier:    Arc<InHouseVerifier>,
     pub lineage:     Arc<LineageLedger>,
     pub price_usdc:  u64,    // atomic units for this route
-    pub resource:    String, // e.g. "/api/ai-call"
+    pub resource:    String,
     pub description: String,
 }
 
@@ -55,10 +56,10 @@ impl X402State {
         let resource    = resource.into();
         let description = description.into();
         let config      = Arc::new(config);
-        let facilitator = Arc::new(FacilitatorClient::new(&config));
+        let verifier    = Arc::new(InHouseVerifier::polygon_mainnet(&config));
         let lineage_path = config.lineage_path.clone();
         Self {
-            facilitator,
+            verifier,
             config,
             lineage:     Arc::new(LineageLedger::open(lineage_path.into())),
             price_usdc,
@@ -97,53 +98,47 @@ pub async fn x402_gate(
             return payment_required_response(&payment_req);
         }
         Some(payload) => {
-            // Verify with CDP facilitator.
-            let payer: String = match state.facilitator.verify(&payload, &payment_req).await {
-                Ok(addr) => addr,
-                Err(FacilitatorError::Rejected { reason }) => {
+            // Verify in-house — no HTTP call, pure ECDSA recovery.
+            let verification = match state.verifier.verify(&payload, state.price_usdc) {
+                Ok(v)  => v,
+                Err(FacilitatorError::AmountMismatch { expected, got }) => {
+                    warn!("x402: amount mismatch expected={expected} got={got}");
+                    return error_response(StatusCode::PAYMENT_REQUIRED, "amount mismatch");
+                }
+                Err(FacilitatorError::Expired { .. }) => {
+                    warn!("x402: payment expired");
+                    return error_response(StatusCode::PAYMENT_REQUIRED, "payment expired");
+                }
+                Err(FacilitatorError::Rejected { ref reason }) => {
                     warn!("x402: payment rejected — {reason}");
-                    return error_response(StatusCode::PAYMENT_REQUIRED, &reason);
-                }
-                Err(FacilitatorError::Timeout) => {
-                    error!("x402: facilitator timeout");
-                    return error_response(
-                        StatusCode::SERVICE_UNAVAILABLE,
-                        "facilitator timeout",
-                    );
+                    return error_response(StatusCode::PAYMENT_REQUIRED, reason);
                 }
                 Err(e) => {
-                    error!("x402: facilitator error — {e}");
-                    return error_response(StatusCode::BAD_GATEWAY, "facilitator error");
+                    error!("x402: verification error — {e}");
+                    return error_response(StatusCode::BAD_REQUEST, "verification error");
                 }
             };
 
-            // Settle on-chain.
-            let settlement = match state.facilitator.settle(&payload, &payment_req).await {
-                Ok(s) => s,
-                Err(e) => {
-                    error!("x402: settlement failed — {e}");
-                    return error_response(StatusCode::BAD_GATEWAY, "settlement failed");
-                }
-            };
-
-            let tx_hash = settlement.tx_hash.clone().unwrap_or_default();
+            let payer = verification.payer.clone();
             info!(
-                payer = %payer,
-                tx_hash = %tx_hash,
-                amount = ?settlement.amount,
+                payer    = %payer,
+                amount   = verification.amount_usdc,
                 resource = %state.resource,
-                "x402: payment settled"
+                "x402: payment verified in-house"
             );
+
+            // No on-chain settle here. Settlement is batched by genesis-ledger
+            // and anchored to SettlementAnchor.sol on Polygon per batch.
 
             // Append to lineage ledger.
             let record = LineageRecord {
-                event_id:     Uuid::new_v4().to_string(),
-                world_id:     crate::WORLD_ID.to_string(),
-                wallet:       payer.clone(),
-                agent_id:     None,
+                event_id:            Uuid::new_v4().to_string(),
+                world_id:            crate::WORLD_ID.to_string(),
+                wallet:              payer.clone(),
+                agent_id:            None,
                 payment_intent_id:   Uuid::new_v4().to_string(),
                 authorization_hash:  payload.clone(),
-                settlement_tx_hash:  Some(tx_hash.clone()),
+                settlement_tx_hash:  None, // filled when batch settles on Polygon
                 parent_event_id:     None,
                 resource_id:         state.resource.clone(),
                 entitlement_id:      None,
@@ -162,10 +157,10 @@ pub async fn x402_gate(
 
             // Attach PAYMENT-RESPONSE header.
             let pr_json = json!({
-                "txHash":  tx_hash,
                 "payer":   payer,
                 "amount":  payment_req.max_amount_required,
                 "network": payment_req.network,
+                "status":  "pending-batch-settlement",
             });
             if let Ok(hv) = HeaderValue::from_str(&pr_json.to_string()) {
                 response.headers_mut().insert(HEADER_PAYMENT_RESPONSE, hv);

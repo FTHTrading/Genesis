@@ -732,6 +732,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "genesis-ledger"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "hex",
+ "parking_lot",
+ "serde",
+ "serde_json",
+ "sha3",
+ "thiserror",
+ "tracing",
+ "uuid",
+]
+
+[[package]]
 name = "genesis-multiverse"
 version = "0.1.0"
 dependencies = [

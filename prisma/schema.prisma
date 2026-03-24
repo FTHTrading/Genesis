@@ -49,7 +49,10 @@ model Entity {
   worldAccounts   WorldAccount[]
   permissions     Permission[]
   obligations     Obligation[] @relation("ObligationDebtor")
-  
+  usageEvents     UsageEvent[]
+  settlementLines SettlementLine[]
+  lineageEvents   LineageEvent[]
+
   @@index([entityType])
   @@index([status])
   @@index([walletAddress])
@@ -97,6 +100,9 @@ model Wallet {
   entity          Entity?
   x402Requests    X402Request[]
   creditTopUps    CreditTopUp[]
+  usageEvents     UsageEvent[]
+  settlementLines SettlementLine[]
+  lineageEvents   LineageEvent[]
 
   @@index([entityId])
 }
@@ -518,6 +524,11 @@ model SettlementBatch {
   closedAt        DateTime?
   onChainTxHash   String?
   onChainBatchId  Int?     // from x402PaymentAdapter.closeBatch()
+  anchorHash      String?  // keccak256 of all SettlementLines — anchored on SettlementAnchor.sol
+
+  usageEvents     UsageEvent[]
+  settlementLines SettlementLine[]
+  lineageEvents   LineageEvent[]
 
   @@index([status])
 }
@@ -611,4 +622,144 @@ model RevenueSplit {
   updatedAt       DateTime @updatedAt
 
   @@index([context])
+}
+
+// ════════════════════════════════════════════════════════════════════════
+// PRICING ENGINE
+// ════════════════════════════════════════════════════════════════════════
+
+/// Canonical price for every action type in the world.
+/// This is the source of truth — pricing engine reads this table.
+/// Prices stored in micro-units (1,000,000 micro = $1.00 USDC).
+model PricedAction {
+  id              String   @id @default(cuid())
+  actionType      String   @unique      // e.g. "AI_CALL", "AGENT_SPAWN", "VOICE_ACTION"
+  priceUnits      BigInt                // micro-units (1000 = $0.001)
+  description     String
+  category        String                // "COMPUTE" | "SOCIAL" | "ASSET" | "GOVERNANCE"
+  enabled         Boolean  @default(true)
+  minBalance      BigInt   @default(0)  // minimum balance required to execute
+  updatedAt       DateTime @updatedAt
+  createdAt       DateTime @default(now())
+
+  usageEvents     UsageEvent[]
+
+  @@index([actionType, enabled])
+  @@index([category])
+}
+
+// ════════════════════════════════════════════════════════════════════════
+// USAGE EVENTS — every priced world action
+// ════════════════════════════════════════════════════════════════════════
+
+/// One record per priced world action. Written atomically with JournalEntry.
+/// Non-negotiable rule: balance check + journal write + lineage write = one transaction.
+model UsageEvent {
+  id              String   @id @default(cuid())
+  entityId        String                // who triggered the action
+  walletId        String                // which wallet was debited
+  actionType      String                // mirrors PricedAction.actionType
+  priceUnits      BigInt                // price at time of action (snapshot)
+  resourceId      String?               // e.g. "/api/ai-call", agent genome prefix
+  agentId         String?               // agent that triggered the action (if any)
+  metadata        Json?                 // arbitrary context (zone, item id, etc.)
+  status          UsageStatus @default(PENDING)
+  journalEntryId  String?     @unique   // links to the double-entry journal
+  batchId         String?               // settlement batch this was flushed into
+  reversedAt      DateTime?
+  reversalReason  String?
+  createdAt       DateTime @default(now())
+
+  entity          Entity          @relation(fields: [entityId], references: [id])
+  wallet          Wallet          @relation(fields: [walletId], references: [id])
+  pricedAction    PricedAction    @relation(fields: [actionType], references: [actionType])
+  journalEntry    JournalEntry?   @relation(fields: [journalEntryId], references: [id])
+  batch           SettlementBatch? @relation(fields: [batchId], references: [id])
+  lineageEvents   LineageEvent[]
+
+  @@index([entityId, createdAt])
+  @@index([walletId, status])
+  @@index([batchId])
+  @@index([actionType, createdAt])
+}
+
+enum UsageStatus {
+  PENDING     // balance checked, awaiting journal write
+  SETTLED     // written to journal + assigned to batch
+  REVERSED    // credit returned, journal corrected
+  FAILED      // balance insufficient or system error
+}
+
+// ════════════════════════════════════════════════════════════════════════
+// SETTLEMENT LINES — net movements within a batch
+// ════════════════════════════════════════════════════════════════════════
+
+/// One line per wallet/direction within a SettlementBatch.
+/// The batch hash anchored to Polygon = keccak256(all SettlementLines in order).
+model SettlementLine {
+  id              String   @id @default(cuid())
+  batchId         String
+  walletId        String
+  entityId        String
+  direction       LineDirection          // DEBIT or CREDIT
+  amountUnits     BigInt                // micro-units
+  assetType       String   @default("USDC") // "USDC" | "WORLD" | "CREDIT"
+  description     String
+  usageEventId    String?               // source usage event (if debit)
+  journalLineId   String?               // matching off-chain journal line
+  createdAt       DateTime @default(now())
+
+  batch           SettlementBatch @relation(fields: [batchId], references: [id])
+  wallet          Wallet          @relation(fields: [walletId], references: [id])
+  entity          Entity          @relation(fields: [entityId], references: [id])
+
+  @@index([batchId, direction])
+  @@index([walletId, createdAt])
+}
+
+enum LineDirection {
+  DEBIT
+  CREDIT
+}
+
+// ════════════════════════════════════════════════════════════════════════
+// LINEAGE EVENTS — immutable heredity chain
+// ════════════════════════════════════════════════════════════════════════
+
+/// Every payment, state change, and entitlement is an immutable lineage record.
+/// parent_event_id forms an ancestry chain for full traceability.
+/// This is the DB equivalent of the JSONL lineage ledger — queryable.
+model LineageEvent {
+  id                  String   @id @default(cuid())
+  worldId             String   @default("genesis-1")
+  walletId            String?
+  entityId            String?
+  agentId             String?               // agent genome prefix
+  parentEventId       String?               // forms ancestry chain
+  usageEventId        String?               // source usage event
+  batchId             String?               // settlement batch
+  actionType          String                // action label
+  amountUnits         BigInt   @default(0)  // micro-units
+  network             String   @default("eip155:137")
+  resourceId          String?               // HTTP path or world resource
+  entitlementId       String?               // what was unlocked
+  authorizationHash   String?               // payment proof hash
+  settlementTxHash    String?               // on-chain tx (if anchored)
+  metadata            Json?
+  reversedAt          DateTime?
+  createdAt           DateTime @default(now())
+
+  wallet              Wallet?       @relation(fields: [walletId], references: [id])
+  entity              Entity?       @relation(fields: [entityId], references: [id])
+  usageEvent          UsageEvent?   @relation(fields: [usageEventId], references: [id])
+  batch               SettlementBatch? @relation(fields: [batchId], references: [id])
+  parent              LineageEvent? @relation("LineageAncestry", fields: [parentEventId], references: [id])
+  children            LineageEvent[] @relation("LineageAncestry")
+
+  @@index([walletId, createdAt])
+  @@index([entityId, createdAt])
+  @@index([agentId, createdAt])
+  @@index([batchId])
+  @@index([actionType, createdAt])
+  @@index([parentEventId])
 }
