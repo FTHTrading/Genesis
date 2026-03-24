@@ -439,6 +439,10 @@ pub struct World {
     /// Evolution chain engine — cryptographic mutation history (Phase 3.5).
     #[serde(default)]
     pub evolution_engine: EvolutionEngine,
+    /// Pending world settlement events for x402 lineage recording.
+    /// Populated by run_epoch(), drained by the background loop outside the lock.
+    #[serde(skip)]
+    pub pending_settlements: Vec<genesis_x402::settlement::SettlementEvent>,
 }
 
 /// Epoch summary stats returned by run_epoch.
@@ -633,6 +637,7 @@ impl World {
             population_history: Vec::new(),
             anchor_engine: AnchorEngine::default(),
             evolution_engine: EvolutionEngine::default(),
+            pending_settlements: Vec::new(),
         }
     }
 

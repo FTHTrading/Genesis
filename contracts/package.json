@@ -1,0 +1,24 @@
+{
+  "name": "genesis-contracts",
+  "version": "1.0.0",
+  "description": "Genesis World Token — Polygon mainnet ERC-20 (10B fixed cap)",
+  "scripts": {
+    "compile":  "hardhat compile",
+    "test":     "hardhat test",
+    "deploy:polygon": "hardhat run scripts/deploy.ts --network polygon",
+    "deploy:amoy":    "hardhat run scripts/deploy.ts --network amoy",
+    "verify":   "hardhat verify --network polygon",
+    "size":     "hardhat size-contracts"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "@openzeppelin/contracts": "^5.1.0",
+    "hardhat": "^2.22.0",
+    "hardhat-contract-sizer": "^2.10.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.4.5"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5"
+  }
+}

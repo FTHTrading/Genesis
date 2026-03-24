@@ -1,0 +1,614 @@
+// Genesis World — Prisma Schema
+// Database: PostgreSQL (recommended) or SQLite for local dev
+// 
+// Double-entry rule:
+//   Every asset state change → journal_entry + 2+ journal_lines
+//   Every x402 payment → x402_request + x402_settlement + journal_entry
+//   Every action → world_event + journal_entry
+//
+// Microcredit rule:
+//   On-chain: top-up deposits + batch closes
+//   Off-chain: every sub-cent action burns micro-credits here
+//   Periodic: batcher nets and calls x402PaymentAdapter.closeBatch()
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// IDENTITY LAYER
+// ══════════════════════════════════════════════════════════════════════════════
+
+/// Every person, AI agent, org, machine, or autonomous process.
+model Entity {
+  id              String   @id @default(cuid())
+  registryId      Int?     @unique   // IdentityRegistry on-chain ID
+  entityType      EntityType
+  status          EntityStatus @default(ACTIVE)
+  walletAddress   String?  @unique
+  genesisHash     String?  @unique   // for AI agents: hex of 32-byte genesis hash
+  displayName     String
+  generation      Int      @default(0)
+  parentId        String?            // for spawned agents
+  reputationScore Int      @default(5000) // 0–10000 bps
+  createdAt       DateTime @default(now())
+  lastActiveAt    DateTime @default(now())
+  worldId         String   @default("genesis-1")
+
+  parent          Entity?  @relation("EntityLineage", fields: [parentId], references: [id])
+  children        Entity[] @relation("EntityLineage")
+  wallet          Wallet?  @relation(fields: [walletAddress], references: [evmAddress])
+  assets          Asset[]
+  x402Requests    X402Request[]
+  journalLines    JournalLine[]
+  worldAccounts   WorldAccount[]
+  permissions     Permission[]
+  obligations     Obligation[] @relation("ObligationDebtor")
+  
+  @@index([entityType])
+  @@index([status])
+  @@index([walletAddress])
+}
+
+enum EntityType {
+  CITIZEN
+  AI_AGENT
+  ORGANIZATION
+  MACHINE
+  VAULT
+  CONTRACT
+}
+
+enum EntityStatus {
+  ACTIVE
+  SUSPENDED
+  DECEASED
+  MIGRATED
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// WALLET LAYER
+// ══════════════════════════════════════════════════════════════════════════════
+
+/// EVM wallet tied to an entity.
+model Wallet {
+  evmAddress      String   @id
+  entityId        String?  @unique
+  
+  // On-chain balances (mirrored, sourced from indexer)
+  worldTokenBalance     Decimal  @default(0) @db.Decimal(36, 18)
+  usdcBalanceOnChain    Decimal  @default(0) @db.Decimal(20, 6)
+  
+  // Off-chain micro-credit balance (USDC atomic units, 6 decimals)
+  microCreditBalance    BigInt   @default(0)
+  totalCreditDeposited  BigInt   @default(0)
+  totalCreditBurned     BigInt   @default(0)
+
+  // Polygon network
+  network         String   @default("eip155:137")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  entity          Entity?
+  x402Requests    X402Request[]
+  creditTopUps    CreditTopUp[]
+
+  @@index([entityId])
+}
+
+/// On-chain USDC top-up event — funds the micro-credit balance.
+model CreditTopUp {
+  id              String   @id @default(cuid())
+  walletAddress   String
+  amountUsdc      BigInt              // atomic units (6 decimals)
+  txHash          String   @unique
+  blockNumber     Int
+  timestamp       DateTime
+  batchId         String?
+
+  wallet          Wallet   @relation(fields: [walletAddress], references: [evmAddress])
+
+  @@index([walletAddress])
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// ACCOUNTING LAYER — World Accounts (chart of accounts)
+// ══════════════════════════════════════════════════════════════════════════════
+
+/// The chart of accounts for the Genesis World.
+/// Every journal entry references two or more accounts.
+model WorldAccount {
+  code            String   @id              // e.g. "COMPUTE_EXPENSE", "TREASURY_FEE_REVENUE"
+  name            String
+  accountType     AccountType
+  normalBalance   NormalBalance            // which side increases this account
+  entityId        String?                  // if entity-specific (agent accounts)
+  denominatedIn   String   @default("USDC_MICRO")  // "USDC_MICRO" | "WORLD_TOKEN" | "CREDIT"
+  parentCode      String?                  // for hierarchical chart
+
+  parent          WorldAccount?  @relation("AccountHierarchy", fields: [parentCode], references: [code])
+  children        WorldAccount[] @relation("AccountHierarchy")
+  entity          Entity?        @relation(fields: [entityId], references: [id])
+  debitLines      JournalLine[]  @relation("DebitAccount")
+  creditLines     JournalLine[]  @relation("CreditAccount")
+
+  @@index([accountType])
+  @@index([entityId])
+}
+
+enum AccountType {
+  ASSET
+  LIABILITY
+  EQUITY
+  REVENUE
+  EXPENSE
+}
+
+enum NormalBalance {
+  DEBIT
+  CREDIT
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// DOUBLE-ENTRY JOURNAL
+// ══════════════════════════════════════════════════════════════════════════════
+
+/// Journal entry header — one per economic event.
+model JournalEntry {
+  id              String   @id @default(cuid())
+  seq             BigInt   @unique @default(autoincrement())
+  entryDate       DateTime @default(now())
+  description     String
+  referenceType   String               // "X402_SETTLEMENT" | "ASSET_CONSUME" | "EMISSION" | "BATCH_CLOSE" | "MICRO_BURN"
+  referenceId     String               // x402_request.id, asset.id, batch.id, etc.
+  totalAmount     Decimal  @db.Decimal(20, 6)
+  denominatedIn   String   @default("USDC_MICRO")   // unit of measure
+  onChainTxHash   String?              // populated for on-chain settlements
+  batchId         String?
+  confirmed       Boolean  @default(false)
+  confirmedAt     DateTime?
+
+  lines           JournalLine[]
+  x402Settlement  X402Settlement?
+
+  @@index([referenceType, referenceId])
+  @@index([entryDate])
+  @@index([batchId])
+}
+
+/// Individual debit/credit line in a journal entry.
+/// Every entry must have sum(debits) = sum(credits).
+model JournalLine {
+  id              String       @id @default(cuid())
+  journalEntryId  String
+  entityId        String?                  // entity-specific line (agent account)
+  debitAccountCode  String?
+  creditAccountCode String?
+  amount          Decimal      @db.Decimal(20, 6)
+  denominatedIn   String       @default("USDC_MICRO")
+  memo            String?
+  lineOrder       Int          @default(0)
+
+  journalEntry    JournalEntry @relation(fields: [journalEntryId], references: [id])
+  entity          Entity?      @relation(fields: [entityId], references: [id])
+  debitAccount    WorldAccount? @relation("DebitAccount", fields: [debitAccountCode], references: [code])
+  creditAccount   WorldAccount? @relation("CreditAccount", fields: [creditAccountCode], references: [code])
+
+  @@index([journalEntryId])
+  @@index([debitAccountCode])
+  @@index([creditAccountCode])
+  @@index([entityId])
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// ASSET LAYER
+// ══════════════════════════════════════════════════════════════════════════════
+
+/// Every world asset — land, compute, bandwidth, voice, energy, etc.
+model Asset {
+  id                  String       @id @default(cuid())
+  registryId          Int?         @unique   // AssetRegistry on-chain ID
+  assetType           AssetType
+  ownerId             String
+  name                String
+  unitOfMeasure       String                 // "sqm", "kwh", "credit", "hour", "mb", "token"
+  
+  // Quantity and value
+  quantity            Decimal      @default(0) @db.Decimal(30, 6)
+  bookValueUsdc       Decimal      @default(0) @db.Decimal(20, 6)
+  marketValueUsdc     Decimal      @default(0) @db.Decimal(20, 6)
+  
+  // Classification
+  liquidityClass      LiquidityClass @default(RESTRICTED)
+  incomeModel         IncomeModel    @default(NONE)
+  maintenanceCostMicroPerEpoch BigInt @default(0)  // USDC microcredits per epoch
+  
+  // Oracle
+  oracleSource        String?
+  lastValuationAt     DateTime?
+
+  // Provider (Cloudflare, OpenAI, ElevenLabs, etc.)
+  providerKey         String?           // "CLOUDFLARE" | "OPENAI" | "ELEVENLABS"
+  serviceId           String?           // provider-specific resource/account ID
+  apiQuotaTotal       BigInt?           // total quota units available
+  apiQuotaUsed        BigInt?           // units consumed this period
+  apiQuotaResetAt     DateTime?         // when quota resets
+
+  active              Boolean      @default(true)
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
+
+  owner               Entity       @relation(fields: [ownerId], references: [id])
+  titles              AssetTitle[]
+  valuations          AssetValuation[]
+  inventoryEntries    InventoryEntry[]
+  obligations         Obligation[]
+
+  @@index([assetType])
+  @@index([ownerId])
+  @@index([providerKey])
+  @@index([active])
+}
+
+enum AssetType {
+  LAND
+  BUILDING
+  ZONE
+  UTILITY_GRID
+  COMPUTE          // OpenAI inference units, Cloudflare Worker hours
+  BANDWIDTH        // Cloudflare CDN egress, R2 storage, DNS
+  VOICE            // ElevenLabs synthesis credits
+  ENERGY
+  MATERIAL
+  FOOD
+  WATER
+  INVENTORY
+  LICENSE
+  VAULT_SHARE
+  DATA
+  INSURANCE
+  VEHICLE
+  EQUIPMENT
+  RENTAL_RIGHT
+  DEBT_NOTE
+}
+
+enum LiquidityClass {
+  LOCKED
+  RESTRICTED
+  SEMI_LIQUID
+  LIQUID
+}
+
+enum IncomeModel {
+  NONE
+  RENT
+  FEE_PER_USE
+  YIELD
+  ROYALTY
+  STIPEND
+}
+
+/// Valuation history for an asset (oracle updates).
+model AssetValuation {
+  id              String   @id @default(cuid())
+  assetId         String
+  marketValueUsdc Decimal  @db.Decimal(20, 6)
+  oracleSource    String
+  timestamp       DateTime @default(now())
+  txHash          String?
+
+  asset           Asset    @relation(fields: [assetId], references: [id])
+
+  @@index([assetId, timestamp])
+}
+
+/// On-chain title record (linked to TitleNFT contract).
+model AssetTitle {
+  id              String   @id @default(cuid())
+  assetId         String
+  ownerId         String
+  tokenId         Int?     // TitleNFT token ID
+  acquiredAt      DateTime @default(now())
+  acquiredPrice   Decimal? @db.Decimal(20, 6)
+  txHash          String?
+  active          Boolean  @default(true)
+
+  asset           Asset    @relation(fields: [assetId], references: [id])
+
+  @@index([assetId])
+  @@index([ownerId])
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// INVENTORY LAYER (fungible resource balances)
+// ══════════════════════════════════════════════════════════════════════════════
+
+/// Fungible resource inventory for an entity.
+model InventoryEntry {
+  id              String   @id @default(cuid())
+  entityId        String
+  assetId         String
+  resourceCode    String               // "ENERGY", "FOOD", "WATER", "COMPUTE_CREDIT", etc.
+  quantity        Decimal  @db.Decimal(30, 6)
+  unitCostUsdc    Decimal  @db.Decimal(20, 6)  // FIFO carrying cost
+  lastConsumedAt  DateTime?
+  updatedAt       DateTime @updatedAt
+
+  asset           Asset    @relation(fields: [assetId], references: [id])
+
+  @@unique([entityId, assetId])
+  @@index([entityId])
+  @@index([resourceCode])
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// OBLIGATION LAYER (liabilities)
+// ══════════════════════════════════════════════════════════════════════════════
+
+/// Any amount owed — debt, payroll, rewards, service credits, redemptions.
+model Obligation {
+  id              String           @id @default(cuid())
+  obligationType  ObligationType
+  debtorId        String
+  creditorId      String?          // null for public obligations (tax etc.)
+  assetId         String?          // backing asset if collateralized
+  
+  principalMicro  BigInt           // USDC atomic units
+  interestRateBps Int              @default(0)
+  amountPaidMicro BigInt           @default(0)
+  amountDueMicro  BigInt           // principalMicro + accrued interest
+  
+  status          ObligationStatus @default(OPEN)
+  dueAt           DateTime?
+  closedAt        DateTime?
+  onChainRef      String?          // ObligationLedger on-chain ID
+
+  debtor          Entity           @relation("ObligationDebtor", fields: [debtorId], references: [id])
+  asset           Asset?           @relation(fields: [assetId], references: [id])
+
+  @@index([debtorId])
+  @@index([status])
+  @@index([obligationType])
+}
+
+enum ObligationType {
+  DEBT
+  PAYROLL
+  REWARD_LIABILITY
+  SERVICE_CREDIT
+  REDEMPTION
+  TAX
+  INSURANCE_CLAIM
+  GRANT_OBLIGATION
+}
+
+enum ObligationStatus {
+  OPEN
+  PARTIALLY_PAID
+  PAID
+  DEFAULTED
+  WAIVED
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// x402 PAYMENT LAYER
+// ══════════════════════════════════════════════════════════════════════════════
+
+/// Every x402 paid request — initiated when 402 is returned.
+model X402Request {
+  id              String        @id @default(cuid())
+  walletAddress   String
+  entityId        String?
+  endpoint        String                   // e.g. "/api/ai-call"
+  actionType      X402ActionType
+  resourceId      String?                  // world resource being accessed
+  agentId         String?                  // Genesis agent hash
+  
+  // Payment requirement (from 402 response)
+  requiredAmountUsdc BigInt               // atomic units
+  network         String   @default("eip155:137")
+  usdcContract    String
+  payTo           String                   // Genesis wallet
+  
+  // Payment proof (from client PAYMENT-SIGNATURE header)
+  paymentPayload  Json?
+  paymentIntentId String?  @unique
+
+  // Status
+  status          X402RequestStatus @default(PENDING)
+  createdAt       DateTime @default(now())
+  settledAt       DateTime?
+
+  wallet          Wallet       @relation(fields: [walletAddress], references: [evmAddress])
+  entity          Entity?      @relation(fields: [entityId], references: [id])
+  settlement      X402Settlement?
+
+  @@index([walletAddress])
+  @@index([actionType])
+  @@index([status])
+  @@index([createdAt])
+}
+
+enum X402RequestStatus {
+  PENDING
+  VERIFIED
+  SETTLED
+  FAILED
+  EXPIRED
+}
+
+enum X402ActionType {
+  AI_CALL
+  AGENT_MESSAGE
+  ZONE_ENTER
+  AGENT_MOVE
+  TRADE_EXECUTE
+  ENERGY_CONSUME
+  ITEM_MINT
+  ITEM_REPAIR
+  REWARD_CLAIM
+  PERMIT_FILE
+  ASSET_LIST
+  PROPERTY_SEARCH
+  VOICE_ACTION
+  DOC_GENERATE
+  COMPUTE_RENT
+  AGENT_SPAWN
+  VAULT_MANAGE
+  ASSET_TRANSFER
+  DATA_PULL
+  ANALYTICS_READ
+  CREDIT_TOPUP    // special: buy micro-credit balance
+}
+
+/// Confirmed on-chain settlement for an x402 request.
+model X402Settlement {
+  id                  String        @id @default(cuid())
+  x402RequestId       String        @unique
+  journalEntryId      String?       @unique
+  
+  // Settlement details
+  settlerAddress      String                   // CDP facilitator or adapter
+  txHash              String        @unique    // on-chain USDC transfer tx
+  blockNumber         Int
+  amountUsdc          BigInt                   // atomic units settled
+  
+  // Revenue split record
+  toTreasury          BigInt        @default(0)
+  toRewards           BigInt        @default(0)
+  toBurn              BigInt        @default(0)
+  toInsurance         BigInt        @default(0)
+  
+  // Lineage (economic ancestry)
+  parentSettlementId  String?
+  authorizationHash   String?       // EIP-3009 struct hash
+  batchId             String?
+  
+  timestamp           DateTime      @default(now())
+
+  x402Request         X402Request   @relation(fields: [x402RequestId], references: [id])
+  journalEntry        JournalEntry? @relation(fields: [journalEntryId], references: [id])
+
+  @@index([batchId])
+  @@index([txHash])
+  @@index([timestamp])
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// SETTLEMENT BATCH (microcredit netting)
+// ══════════════════════════════════════════════════════════════════════════════
+
+/// A batch of micro-credit burns netted into a single on-chain settlement.
+model SettlementBatch {
+  id              String   @id @default(cuid())
+  seq             Int      @unique
+  status          BatchStatus @default(OPEN)
+  
+  totalMicroBurned BigInt  @default(0)  // total credits burned in this batch
+  netUsdcSettled  BigInt?               // USDC sent on-chain when closed
+  actionCount     Int      @default(0)
+  
+  openedAt        DateTime @default(now())
+  closedAt        DateTime?
+  onChainTxHash   String?
+  onChainBatchId  Int?     // from x402PaymentAdapter.closeBatch()
+
+  @@index([status])
+}
+
+enum BatchStatus {
+  OPEN
+  CLOSING
+  CLOSED
+  FAILED
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// TREASURY POSITIONS
+// ══════════════════════════════════════════════════════════════════════════════
+
+/// Snapshot of treasury reserves at a point in time.
+model TreasuryPosition {
+  id                String   @id @default(cuid())
+  snapshotAt        DateTime @default(now())
+  epochNumber       Int?
+
+  worldTokenBalance Decimal  @db.Decimal(36, 18)
+  usdcBalance       Decimal  @db.Decimal(20, 6)
+  totalFeeIncomeUsdc Decimal @db.Decimal(20, 6)
+  totalWorldEmitted Decimal  @db.Decimal(36, 18)
+  circulatingSupply Decimal  @db.Decimal(36, 18)
+  
+  ecosystemEmitted  Decimal  @db.Decimal(36, 18)
+  patronEmitted     Decimal  @db.Decimal(36, 18)
+  liquidityEmitted  Decimal  @db.Decimal(36, 18)
+
+  @@index([snapshotAt])
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// EMISSION SCHEDULES
+// ══════════════════════════════════════════════════════════════════════════════
+
+/// Scheduled WORLD token emission events.
+model EmissionSchedule {
+  id              String   @id @default(cuid())
+  bucket          String               // "ECOSYSTEM" | "PATRON_REWARDS" | "LIQUIDITY"
+  recipientId     String
+  recipientAddress String
+  amountWorld     Decimal  @db.Decimal(36, 18)
+  scheduledFor    DateTime
+  executedAt      DateTime?
+  txHash          String?
+  status          EmissionStatus @default(PENDING)
+  referenceId     String?              // triggering event (e.g. vault_id, epoch)
+
+  @@index([status])
+  @@index([scheduledFor])
+}
+
+enum EmissionStatus {
+  PENDING
+  EXECUTED
+  FAILED
+  CANCELLED
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// PERMISSIONS AND REVENUE SPLITS
+// ══════════════════════════════════════════════════════════════════════════════
+
+model Permission {
+  id              String   @id @default(cuid())
+  entityId        String
+  resource        String               // what is being gated
+  action          String               // what is permitted
+  conditions      Json?                // optional conditions (staking, reputation, tier)
+  grantedBy       String?
+  expiresAt       DateTime?
+  active          Boolean  @default(true)
+  createdAt       DateTime @default(now())
+
+  entity          Entity   @relation(fields: [entityId], references: [id])
+
+  @@index([entityId, resource, action])
+}
+
+/// Revenue split configuration for an endpoint or asset.
+model RevenueSplit {
+  id              String   @id @default(cuid())
+  context         String   @unique      // e.g. "DEFAULT" | "VAULT_MANAGE" | "AI_CALL"
+  treasuryBps     Int                   // basis points → treasury
+  rewardsBps      Int                   // basis points → rewards pool
+  burnBps         Int                   // basis points → burn
+  insuranceBps    Int                   // basis points → insurance backstop
+  updatedAt       DateTime @updatedAt
+
+  @@index([context])
+}

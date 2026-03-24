@@ -167,6 +167,10 @@ pub fn build_router_with_controls(world: SharedWorld, controls: SharedControls) 
         .route("/introspect", get(get_introspect))
         .route("/econometrics", get(get_econometrics))
         .route("/immune", get(get_immune_report))
+        .route("/wallet/balance", get(get_wallet_balance))
+        .route("/settlements", get(get_settlements))
+        .route("/api/ai-call", get(get_ai_call))
+        .route("/api/voice", post(post_voice))
         .route_layer(middleware::from_fn_with_state(
             read_rl.clone(),
             rate_limit_middleware,
@@ -1082,6 +1086,100 @@ async fn get_immune_report(
 
     drop(w);
     (StatusCode::OK, Json(resp))
+}
+
+// ── x402 endpoint stubs ───────────────────────────────────────────────────
+//
+// GET  /wallet/balance  — returns wallet metadata + micro-credit balance
+// GET  /settlements     — returns lineage JSONL summary
+// GET  /api/ai-call     — 402 if GENESIS_X402_ENABLED; returns 402 hint when not paid
+// POST /api/voice       — voice synthesis stub; same x402 pattern
+//
+// When GENESIS_X402_ENABLED=true the x402_gate middleware is layered on top
+// in main.rs (or via build_router_with_x402). These stubs return the payload
+// that has already passed verification.
+
+#[derive(Serialize)]
+struct WalletBalanceResponse {
+    pay_to:            String,
+    network:           String,
+    usdc_contract:     String,
+    x402_enabled:      bool,
+    micro_credit_note: &'static str,
+}
+
+async fn get_wallet_balance() -> impl IntoResponse {
+    let enabled = std::env::var("GENESIS_X402_ENABLED")
+        .map(|v| v == "true" || v == "1")
+        .unwrap_or(false);
+    let pay_to = std::env::var("GENESIS_X402_PAY_TO")
+        .unwrap_or_else(|_| "not configured".to_string());
+
+    Json(WalletBalanceResponse {
+        pay_to,
+        network:           genesis_x402::NETWORK_POLYGON.to_string(),
+        usdc_contract:     genesis_x402::USDC_POLYGON.to_string(),
+        x402_enabled:      enabled,
+        micro_credit_note: "Use POST /api/top-up to add USDC micro-credits",
+    })
+}
+
+#[derive(Serialize)]
+struct SettlementsResponse {
+    note:       &'static str,
+    lineage_path: String,
+    record_count: usize,
+}
+
+async fn get_settlements() -> impl IntoResponse {
+    let lineage_path = std::env::var("GENESIS_LINEAGE_PATH")
+        .unwrap_or_else(|_| "genesis-lineage.jsonl".to_string());
+    let count = count_jsonl_lines(&lineage_path);
+    Json(SettlementsResponse {
+        note:         "Append-only x402 lineage ledger",
+        lineage_path,
+        record_count: count,
+    })
+}
+
+fn count_jsonl_lines(path: &str) -> usize {
+    use std::io::{BufRead, BufReader};
+    std::fs::File::open(path)
+        .map(|f| BufReader::new(f).lines().filter(|l| l.as_ref().map(|s| !s.trim().is_empty()).unwrap_or(false)).count())
+        .unwrap_or(0)
+}
+
+#[derive(Serialize)]
+struct X402Stub {
+    status:      &'static str,
+    description: &'static str,
+    action_type: &'static str,
+    price_usdc:  &'static str,
+    x402_note:   &'static str,
+}
+
+/// GET /api/ai-call
+/// Returns a stub response; x402_gate middleware enforces payment when enabled.
+async fn get_ai_call() -> impl IntoResponse {
+    Json(X402Stub {
+        status:      "ok",
+        description: "AI inference endpoint",
+        action_type: "AI_CALL",
+        price_usdc:  "0.001",
+        x402_note:   "This endpoint requires x402 payment when GENESIS_X402_ENABLED=true",
+    })
+}
+
+/// POST /api/voice
+/// Voice synthesis stub; payment-gated via x402 middleware in production.
+async fn post_voice() -> impl IntoResponse {
+    Json(X402Stub {
+        status:      "ok",
+        description: "Voice synthesis endpoint",
+        action_type: "VOICE_ACTION",
+        price_usdc:  "0.005",
+        x402_note:   "This endpoint requires x402 payment when GENESIS_X402_ENABLED=true",
+    })
 }
 
 #[cfg(test)]

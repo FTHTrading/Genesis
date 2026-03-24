@@ -9,6 +9,7 @@ use std::time::Duration;
 use crate::moltbot::EpochSnapshot;
 use crate::persistence;
 use crate::world::{SharedWorld, World};
+use genesis_x402::settlement::{SettlementEvent, SettlementTx};
 
 /// Default epoch interval (1 second).
 const EPOCH_INTERVAL: Duration = Duration::from_secs(1);
@@ -22,7 +23,7 @@ const ARCHIVE_INTERVAL: u64 = 100;
 /// Start the background survival loop on a dedicated thread.
 /// Returns the join handle.
 pub fn start_background_loop(world: SharedWorld) -> std::thread::JoinHandle<()> {
-    start_background_loop_with_adapter(world, None)
+    start_background_loop_with_adapter(world, None, None)
 }
 
 /// Start the background survival loop with an optional Moltbot adapter channel.
@@ -30,10 +31,11 @@ pub fn start_background_loop(world: SharedWorld) -> std::thread::JoinHandle<()> 
 pub fn start_background_loop_with_adapter(
     world: SharedWorld,
     moltbot_tx: Option<tokio::sync::mpsc::Sender<EpochSnapshot>>,
+    x402_tx: Option<SettlementTx>,
 ) -> std::thread::JoinHandle<()> {
     std::thread::spawn(move || {
         loop {
-            let (snapshot, docs_json, archive_json, is_extinct) = {
+            let (snapshot, docs_json, archive_json, is_extinct, settlements) = {
                 // Lock, tick, extract, release — keep lock duration minimal
                 let mut w = match world.lock() {
                     Ok(guard) => guard,
@@ -109,7 +111,10 @@ pub fn start_background_loop_with_adapter(
                     tracing::error!("EXTINCTION EVENT at epoch {}", w.epoch);
                 }
 
-                (snapshot, docs_json, archive_json, is_extinct)
+                // Drain pending settlement events before releasing lock.
+                let settlements: Vec<SettlementEvent> = std::mem::take(&mut w.pending_settlements);
+
+                (snapshot, docs_json, archive_json, is_extinct, settlements)
             };
             // Lock released here
 
@@ -139,6 +144,15 @@ pub fn start_background_loop_with_adapter(
                 // Use try_send to never block the epoch loop
                 if let Err(e) = tx.try_send(snap) {
                     tracing::debug!("Moltbot channel full or closed: {}", e);
+                }
+            }
+
+            // Send settlement events to x402 loop (outside lock, fire-and-forget)
+            if let Some(ref tx) = x402_tx {
+                for event in settlements {
+                    if let Err(e) = tx.try_send(event) {
+                        tracing::debug!("x402 settlement channel full or closed: {}", e);
+                    }
                 }
             }
 

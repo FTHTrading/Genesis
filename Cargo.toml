@@ -13,6 +13,7 @@ members = [
     "crates/genesis-homeostasis",
     "crates/genesis-multiverse",
     "crates/genesis-experiment",
+    "crates/genesis-x402",
 ]
 resolver = "2"
 
@@ -35,6 +36,7 @@ genesis-econometrics = { path = "crates/genesis-econometrics" }
 genesis-homeostasis = { path = "crates/genesis-homeostasis" }
 genesis-multiverse = { path = "crates/genesis-multiverse" }
 genesis-experiment = { path = "crates/genesis-experiment" }
+genesis-x402 = { path = "crates/genesis-x402" }
 
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
@@ -59,6 +61,7 @@ metabolism.workspace = true
 apostle.workspace = true
 ecosystem.workspace = true
 evolution.workspace = true
+genesis-x402.workspace = true
 gateway.workspace = true
 genesis-multiverse.workspace = true
 genesis-experiment.workspace = true

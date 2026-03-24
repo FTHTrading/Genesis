@@ -12,6 +12,7 @@ evolution.workspace = true
 genesis-anchor = { path = "../genesis-anchor" }
 genesis-econometrics = { path = "../genesis-econometrics" }
 genesis-homeostasis = { path = "../genesis-homeostasis" }
+genesis-x402 = { path = "../genesis-x402" }
 serde.workspace = true
 serde_json.workspace = true
 sha2.workspace = true

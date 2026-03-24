@@ -84,8 +84,30 @@ async fn main() {
         }
     };
 
+    // Initialize x402 payment layer (microcredit + lineage + settlement)
+    let x402_tx = match genesis_x402::config::X402Config::from_env() {
+        Some(config) => {
+            let pay_to  = config.pay_to.clone();
+            let network = config.network.clone();
+            let lineage_path = config.lineage_path.clone();
+            let (tx, _handle) = genesis_x402::settlement::start_settlement_loop_with_retry(
+                std::sync::Arc::new(config),
+                std::sync::Arc::new(genesis_x402::lineage::LineageLedger::open(lineage_path.into())),
+                256,
+            );
+            println!("  x402 payment layer enabled");
+            println!("    pay_to:  {}", pay_to);
+            println!("    network: {}", network);
+            Some(tx)
+        }
+        None => {
+            println!("  x402 payment layer disabled (set GENESIS_X402_ENABLED=true to enable)");
+            None
+        }
+    };
+
     // Start background survival loop (ticks every 1s, autosaves every 25 epochs)
-    gateway::runtime::start_background_loop_with_adapter(shared.clone(), moltbot_tx);
+    gateway::runtime::start_background_loop_with_adapter(shared.clone(), moltbot_tx, x402_tx);
     println!("  Background survival loop started");
 
     // Start HTTP gateway
@@ -93,11 +115,15 @@ async fn main() {
     println!("  HTTP gateway starting on {}", bind);
     println!();
     println!("  Endpoints:");
-    println!("    GET  /status      — ecosystem telemetry");
-    println!("    GET  /agent/:id   — agent info by hex prefix");
-    println!("    POST /register    — controlled agent entry");
-    println!("    GET  /leaderboard — top 20 agents by fitness");
-    println!("    GET  /genesis     — living HTML dashboard");
+    println!("    GET  /status          — ecosystem telemetry");
+    println!("    GET  /agent/:id       — agent info by hex prefix");
+    println!("    POST /register        — controlled agent entry");
+    println!("    GET  /leaderboard     — top 20 agents by fitness");
+    println!("    GET  /genesis         — living HTML dashboard");
+    println!("    GET  /wallet/balance  — wallet info + credit balance");
+    println!("    GET  /settlements     — lineage & settlement history");
+    println!("    GET  /api/ai-call     — [x402] AI inference (micropaid)");
+    println!("    POST /api/voice       — [x402] voice synthesis (micropaid)");
     println!();
 
     gateway::server::start_server(shared, bind).await;

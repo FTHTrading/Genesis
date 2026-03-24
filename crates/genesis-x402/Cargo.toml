@@ -1,0 +1,49 @@
+[package]
+name    = "genesis-x402"
+version = "0.1.0"
+edition = "2021"
+description = "x402 payment middleware and EVM wallet for Genesis Protocol"
+
+[dependencies]
+# Serialization
+serde      = { version = "1",    features = ["derive"] }
+serde_json = "1"
+
+# Async runtime + HTTP
+tokio   = { version = "1", features = ["full"] }
+reqwest = { version = "0.12", features = ["json"] }
+
+# Axum (for x402 seller middleware)
+axum = "0.7"
+
+# Logging
+tracing = "0.1"
+
+# Error handling
+thiserror = "1"
+
+# Random number generation
+rand = "0.8"
+
+# Time
+chrono = { version = "0.4", features = ["serde"] }
+
+# IDs
+uuid = { version = "1", features = ["v4", "serde"] }
+
+# Encoding
+hex    = "0.4"
+base64 = "0.22"
+
+# EVM cryptography
+# k256: secp256k1 ECDSA — derive Ethereum address, sign EIP-712 / EIP-3009
+k256 = { version = "0.13", features = ["ecdsa", "pkcs8"] }
+# sha3: keccak256 for EIP-712 hashing
+sha3 = "0.10"
+
+# Vault encryption — AES-256-GCM + Argon2id KDF
+aes-gcm = "0.10"
+argon2  = "0.5"
+
+# Secure memory erasure (private keys)
+zeroize = { version = "1", features = ["derive"] }
