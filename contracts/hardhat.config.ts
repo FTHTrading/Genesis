@@ -1,9 +1,25 @@
-import { HardhatUserConfig } from "hardhat/config";
+import { HardhatUserConfig, subtask } from "hardhat/config";
+import { TASK_COMPILE_SOLIDITY_GET_SOURCE_PATHS } from "hardhat/builtin-tasks/task-names";
 import "@nomicfoundation/hardhat-toolbox";
 import "hardhat-contract-sizer";
 import * as dotenv from "dotenv";
+import * as path from "path";
+import * as fs from "fs";
 
 dotenv.config();
+
+// ── Source path fix ───────────────────────────────────────────────────────────
+// .sol files live in the same directory as hardhat.config.ts (not in a
+// "contracts/" subdirectory). Override the default discovery so Hardhat
+// picks up ONLY the .sol files here — never recursing into node_modules,
+// which would trigger error HH1006.
+subtask(TASK_COMPILE_SOLIDITY_GET_SOURCE_PATHS, async () => {
+  const dir = __dirname;
+  return fs
+    .readdirSync(dir)
+    .filter((f) => f.endsWith(".sol"))
+    .map((f) => path.join(dir, f));
+});
 
 const DEPLOYER_PK = process.env.DEPLOYER_PRIVATE_KEY ?? "0x" + "0".repeat(64);
 const POLYGONSCAN_API_KEY = process.env.POLYGONSCAN_API_KEY ?? "";
@@ -16,6 +32,7 @@ const config: HardhatUserConfig = {
     settings: {
       optimizer: { enabled: true, runs: 200 },
       viaIR: true,
+      evmVersion: "cancun",   // needed for mcopy opcode (OZ v5 Bytes.sol)
     },
   },
   networks: {
@@ -32,10 +49,17 @@ const config: HardhatUserConfig = {
     },
   },
   etherscan: {
-    apiKey: {
-      polygon: POLYGONSCAN_API_KEY,
-      polygonAmoy: POLYGONSCAN_API_KEY,
-    },
+    apiKey: POLYGONSCAN_API_KEY,  // Etherscan v2 unified key
+    customChains: [
+      {
+        network: "polygon",
+        chainId: 137,
+        urls: {
+          apiURL: "https://api.polygonscan.com/api",
+          browserURL: "https://polygonscan.com",
+        },
+      },
+    ],
   },
   contractSizer: {
     alphaSort: true,

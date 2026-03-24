@@ -1,0 +1,21 @@
+{
+  "address": "0x14E64b91B96f11D12ef6bDaDc21e2f25a2f45a99",
+  "deployer": "0x13cBa455498cA6333256937280a78F138B1921b2",
+  "chainId": "137",
+  "timestamp": "2026-03-24T03:01:59.099Z",
+  "totalSupply": "10000000000",
+  "treasuryAlloc": "8500000000",
+  "ecosystemAlloc": "500000000",
+  "teamAlloc": "500000000",
+  "floatAlloc": "500000000",
+  "Treasury": {
+    "address": "0x17A2d219A1C5b7aF2890aFAf6E7045669Dc96952",
+    "deployedAt": "2026-03-24T06:59:10.619Z",
+    "deployer": "0x13cBa455498cA6333256937280a78F138B1921b2"
+  },
+  "x402PaymentAdapter": {
+    "address": "0xe25d0C100a98D2004e3CC81b081492Bb3D102a91",
+    "deployedAt": "2026-03-24T06:59:10.619Z",
+    "deployer": "0x13cBa455498cA6333256937280a78F138B1921b2"
+  }
+}

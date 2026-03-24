@@ -105,7 +105,6 @@ contract GenesisToken is ERC20, ERC20Pausable, ERC20Permit, AccessControl {
         address liquidityPool
     )
         ERC20("Genesis World Token", "GENESIS")
-        EIP712("Genesis World Token", "1")
         ERC20Permit("Genesis World Token")
     {
         require(admin       != address(0), "admin zero");

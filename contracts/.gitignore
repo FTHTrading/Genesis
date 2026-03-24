@@ -1,0 +1,22 @@
+# Genesis Contracts — .gitignore
+
+# Wallet key material (SENSITIVE — never commit)
+wallets.json
+
+# Hardhat artifacts
+artifacts/
+cache/
+typechain-types/
+
+# Deployment records (contain addresses — commit if desired for reference)
+# deployments/
+
+# TypeScript compiled output
+dist/
+
+# Environment
+.env
+
+# npm
+node_modules/
+package-lock.json
