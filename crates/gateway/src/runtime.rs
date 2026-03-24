@@ -79,6 +79,10 @@ pub fn start_background_loop_with_adapter(
 
                 // Autosave + docs snapshot every AUTOSAVE_INTERVAL epochs
                 let docs_json: Option<String> = if w.epoch % AUTOSAVE_INTERVAL == 0 {
+                    // Compact history logs before saving so world_state.json stays small.
+                    // Balances are the source of truth; the transaction/mutation logs
+                    // are audit-only and do not affect simulation correctness.
+                    w.compact_for_snapshot();
                     if let Err(e) = persistence::save(&w) {
                         tracing::error!("Autosave failed: {}", e);
                     }

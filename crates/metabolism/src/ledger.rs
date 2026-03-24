@@ -323,6 +323,24 @@ impl MetabolismLedger {
         &self.transactions[start..]
     }
 
+    /// Discard full transaction log, keeping only the most recent `keep` entries.
+    /// Agent balances and total supply are unaffected — they are the source of truth.
+    /// Call this before serialising a snapshot to prevent unbounded growth.
+    pub fn compact(&mut self, keep: usize) {
+        let len = self.transactions.len();
+        if len > keep {
+            self.transactions.drain(0..len - keep);
+        }
+    }
+
+    /// Remove balance entries for agents that are no longer alive.
+    /// Dead agents accumulate over epochs; pruning them keeps the snapshot small.
+    pub fn prune_dead_agents(&mut self, live_ids: &std::collections::HashSet<genesis_dna::AgentID>) {
+        self.balances.retain(|id, _| live_ids.contains(id));
+        // Recompute supply from surviving balances (dead agents had 0 or near-0 balance, so delta is tiny)
+        self.total_atp_supply = self.balances.values().map(|b| b.balance.max(0.0)).sum();
+    }
+
     /// Get all transactions for a specific agent.
     pub fn agent_transactions(&self, agent_id: &AgentID) -> Vec<&AtpTransaction> {
         self.transactions

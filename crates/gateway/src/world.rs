@@ -649,6 +649,21 @@ impl World {
         }
     }
 
+    /// Compact in-memory history logs before writing a snapshot.
+    ///
+    /// Clears the full ATP transaction log (balances are the source of truth)
+    /// and trims the mutation history to the most recent 500 events.
+    /// This keeps `world_state.json` small regardless of how long the simulation
+    /// has been running.
+    pub fn compact_for_snapshot(&mut self) {
+        let live_ids: std::collections::HashSet<uuid::Uuid> =
+            self.agents.iter().map(|a| a.id).collect();
+        self.ledger.compact(0);                   // clear transaction log; balances are truth
+        self.ledger.prune_dead_agents(&live_ids); // drop balance entries for dead agents
+        self.mutation_engine.compact(500);        // keep last 500 mutation events
+        self.mesh.compact(&live_ids);             // clear message log + dead inbox/registry
+    }
+
     /// Attach a stress profile to this world.
     pub fn with_stress(&mut self, config: StressConfig, profile_name: impl Into<String>) {
         self.stress_metrics = Some(StressMetrics::new(profile_name));

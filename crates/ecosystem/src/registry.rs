@@ -188,6 +188,12 @@ impl AgentRegistry {
         agents.truncate(limit);
         agents
     }
+
+    /// Remove registry entries for agents that are no longer alive.
+    /// Call before snapshot serialisation to stop the registry growing without bound.
+    pub fn prune_dead_agents(&mut self, live_ids: &std::collections::HashSet<AgentID>) {
+        self.agents.retain(|id, _| live_ids.contains(id));
+    }
 }
 
 #[cfg(test)]

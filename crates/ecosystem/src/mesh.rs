@@ -118,6 +118,17 @@ impl EcosystemMesh {
         let start = self.message_log.len().saturating_sub(n);
         &self.message_log[start..]
     }
+
+    /// Compact the mesh before snapshot serialisation.
+    ///
+    /// - Clears the global message audit log (unbounded, not needed for recovery).
+    /// - Removes inbox queues for dead agents.
+    /// - Prunes dead agents from the registry.
+    pub fn compact(&mut self, live_ids: &std::collections::HashSet<genesis_dna::AgentID>) {
+        self.message_log.clear();
+        self.inboxes.retain(|id, _| live_ids.contains(id));
+        self.registry.prune_dead_agents(live_ids);
+    }
 }
 
 impl Default for EcosystemMesh {

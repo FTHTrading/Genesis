@@ -54,6 +54,15 @@ impl MutationEngine {
         }
     }
 
+    /// Trim stored mutation history to the most recent `keep` events.
+    /// Called before snapshot serialisation to bound memory and file size.
+    pub fn compact(&mut self, keep: usize) {
+        let len = self.history.len();
+        if len > keep {
+            self.history.drain(0..len - keep);
+        }
+    }
+
     /// Apply environmental pressure to potentially mutate an agent's traits.
     ///
     /// Higher `pressure` (0.0–1.0) increases both mutation probability and magnitude.
