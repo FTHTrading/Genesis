@@ -1,4 +1,4 @@
-﻿# Replication Leaderboard
+# Replication Leaderboard
 
 **Status:** Awaiting first independent replication.
 
@@ -24,7 +24,7 @@ cd Genesis
 # Build
 cargo build --release
 
-# Run tests (396 pass, 7 long-run ignored, 0 fail — 403 total)
+# Run tests (396 pass, 7 long-run ignored, 0 fail � 403 total)
 cargo test --release --workspace
 
 # Run experiments
@@ -48,7 +48,7 @@ All hashes are SHA-256: `result_hash` from each experiment manifest.
 
 Full registry: [`replication_status.json`](replication_status.json) (38 individually hashed experiments, 5,680 worlds; 44 total configurations, 6,820 worlds including sensitivity).
 
-### Season 1 â€” Survival Under Hostile Conditions (25 experiments, 4,180 worlds)
+### Season 1 — Survival Under Hostile Conditions (25 experiments, 4,180 worlds)
 
 | Experiment | Worlds | Seed | Result Hash (first 16) |
 |---|---|---|---|
@@ -78,7 +78,7 @@ Full registry: [`replication_status.json`](replication_status.json) (38 individu
 | resource_depletion_scarce | 150 | 20260222 | `270d93fce13b9654` |
 | treasury_stability | 180 | 20260222 | `8eaf27d368207e2b` |
 
-### Season 2 â€” Structural Invariant Violations (13 experiments, 1,500 worlds)
+### Season 2 — Structural Invariant Violations (13 experiments, 1,500 worlds)
 
 | Experiment | Worlds | Seed | Result Hash (first 16) |
 |---|---|---|---|
@@ -102,7 +102,7 @@ Full registry: [`replication_status.json`](replication_status.json) (38 individu
 
 | # | Replicator | Experiments | Matches | Mismatches | Platform | Date |
 |---|---|---|---|---|---|---|
-| â€” | *awaiting first entry* | â€” | â€” | â€” | â€” | â€” |
+| — | *awaiting first entry* | — | — | — | — | — |
 
 ---
 
@@ -137,7 +137,7 @@ There are three divergence scenarios, each with a different interpretation:
 
 ---
 
-**Scenario A — Minor divergence (platform variance)**
+**Scenario A � Minor divergence (platform variance)**
 
 Your hashes differ slightly. Population counts or fitness values vary by small margins across platforms.
 
@@ -147,7 +147,7 @@ Your hashes differ slightly. Population counts or fitness values vary by small m
 
 ---
 
-**Scenario B — Structural divergence (Rust version sensitivity)**
+**Scenario B � Structural divergence (Rust version sensitivity)**
 
 Your hashes differ significantly but the zero-collapse result holds. Different world trajectories, same aggregate outcome.
 
@@ -157,17 +157,17 @@ Your hashes differ significantly but the zero-collapse result holds. Different w
 
 ---
 
-**Scenario C — Major divergence (determinism failure)**
+**Scenario C � Major divergence (determinism failure)**
 
 Your hashes differ substantially and your collapse results differ from the canonical record. You observe collapses where the canonical run records none, or vice versa.
 
 *Interpretation:* This is the most important possible finding. It means either: (1) the engine is not fully deterministic across platforms, or (2) a bug exists in the canonical run or your run that produces different effective configurations.
 
 *What to do:*
-1. Submit the full divergence immediately — GitHub Issue with label `determinism-failure`
+1. Submit the full divergence immediately � GitHub Issue with label `determinism-failure`
 2. Include: your result hash, collapse count, world index of any collapse, your OS/Rust/architecture
 3. This will be treated as a priority investigation, not a defense
-4. If determinism is broken, that finding will be published directly — it supersedes all prior claims
+4. If determinism is broken, that finding will be published directly � it supersedes all prior claims
 
 The canonical result is a measurement. Measurements can be wrong. If Scenario C occurs, the correct response is investigation and publication, not dispute.
 
@@ -209,7 +209,7 @@ Platforms tested: 0
 
 ## References
 
-- Whitepaper: [WHITEPAPER.md](WHITEPAPER.md) â€” DOI: [10.5281/zenodo.18729652](https://doi.org/10.5281/zenodo.18729652)
+- Whitepaper: [WHITEPAPER.md](WHITEPAPER.md) — DOI: [10.5281/zenodo.18729652](https://doi.org/10.5281/zenodo.18729652)
 - Collapse Definition: [COLLAPSE_DEFINITION.md](COLLAPSE_DEFINITION.md)
 - Adversarial Blueprint: [COLLAPSE_HUNTER.md](COLLAPSE_HUNTER.md)
 - Hash Registry: [replication_status.json](replication_status.json)
