@@ -111,7 +111,8 @@ async fn main() {
     println!("  Background survival loop started");
 
     // Start HTTP gateway
-    let bind = "0.0.0.0:3000";
+    let port = std::env::var("GENESIS_PORT").unwrap_or_else(|_| "7099".to_string());
+    let bind = format!("0.0.0.0:{}", port);
     println!("  HTTP gateway starting on {}", bind);
     println!();
     println!("  Endpoints:");
@@ -126,7 +127,7 @@ async fn main() {
     println!("    POST /api/voice       — [x402] voice synthesis (micropaid)");
     println!();
 
-    gateway::server::start_server(shared, bind).await;
+    gateway::server::start_server(shared, &bind).await;
 }
 
 // ===== CLI simulation mode (--features cli) =====
