@@ -8,7 +8,7 @@ Every decision in every epoch is seeded from a SHA-256 hash chain. The same seed
 
 44 experiment configurations have produced 6,820 independent world simulations totaling over 3,410,000 computed epochs. Under the default collapse definition (population sustained below 3 agents for 50 consecutive epochs), zero collapses were observed. Under stricter definitions (floor of 10), collapse rates exceed 97%.
 
-The engine is 13 Rust crates, 403 tests, zero compiler warnings.
+The engine is 15 Rust crates, 403 tests, zero compiler warnings.
 The source is open. The results are reproducible. The collapse bounty is active.
 
 ---

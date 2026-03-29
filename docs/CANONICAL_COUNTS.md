@@ -1,6 +1,15 @@
 # Canonical Counts — Genesis Protocol
 
-Single source of truth for all numerical claims. Updated 2026-03-17.
+Single source of truth for all numerical claims. Updated 2026-03-29.
+
+---
+
+## Changelog
+
+| Date | Changes |
+|---|---|
+| 2026-03-29 | Updated commit hash (`c67de30` → `366134d`), crate count (13 → 15), live organism epoch (3,475 → 52,375 last confirmed), added x402 contract addresses |
+| 2026-03-17 | Initial publication |
 
 ---
 
@@ -95,6 +104,8 @@ Counted via: all `.rs` files in repository excluding `target/`, measured by line
 | `cargo clippy --workspace` | 0 errors, ~56 style suggestions | 2026-03-17 |
 | `cargo test --workspace` | 396 pass, 7 ignored, 0 fail | 2026-03-17 |
 
+**Note (2026-03-29):** Two new crates added since last build verification: `genesis-x402` and `genesis-ledger`. genesis-ledger has 7 passing tests verified. Full workspace re-verification pending.
+
 Clippy suggestions are advisory (needless borrows, too_many_arguments, field_reassign_with_default). No correctness issues.
 
 ---
@@ -105,7 +116,7 @@ Clippy suggestions are advisory (needless borrows, too_many_arguments, field_rea
 |---|---|
 | Engine version (workspace) | 0.1.0 |
 | Published crate version | 0.1.1 |
-| Git commit (HEAD of main) | `c67de30` |
+| Git commit (HEAD of main) | `366134d` |
 | DOI | `10.5281/zenodo.18729652` |
 | Base seed | `20260222` |
 | ORCID | `0009-0008-8425-939X` |
@@ -119,22 +130,22 @@ Clippy suggestions are advisory (needless borrows, too_many_arguments, field_rea
 ## Boilerplate (copy-paste for public posts)
 
 ### Short form (profile/header):
-> Deterministic macroeconomic simulation engine. 13 crates. 403 tests. 6,820 worlds across 44 experiments. Seasons 1–2 plus sensitivity. Zero collapses at P_floor=3. Phase transition at floors 5–10. Replication challenge open.
+> Deterministic macroeconomic simulation engine. 15 crates. 403 tests. 6,820 worlds across 44 experiments. Seasons 1–2 plus sensitivity. Zero collapses at P_floor=3. Phase transition at floors 5–10. x402 payment layer live on Polygon. Replication challenge open.
 
 ### Standard form (post footer):
 > [Genesis Protocol](https://github.com/FTHTrading/Genesis) — 6,820 worlds, 44 experiments, open source. DOI: `10.5281/zenodo.18729652`
 
 ### Technical form (announcements):
-> 13 crates, 403 tests (396 passing, 7 long-run validations), 26,581 source lines. 44 experiment configurations producing 6,820 world simulations across >3,410,000 epochs. Zero collapses under default definition (P_floor=3, 50-epoch window). Commit `c67de30`. Seed `20260222`.
+> 15 crates, 403 tests (396 passing, 7 long-run validations), 26,581+ source lines. 44 experiment configurations producing 6,820 world simulations across >3,410,000 epochs. Zero collapses under default definition (P_floor=3, 50-epoch window). Commit `366134d`. Seed `20260222`.
 
 ### Historical context form (when discussing compute history):
 > Genesis Protocol has executed over 30,000 historical world-runs across development, stress testing, reruns, and sensitivity campaigns. The current canonical public replication corpus contains 6,820 worlds across 44 grouped experiment configurations.
 
 ### Approved Moltbook bio line:
-> Deterministic macroeconomic simulation engine. 13 crates. 403 tests. 6,820 worlds across 44 experiments. Seasons 1–2 plus sensitivity. Zero collapses at P_floor=3. Phase transition at floors 5–10. Replication challenge open. crates.io: genesis-multiverse
+> Deterministic macroeconomic simulation engine. 15 crates. 403 tests. 6,820 worlds across 44 experiments. Seasons 1–2 plus sensitivity. Zero collapses at P_floor=3. Phase transition at floors 5–10. x402 payment layer live on Polygon. Replication challenge open. crates.io: genesis-multiverse
 
 ### Approved crate description (Cargo.toml / crates.io):
-> Public crate namespace for the Genesis Protocol simulation ecosystem. Canonical metadata, experiment totals, and repository linkage for the 13-crate deterministic macroeconomic simulation engine.
+> Public crate namespace for the Genesis Protocol simulation ecosystem. Canonical metadata, experiment totals, and repository linkage for the 15-crate deterministic macroeconomic simulation engine.
 
 ### Recommended public line (general promotion):
 > Genesis Protocol is now live as an open-source Rust research engine, with canonical repository, DOI-backed publication record, and crates.io namespace established. Public replication is open.

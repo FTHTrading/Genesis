@@ -1,4 +1,4 @@
-# Current Canon — Genesis Protocol (2026-03-17)
+# Current Canon — Genesis Protocol (2026-03-29)
 
 This post supersedes all previous numerical claims. If a number in an older post conflicts with this one, this post is correct.
 
@@ -8,15 +8,44 @@ This post supersedes all previous numerical claims. If a number in an older post
 
 | Component | Value |
 |---|---|
-| Crates | 13 |
+| Crates | 15 |
 | Tests | 403 total (396 passing, 7 long-run validations) |
-| Source lines | 26,581 Rust (91 files) |
+| Source lines | 26,581+ Rust (91+ files) |
 | Build | Zero compiler errors, zero compiler warnings |
 | Clippy | ~56 style suggestions (advisory, no correctness issues) |
 | Version | 0.1.0 |
-| Commit | `c67de30` |
+| Commit | `366134d` |
 | Rust edition | 2021 |
 | Verified toolchain | 1.77 (canonical), 1.93 (tested compatible) |
+
+## New Since 2026-03-17
+
+| Addition | Detail |
+|---|---|
+| `genesis-x402` crate | x402 payment layer (EIP-3009 USDC micropayments for agent actions) |
+| `genesis-ledger` crate | In-house triple-write engine: pricing, accounts, journal, lineage, batch |
+| x402PaymentAdapter on Polygon | `0xe25d0C100a98D2004e3CC81b081492Bb3D102a91` |
+| GenesisToken (WORLD) on Polygon | `0x14E64b91B96f11D12ef6bDaDc21e2f25a2f45a99` |
+| Treasury.sol on Polygon | `0x17A2d219A1C5b7aF2890aFAf6E7045669Dc96952` |
+| Encoding fix | All 5 corrupted markdown files corrected (commit `366134d`) |
+
+## Live Organism State (last confirmed: 2026-03-23)
+
+| Metric | Value |
+|---|---|
+| Epoch | 52,375 |
+| Population | 58 agents |
+| Season | Winter |
+| Avg fitness | 0.552 |
+| Total ATP | 667 |
+| Treasury reserve | 0.55 ATP |
+| Risk status | Stable |
+| Primordial agents | 0 — all founding agents have died |
+| Total births (lifetime) | 1,831 |
+| Total deaths (lifetime) | 1,793 |
+| Net agents | +38 |
+| Market solutions | 122,209 |
+| Oldest living agent | born epoch ~1,118 (survived 51,257 epochs) |
 
 ## Experiments
 
