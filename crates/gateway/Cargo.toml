@@ -25,7 +25,7 @@ tracing.workspace = true
 axum = "0.7"
 tower-http = { version = "0.5", features = ["cors", "limit", "set-header"] }
 tower = { version = "0.5", features = ["util"] }
-reqwest = { version = "0.12", features = ["json"] }
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
 tokio-stream = "0.1"
 futures = "0.3"
 
