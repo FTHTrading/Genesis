@@ -617,4 +617,24 @@
       { passive: true }
     );
   }
+  // ---- Live Engine Status (fetches system-state.json on page load) ----
+  (function loadLiveStats() {
+    fetch('./system-state.json?t=' + Date.now())
+      .then(function(r) { return r.ok ? r.json() : null; })
+      .then(function(d) {
+        if (!d) return;
+        var bar = document.getElementById('liveStatus');
+        var epochEl = document.getElementById('lsEpoch');
+        var popEl   = document.getElementById('lsPop');
+        var fitEl   = document.getElementById('lsFit');
+        var seaEl   = document.getElementById('lsSeason');
+        if (epochEl) epochEl.textContent = d.epoch.toLocaleString();
+        if (popEl)   popEl.textContent   = d.population;
+        if (fitEl)   fitEl.textContent   = typeof d.avg_fitness === 'number' ? d.avg_fitness.toFixed(4) : d.avg_fitness;
+        if (seaEl)   seaEl.textContent   = d.season || '';
+        if (bar)     bar.style.display   = 'flex';
+      })
+      .catch(function() {}); // silent — static file may be absent in dev
+  })();
+
 })();
